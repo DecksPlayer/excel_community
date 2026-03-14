@@ -534,3 +534,19 @@ File(join('$directory/output_file_name.xlsx'))
   ..createSync(recursive: true)
   ..writeAsBytesSync(fileBytes);
 ```
+
+## Credits
+
+This project is based on the [excel](https://github.com/justkawal/excel) package created by **Kawaljeet Singh (justkawal)**. 
+
+We are grateful for the original work and continue to maintain and enhance this library for the community.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Original Author:** Kawaljeet Singh (justkawal)  
+**Original Project:** https://github.com/justkawal/excel
+
+**Current Maintainer:** DecksPlayer  
+**Community Fork:** https://github.com/DecksPlayer/excel_community

@@ -1,6 +1,13 @@
 The MIT License (MIT)
 
-Copyright (C) 2021 - Kawaljeet Singh
+Copyright (C) 2021 - Kawaljeet Singh (justkawal)
+Original project: https://github.com/justkawal/excel
+
+Copyright (C) 2026 - DecksPlayer (excel_community fork)
+Modified project: https://github.com/DecksPlayer/excel_community
+
+This project is based on the excel package by Kawaljeet Singh (justkawal).
+Modifications and enhancements have been made by DecksPlayer.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
