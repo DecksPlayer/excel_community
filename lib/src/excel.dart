@@ -21,7 +21,7 @@ Excel _newExcel(Archive archive) {
   }
 }
 
-/// Decode a excel file.
+/// Main entry point for interacting with Excel files in XLSX format.
 class Excel {
   bool _styleChanges = false;
   bool _mergeChanges = false;
@@ -64,10 +64,12 @@ class Excel {
     parser._startParsing();
   }
 
+  /// Creates a new, empty Excel file with a single sheet named 'Sheet1'.
   factory Excel.createExcel() {
     return Excel.decodeBytes(Base64Decoder().convert(_newSheet));
   }
 
+  /// Decodes an Excel file from a list of bytes.
   factory Excel.decodeBytes(List<int> data) {
     final Archive archive;
     try {
@@ -79,6 +81,7 @@ class Excel {
     return _newExcel(archive);
   }
 
+  /// Decodes an Excel file from an [InputStream].
   factory Excel.decodeBuffer(InputStream input) {
     return _newExcel(ZipDecoder().decodeStream(input));
   }

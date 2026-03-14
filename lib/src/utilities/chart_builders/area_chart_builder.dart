@@ -1,7 +1,10 @@
 part of excel_community;
 
-/// Builder for Area chart styles with transparency
+/// Builder for Area chart styles with transparency.
 class AreaChartBuilder implements ChartStyleBuilder {
+  /// Creates a new AreaChartBuilder.
+  AreaChartBuilder();
+
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
     builder.element('c:grouping', attributes: {'val': 'standard'});

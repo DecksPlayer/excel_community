@@ -107,13 +107,17 @@ class Data extends Equatable {
       ];
 }
 
+/// Base class for all cell value types in an Excel sheet.
 sealed class CellValue {
   const CellValue();
 }
 
+/// Represents a formula in a cell.
 class FormulaCellValue extends CellValue {
+  /// The formula string (e.g., "=SUM(A1:A10)").
   final String formula;
 
+  /// Creates a new FormulaCellValue.
   const FormulaCellValue(this.formula);
 
   @override
@@ -130,9 +134,12 @@ class FormulaCellValue extends CellValue {
   }
 }
 
+/// Represents an integer value in a cell.
 class IntCellValue extends CellValue {
+  /// The integer value.
   final int value;
 
+  /// Creates a new IntCellValue.
   const IntCellValue(this.value);
 
   @override
@@ -149,9 +156,12 @@ class IntCellValue extends CellValue {
   }
 }
 
+/// Represents a double (floating-point) value in a cell.
 class DoubleCellValue extends CellValue {
+  /// The double value.
   final double value;
 
+  /// Creates a new DoubleCellValue.
   const DoubleCellValue(this.value);
 
   @override
@@ -168,11 +178,16 @@ class DoubleCellValue extends CellValue {
   }
 }
 
+/// Represents a date value in a cell.
 class DateCellValue extends CellValue {
+  /// Year component.
   final int year;
+  /// Month component (1-12).
   final int month;
+  /// Day component (1-31).
   final int day;
 
+  /// Creates a new DateCellValue.
   const DateCellValue({
     required this.year,
     required this.month,
@@ -180,15 +195,18 @@ class DateCellValue extends CellValue {
   })  : assert(month <= 12 && month >= 1),
         assert(day <= 31 && day >= 1);
 
+  /// Creates a DateCellValue from a [DateTime] object.
   DateCellValue.fromDateTime(DateTime dt)
       : year = dt.year,
         month = dt.month,
         day = dt.day;
 
+  /// Returns the date as a local [DateTime] object.
   DateTime asDateTimeLocal() {
     return DateTime(year, month, day);
   }
 
+  /// Returns the date as a UTC [DateTime] object.
   DateTime asDateTimeUtc() {
     return DateTime.utc(year, month, day);
   }
@@ -210,10 +228,15 @@ class DateCellValue extends CellValue {
   }
 }
 
+/// Represents a text value in a cell, supporting rich text through spans.
 class TextCellValue extends CellValue {
+  /// The text content as a [TextSpan].
   final TextSpan value;
 
+  /// Creates a new TextCellValue from a simple string.
   TextCellValue(String text) : value = TextSpan(text: text);
+  
+  /// Creates a new TextCellValue from a [TextSpan] for rich text support.
   TextCellValue.span(this.value);
 
   @override
@@ -230,9 +253,12 @@ class TextCellValue extends CellValue {
   }
 }
 
+/// Represents a boolean value in a cell.
 class BoolCellValue extends CellValue {
+  /// The boolean value.
   final bool value;
 
+  /// Creates a new BoolCellValue.
   const BoolCellValue(this.value);
 
   @override
