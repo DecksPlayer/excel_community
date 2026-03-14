@@ -26,6 +26,7 @@ class Excel {
   bool _styleChanges = false;
   bool _mergeChanges = false;
   bool _rtlChanges = false;
+  bool _isRenamingDefaultSheet = false;
 
   Archive _archive;
 
@@ -513,6 +514,20 @@ class Excel {
   ///
   void _availSheet(String sheet) {
     if (_sheetMap[sheet] == null) {
+      if (_sheetMap.length == 1 &&
+          _sheetMap.containsKey('Sheet1') &&
+          !_isRenamingDefaultSheet) {
+        Sheet s = _sheetMap['Sheet1']!;
+        if (s._sheetData.isEmpty && s._spanList.isEmpty && sheet != 'Sheet1') {
+          _isRenamingDefaultSheet = true;
+          try {
+            rename('Sheet1', sheet);
+            return;
+          } finally {
+            _isRenamingDefaultSheet = false;
+          }
+        }
+      }
       _sheetMap[sheet] = Sheet._(this, sheet);
     }
   }
