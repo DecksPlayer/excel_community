@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 Archive _cloneArchive(
   Archive archive,

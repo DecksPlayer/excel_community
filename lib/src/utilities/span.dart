@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 // For Spanning the columns and rows
 class _Span extends Equatable {

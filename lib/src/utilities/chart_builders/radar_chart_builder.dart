@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Builder for Radar chart styles with optional fill
 class RadarChartBuilder implements ChartStyleBuilder {

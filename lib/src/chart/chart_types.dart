@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Represents an Excel Column/Bar Chart.
 class ColumnChart extends Chart {

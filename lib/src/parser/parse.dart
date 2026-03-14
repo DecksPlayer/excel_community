@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 class Parser {
   final Excel _excel;
@@ -605,8 +605,8 @@ class Parser {
     switch (type) {
       // sharedString
       case 's':
-        final sharedString = _excel._sharedStrings
-            .value(int.parse(_parseValue(node.findElements('v').first)));
+        final sharedString = _excel._sharedStrings.value(
+            int.parse(_parseValue(node.findElements('v').first).trim()));
         value = TextCellValue.span(sharedString!.textSpan);
         break;
       // boolean
@@ -662,15 +662,7 @@ class Parser {
   }
 
   static String _parseValue(XmlElement node) {
-    var buffer = StringBuffer();
-
-    node.children.forEach((child) {
-      if (child is XmlText) {
-        buffer.write(_normalizeNewLine(child.value));
-      }
-    });
-
-    return buffer.toString();
+    return _normalizeNewLine(node.innerText);
   }
 
   int _getAvailableRid() {

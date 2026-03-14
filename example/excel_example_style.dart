@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart';
-import 'package:excel_community/excel.dart';
+import 'package:excel_community/excel_community.dart';
 
 void main(List<String> args) {
   //var file = "/Users/kawal/Desktop/excel/test/test_resources/example.xlsx";

@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 // ignore: must_be_immutable
 class Data extends Equatable {

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:excel_community/excel.dart';
+import 'package:excel_community/excel_community.dart';
 import 'package:file_picker/file_picker.dart';
 
 void main() {

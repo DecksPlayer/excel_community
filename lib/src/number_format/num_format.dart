@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 Map<V, K> _createInverseMap<K, V>(Map<K, V> map) {
   final inverse = <V, K>{};

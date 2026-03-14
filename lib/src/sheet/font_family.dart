@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 enum FontFamily {
   Al_Bayan_Plain,

@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Builder for Pie and Doughnut chart styles
 class PieChartBuilder implements ChartStyleBuilder {

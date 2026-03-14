@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Configuration for chart colors and palettes.
 /// 

@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 final List<String> _noCompression = <String>[
   'mimetype',

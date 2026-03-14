@@ -80,9 +80,9 @@ build/
 # Generated test files
 *.xlsx
 test_*.dart
-**/test_*.dart
+**/TEST_*.xlsx
 generar_*.dart
 prueba_*.dart
-TEST_*.xlsx
 PRUEBA_*.xlsx
+**/TEST_RESOURCES
 excel_flutter_example/windows/flutter/generated_plugins.cmake

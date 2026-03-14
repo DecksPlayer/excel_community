@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Internal utility to generate XML for Charts and Drawings.
 /// 
@@ -49,7 +49,7 @@ class ChartXmlWriter {
   // PRIVATE: Drawing XML Helpers
   // ========================================================================
 
-  Map<String, String> _buildDrawingNamespaces() {
+  Map<String, String?> _buildDrawingNamespaces() {
     return {
       'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing': 'xdr',
       'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
@@ -92,7 +92,7 @@ class ChartXmlWriter {
         builder.element('a:graphicData',
             attributes: {'uri': 'http://schemas.openxmlformats.org/drawingml/2006/chart'},
             nest: () {
-          builder.element('c:chart', namespaces: {
+          builder.element('c:chart', namespaces: <String, String?>{
             'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
           }, attributes: {
@@ -107,7 +107,7 @@ class ChartXmlWriter {
   // PRIVATE: Chart XML Helpers
   // ========================================================================
 
-  Map<String, String> _buildChartNamespaces() {
+  Map<String, String?> _buildChartNamespaces() {
     return {
       'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
       'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',

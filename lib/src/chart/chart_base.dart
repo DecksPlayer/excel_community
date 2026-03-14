@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Base class for all Excel charts.
 abstract class Chart {

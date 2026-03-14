@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 class Save {
   final Excel _excel;
@@ -1023,7 +1023,7 @@ class Save {
       // 1. Generate Chart XMLs and Drawing Relationships
       final drawingRelsBuilder = XmlBuilder();
       drawingRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-      drawingRelsBuilder.element('Relationships', namespaces: {
+      drawingRelsBuilder.element('Relationships', namespaces: <String, String?>{
         'http://schemas.openxmlformats.org/package/2006/relationships': null,
       }, nest: () {
         for (int i = 0; i < sheet.charts.length; i++) {
@@ -1064,7 +1064,7 @@ class Save {
       if (sheetRels == null) {
         final relsBuilder = XmlBuilder();
         relsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-        relsBuilder.element('Relationships', namespaces: {
+        relsBuilder.element('Relationships', namespaces: <String, String?>{
           'http://schemas.openxmlformats.org/package/2006/relationships': null,
         }, nest: () {});
         sheetRels = relsBuilder.buildDocument();
@@ -1089,8 +1089,7 @@ class Save {
       if (existingDrawings.isEmpty) {
         final drawingElement = XmlElement(XmlName('drawing'), [
           XmlAttribute(
-              XmlName('id',
-                  'http://schemas.openxmlformats.org/officeDocument/2006/relationships'),
+              XmlName('id', 'r'),
               drawingRId),
         ]);
 

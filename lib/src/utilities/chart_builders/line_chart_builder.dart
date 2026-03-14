@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Builder for Line chart styles
 class LineChartBuilder implements ChartStyleBuilder {

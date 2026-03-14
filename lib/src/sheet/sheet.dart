@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 class Sheet {
   final Excel _excel;

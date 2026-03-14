@@ -15,16 +15,16 @@
   <img src='https://img.shields.io/badge/License-MIT-red.svg'  
     alt='License: MIT' />
 </a>
-<a href='https://github.com/gonoj/excel_community/issues'>  
-  <img src='https://img.shields.io/github/issues/gonoj/excel_community'  
+<a href='https://github.com/decksplayer/excel_community/issues'>  
+  <img src='https://img.shields.io/github/issues/decksplayer/excel_community'  
     alt='Issues' />  
 </a>
-<a href='https://github.com/gonoj/excel_community/network'>  
-  <img src='https://img.shields.io/github/forks/gonoj/excel_community'  
+<a href='https://github.com/decksplayer/excel_community/network'>  
+  <img src='https://img.shields.io/github/forks/decksplayer/excel_community'  
     alt='Forks' />  
 </a>
-<a href='https://github.com/gonoj/excel_community/stargazers'>  
-  <img src='https://img.shields.io/github/stars/gonoj/excel_community'  
+<a href='https://github.com/decksplayer/excel_community/stargazers'>  
+  <img src='https://img.shields.io/github/stars/decksplayer/excel_community'  
     alt='Stars' />  
 </a>
 

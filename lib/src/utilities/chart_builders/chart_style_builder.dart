@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Base interface for chart-specific styling builders.
 /// 

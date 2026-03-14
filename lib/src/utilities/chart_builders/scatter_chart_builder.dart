@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Builder for Scatter chart styles
 class ScatterChartBuilder implements ChartStyleBuilder {

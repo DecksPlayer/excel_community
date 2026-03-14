@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 class CellIndex extends Equatable {
   CellIndex._({required this.columnIndex, required this.rowIndex});

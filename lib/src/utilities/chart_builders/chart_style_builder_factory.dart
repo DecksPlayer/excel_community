@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Factory to get the appropriate style builder for a chart type
 /// 

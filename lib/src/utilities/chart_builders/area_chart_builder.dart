@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Builder for Area chart styles with transparency
 class AreaChartBuilder implements ChartStyleBuilder {

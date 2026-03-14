@@ -1,4 +1,4 @@
-part of excel;
+part of excel_community;
 
 /// Builder for Column and Bar chart styles
 class ColumnBarChartBuilder implements ChartStyleBuilder {
