@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart';
-import 'package:excel/excel.dart';
+import 'package:excel_community/excel.dart';
 
 void main(List<String> args) {
   Stopwatch stopwatch = new Stopwatch()..start();

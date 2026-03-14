@@ -1,31 +1,34 @@
-# Excel
+# Excel Community
+
+> [!NOTE]
+> This is a community-maintained fork of the [excel](https://github.com/justkawal/excel) library.
 
 <a href='https://flutter.io'>  
   <img src='https://img.shields.io/badge/Platform-Flutter-yellow.svg'  
     alt='Platform' />  
 </a>
-<a href='https://pub.dartlang.org/packages/excel'>  
-  <img src='https://img.shields.io/pub/v/excel.svg'  
+<a href='https://pub.dev/packages/excel_community'>  
+  <img src='https://img.shields.io/pub/v/excel_community.svg'  
     alt='Pub Package' />
 </a>
 <a href='https://opensource.org/licenses/MIT'>  
   <img src='https://img.shields.io/badge/License-MIT-red.svg'  
     alt='License: MIT' />
 </a>
-<a href='https://github.com/justkawal/excel/issues'>  
-  <img src='https://img.shields.io/github/issues/justkawal/excel'  
+<a href='https://github.com/gonoj/excel_community/issues'>  
+  <img src='https://img.shields.io/github/issues/gonoj/excel_community'  
     alt='Issues' />  
 </a>
-<a href='https://github.com/justkawal/excel/network'>  
-  <img src='https://img.shields.io/github/forks/justkawal/excel'  
+<a href='https://github.com/gonoj/excel_community/network'>  
+  <img src='https://img.shields.io/github/forks/gonoj/excel_community'  
     alt='Forks' />  
 </a>
-<a href='https://github.com/justkawal/excel/stargazers'>  
-  <img src='https://img.shields.io/github/stars/justkawal/excel'  
+<a href='https://github.com/gonoj/excel_community/stargazers'>  
+  <img src='https://img.shields.io/github/stars/gonoj/excel_community'  
     alt='Stars' />  
 </a>
 
-### [Excel](https://www.pub.dev/packages/excel) is a flutter and dart library for reading, creating and updating excel-sheets for XLSX files.
+### [Excel Community](https://www.pub.dev/packages/excel_community) is a flutter and dart library for reading, creating and updating excel-sheets for XLSX files.
 
 ## Road-map:
  - ➕ Formulas and Calculations

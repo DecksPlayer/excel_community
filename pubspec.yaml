@@ -1,7 +1,7 @@
-name: excel
-description: A flutter and dart library for reading, creating, editing and updating excel sheets with compatible both on client and server side.
+name: excel_community
+description: A community-maintained fork of the excel library for reading, creating, editing and updating excel sheets. Compatible with both client and server side.
 version: 5.0.0
-homepage: https://github.com/justkawal/excel
+homepage: https://github.com/decksplayer/excel_community
 topics:
   - excel
   - office
