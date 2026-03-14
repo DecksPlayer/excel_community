@@ -19,12 +19,17 @@ part 'src/sharedStrings/shared_strings.dart';
 /// Number Format
 part 'src/number_format/num_format.dart';
 
+/// Chart
+part 'src/chart/chart_base.dart';
+part 'src/chart/chart_types.dart';
+
 /// Utilities
 part 'src/utilities/span.dart';
 part 'src/utilities/fast_list.dart';
 part 'src/utilities/utility.dart';
 part 'src/utilities/constants.dart';
 part 'src/utilities/enum.dart';
+part 'src/utilities/chart_xml_writer.dart';
 part 'src/utilities/archive.dart';
 part 'src/utilities/colors.dart';
 

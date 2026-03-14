@@ -556,6 +556,8 @@ class Save {
       _setRTL();
     }
 
+    _processCharts();
+
     for (var xmlFile in _excel._xmlFiles.keys) {
       var xml = _excel._xmlFiles[xmlFile].toString();
       var content = utf8.encode(xml);
@@ -1003,4 +1005,106 @@ class Save {
         diagonalBorderUp: cellStyle.diagonalBorderUp,
         diagonalBorderDown: cellStyle.diagonalBorderDown,
       );
+
+  void _processCharts() {
+    final writer = ChartXmlWriter();
+    int chartCount = 0;
+    int drawingCount = 0;
+
+    _excel._sheetMap.forEach((sheetName, sheet) {
+      if (sheet.charts.isEmpty) return;
+
+      drawingCount++;
+      final drawingPath = 'xl/drawings/drawing$drawingCount.xml';
+      final drawingRelsPath = 'xl/drawings/_rels/drawing$drawingCount.xml.rels';
+      final sheetId = _excel._xmlSheetId[sheetName]!;
+      final sheetRelsPath = 'xl/worksheets/_rels/${sheetId.split("/").last}.rels';
+
+      // 1. Generate Chart XMLs and Drawing Relationships
+      final drawingRelsBuilder = XmlBuilder();
+      drawingRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+      drawingRelsBuilder.element('Relationships', namespaces: {
+        'http://schemas.openxmlformats.org/package/2006/relationships': null,
+      }, nest: () {
+        for (int i = 0; i < sheet.charts.length; i++) {
+          chartCount++;
+          final chart = sheet.charts[i];
+          final chartPath = 'xl/charts/chart$chartCount.xml';
+
+          // Generate Chart XML
+          _excel._xmlFiles[chartPath] = writer.generateChartXml(chart);
+
+          // Add to Drawing Relationships
+          drawingRelsBuilder.element('Relationship', attributes: {
+            'Id': 'rId${i + 1}',
+            'Type': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
+            'Target': '../charts/chart$chartCount.xml',
+          });
+
+          // Add Content Type for Chart
+          _addContentType(
+            'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+            '/$chartPath',
+          );
+        }
+      });
+      _excel._xmlFiles[drawingRelsPath] = drawingRelsBuilder.buildDocument();
+
+      // 2. Generate Drawing XML (linking to rId1, rId2... in drawingRels)
+      _excel._xmlFiles[drawingPath] = writer.generateDrawingXml(sheet.charts.first, drawingCount);
+
+      // Add Content Type for Drawing
+      _addContentType(
+        'application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml',
+        '/$drawingPath',
+      );
+
+      // 3. Update Sheet Relationships
+      var sheetRels = _excel._xmlFiles[sheetRelsPath];
+      if (sheetRels == null) {
+        final relsBuilder = XmlBuilder();
+        relsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+        relsBuilder.element('Relationships', namespaces: {
+          'http://schemas.openxmlformats.org/package/2006/relationships': null,
+        }, nest: () {});
+        sheetRels = relsBuilder.buildDocument();
+        _excel._xmlFiles[sheetRelsPath] = sheetRels;
+      }
+
+      final relsElement = sheetRels.findAllElements('Relationships').first;
+      final drawingRId = 'rIdDrawing$drawingCount';
+      relsElement.children.add(XmlElement(XmlName('Relationship'), [
+        XmlAttribute(XmlName('Id'), drawingRId),
+        XmlAttribute(XmlName('Type'), 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing'),
+        XmlAttribute(XmlName('Target'), '../drawings/drawing$drawingCount.xml'),
+      ]));
+
+      // 4. Update Worksheet XML with <drawing> tag
+      final worksheet = _excel._xmlFiles[sheetId]!.findAllElements('worksheet').first;
+      final existingDrawings = worksheet.findAllElements('drawing').toList();
+      if (existingDrawings.isEmpty) {
+        worksheet.children.add(XmlElement(XmlName('drawing'), [
+          XmlAttribute(XmlName('r:id', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'), drawingRId),
+        ]));
+      }
+    });
+  }
+
+  void _addContentType(String contentType, String partName) {
+    final contentTypes = _excel._xmlFiles['[Content_Types].xml'];
+    if (contentTypes == null) return;
+
+    final typesElement = contentTypes.findAllElements('Types').first;
+
+    // Check if already exists
+    final exists = typesElement.children.any((node) =>
+        node is XmlElement && node.getAttribute('PartName') == partName);
+
+    if (!exists) {
+      typesElement.children.add(XmlElement(XmlName('Override'), [
+        XmlAttribute(XmlName('PartName'), partName),
+        XmlAttribute(XmlName('ContentType'), contentType),
+      ]));
+    }
+  }
 }
