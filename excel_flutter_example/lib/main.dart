@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Border, BorderStyle;
 import 'package:excel_community/excel_community.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -322,6 +322,144 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _generateFullExample() async {
+    setState(() {
+      _isGenerating = true;
+      _status = 'Generating Full Demo Excel...';
+    });
+
+    try {
+      var excel = Excel.createExcel();
+      // Rename default sheet
+      var sheetName = 'Full Demo';
+      excel.rename('Sheet1', sheetName);
+      var sheet = excel[sheetName];
+
+      // 1. Defining Styles with Borders and Colors
+      final headerStyle = CellStyle(
+        bold: true,
+        fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
+        backgroundColorHex: ExcelColor.fromHexString('#4472C4'),
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#000000')),
+        rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#000000')),
+        topBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#000000')),
+        bottomBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#000000')),
+      );
+
+      final dataStyle = CellStyle(
+        leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D9D9D9')),
+        rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D9D9D9')),
+        topBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D9D9D9')),
+        bottomBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.fromHexString('#D9D9D9')),
+      );
+
+      final formulaStyle = CellStyle(
+        bold: true,
+        backgroundColorHex: ExcelColor.fromHexString('#E2EFDA'),
+        leftBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: ExcelColor.fromHexString('#000000')),
+        rightBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: ExcelColor.fromHexString('#000000')),
+        topBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: ExcelColor.fromHexString('#000000')),
+        bottomBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: ExcelColor.fromHexString('#000000')),
+      );
+
+      // 2. Headers
+      sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Month"), cellStyle: headerStyle);
+      sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Revenue"), cellStyle: headerStyle);
+      sheet.updateCell(CellIndex.indexByString("C1"), TextCellValue("Expenses"), cellStyle: headerStyle);
+      sheet.updateCell(CellIndex.indexByString("D1"), TextCellValue("Profit"), cellStyle: headerStyle);
+
+      // 3. Data and Formulas
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      final revenues = [1000, 1200, 1500, 1300, 1700, 2000];
+      final expenses = [800, 900, 1000, 950, 1100, 1200];
+
+      for (var i = 0; i < months.length; i++) {
+        var row = i + 2;
+        sheet.updateCell(CellIndex.indexByString("A$row"), TextCellValue(months[i]), cellStyle: dataStyle);
+        sheet.updateCell(CellIndex.indexByString("B$row"), IntCellValue(revenues[i]), cellStyle: dataStyle);
+        sheet.updateCell(CellIndex.indexByString("C$row"), IntCellValue(expenses[i]), cellStyle: dataStyle);
+        // Formula: Revenue - Expenses
+        sheet.updateCell(CellIndex.indexByString("D$row"), FormulaCellValue("B$row-C$row"), cellStyle: dataStyle);
+      }
+
+      // 4. Totals with Formulas
+      var totalRow = months.length + 2;
+      sheet.updateCell(CellIndex.indexByString("A$totalRow"), TextCellValue("TOTAL"), cellStyle: formulaStyle);
+      sheet.updateCell(CellIndex.indexByString("B$totalRow"), FormulaCellValue("SUM(B2:B${totalRow - 1})"), cellStyle: formulaStyle);
+      sheet.updateCell(CellIndex.indexByString("C$totalRow"), FormulaCellValue("SUM(C2:C${totalRow - 1})"), cellStyle: formulaStyle);
+      sheet.updateCell(CellIndex.indexByString("D$totalRow"), FormulaCellValue("SUM(D2:D${totalRow - 1})"), cellStyle: formulaStyle);
+
+      // 5. Chart using the data
+      final series = [
+        ChartSeries(
+          name: "Revenue",
+          categoriesRange: "'Full Demo'!\$A\$2:\$A\$7",
+          valuesRange: "'Full Demo'!\$B\$2:\$B\$7",
+        ),
+        ChartSeries(
+          name: "Profit",
+          categoriesRange: "'Full Demo'!\$A\$2:\$A\$7",
+          valuesRange: "'Full Demo'!\$D\$2:\$D\$7",
+        ),
+      ];
+
+      final chart = ColumnChart(
+        title: "Financial Overview",
+        series: series,
+        anchor: ChartAnchor.at(column: 6, row: 1, width: 10, height: 15),
+      );
+
+      sheet.addChart(chart);
+
+      // 6. Save and Download
+      if (kIsWeb) {
+        final bytes = excel.save(fileName: 'full_demo_example.xlsx');
+        if (bytes != null && bytes.isNotEmpty) {
+          setState(() {
+            _status = '✅ Full Demo Excel generated successfully!\n'
+                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
+                'The download should start automatically.\n'
+                '📌 Includes: Formulas, Headers, Borders, and Charts.';
+          });
+        }
+      } else {
+        var bytes = excel.encode();
+        if (bytes == null) {
+          setState(() => _status = 'Error: Failed to encode Excel file.');
+          return;
+        }
+
+        String? outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save Full Demo Excel',
+          fileName: 'full_demo_example.xlsx',
+          type: FileType.custom,
+          allowedExtensions: ['xlsx'],
+        );
+
+        if (outputFile != null) {
+          final file = File(outputFile);
+          await file.writeAsBytes(bytes);
+          setState(() {
+            _status = '✅ Full Demo Excel saved successfully!\n'
+                'Location: $outputFile\n'
+                '📌 Includes: Formulas, Headers, Borders, and Charts.';
+          });
+        }
+      }
+    } catch (e, stackTrace) {
+      setState(() => _status = 'Error: $e');
+      if (kDebugMode) {
+        print('Error generating full demo: $e');
+        print(stackTrace);
+      }
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -411,6 +549,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () => _generateExcelWithChart(ChartType.scatter),
                   icon: const Icon(Icons.scatter_plot),
                   label: const Text('Generate Scatter Chart'),
+                ),
+                const SizedBox(height: 30),
+                const Divider(),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: _generateFullExample,
+                  icon: const Icon(Icons.star, color: Colors.amber),
+                  label: const Text('GENERATE FULL DEMO (Everything)'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade50,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ],

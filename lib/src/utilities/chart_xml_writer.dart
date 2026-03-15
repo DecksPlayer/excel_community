@@ -194,12 +194,41 @@ class ChartXmlWriter {
     builder.element('c:cat', nest: () {
       builder.element('c:strRef', nest: () {
         builder.element('c:f', nest: () => builder.text(series.categoriesRange));
+        if (series.categories != null && series.categories!.isNotEmpty) {
+          _buildStrCache(builder, series.categories!);
+        }
       });
     });
     builder.element('c:val', nest: () {
       builder.element('c:numRef', nest: () {
         builder.element('c:f', nest: () => builder.text(series.valuesRange));
+        if (series.values != null && series.values!.isNotEmpty) {
+          _buildNumCache(builder, series.values!);
+        }
       });
+    });
+  }
+
+  void _buildStrCache(XmlBuilder builder, List<String> categories) {
+    builder.element('c:strCache', nest: () {
+      builder.element('c:ptCount', attributes: {'val': '${categories.length}'});
+      for (int i = 0; i < categories.length; i++) {
+        builder.element('c:pt', attributes: {'idx': '$i'}, nest: () {
+          builder.element('c:v', nest: () => builder.text(categories[i]));
+        });
+      }
+    });
+  }
+
+  void _buildNumCache(XmlBuilder builder, List<num> values) {
+    builder.element('c:numCache', nest: () {
+      builder.element('c:formatCode', nest: () => builder.text('General'));
+      builder.element('c:ptCount', attributes: {'val': '${values.length}'});
+      for (int i = 0; i < values.length; i++) {
+        builder.element('c:pt', attributes: {'idx': '$i'}, nest: () {
+          builder.element('c:v', nest: () => builder.text(values[i].toString()));
+        });
+      }
     });
   }
 

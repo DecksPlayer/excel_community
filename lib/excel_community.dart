@@ -49,6 +49,12 @@ part 'src/utilities/chart_builders/chart_style_builder_factory.dart';
 
 /// Save
 part 'src/save/save_file.dart';
+part 'src/save/charts/chart_manager.dart';
+part 'src/save/styles/style_manager.dart';
+part 'src/save/styles/style_resource_collector.dart';
+part 'src/save/styles/style_xml_builders.dart';
+part 'src/save/worksheet/worksheet_manager.dart';
+part 'src/save/workbook/workbook_manager.dart';
 part 'src/save/self_correct_span.dart';
 part 'src/parser/parse.dart';
 

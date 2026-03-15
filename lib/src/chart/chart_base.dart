@@ -23,11 +23,18 @@ class ChartSeries {
   final String name;
   final String categoriesRange; // e.g., "Sheet1!$A$2:$A$10"
   final String valuesRange;     // e.g., "Sheet1!$B$2:$B$10"
+  
+  /// Optional cached data for categories (labels)
+  List<String>? categories;
+  /// Optional cached data for values
+  List<num>? values;
 
   ChartSeries({
     required this.name,
     required this.categoriesRange,
     required this.valuesRange,
+    this.categories,
+    this.values,
   });
 }
 
