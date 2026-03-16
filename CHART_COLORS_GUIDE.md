@@ -1,65 +1,65 @@
-# 🎨 Estrategia de Colores por Tipo de Gráfico
+# 🎨 Color Strategy by Chart Type
 
-## Resumen Ejecutivo
+## Executive Summary
 
-Se implementó un sistema completo de colores para todos los tipos de gráficos de la librería `excel_community`, garantizando visualizaciones profesionales, distinguibles y estéticamente agradables.
-
----
-
-## 📊 Gráficos de Series (Column, Bar, Line, Area, Scatter)
-
-### Paleta de Colores (12 colores)
-```
-1.  #4472C4 - Blue (Azul)
-2.  #ED7D31 - Orange (Naranja)
-3.  #70AD47 - Green (Verde)
-4.  #FFC000 - Gold (Dorado)
-5.  #5B9BD5 - Light Blue (Azul Claro)
-6.  #C5504B - Red (Rojo)
-7.  #8064A2 - Purple (Púrpura)
-8.  #4BACC6 - Cyan (Cian)
-9.  #9BBB59 - Olive (Oliva)
-10. #F79646 - Light Orange (Naranja Claro)
-11. #17B897 - Teal (Verde Azulado)
-12. #E83352 - Crimson (Carmesí)
-```
-
-### Rotación Automática
-Si hay más de 12 series, los colores se reutilizan usando `i % 12`.
+A comprehensive color system has been implemented for all chart types in the `excel_community` library, ensuring professional, distinguishable, and aesthetically pleasing visualizations.
 
 ---
 
-## 1️⃣ Column Chart (Gráfico de Columnas)
+## 📊 Series Charts (Column, Bar, Line, Area, Scatter)
 
-**Características:**
-- ✅ Colores sólidos (100% opacidad)
-- ✅ Bordes del mismo color que el relleno
-- ✅ Grosor de borde: 9525 EMUs (fino)
+### Color Palette (12 colors)
+```
+1.  #4472C4 - Blue
+2.  #ED7D31 - Orange
+3.  #70AD47 - Green
+4.  #FFC000 - Gold
+5.  #5B9BD5 - Light Blue
+6.  #C5504B - Red
+7.  #8064A2 - Purple
+8.  #4BACC6 - Cyan
+9.  #9BBB59 - Olive
+10. #F79646 - Light Orange
+11. #17B897 - Teal
+12. #E83352 - Crimson
+```
 
-**Uso:**
+### Automatic Rotation
+If there are more than 12 series, colors are reused using `i % 12`.
+
+---
+
+## 1️⃣ Column Chart
+
+**Features:**
+- ✅ Solid colors (100% opacity)
+- ✅ Borders of the same color as the fill
+- ✅ Border thickness: 9525 EMUs (thin)
+
+**Usage:**
 ```dart
 ColumnChart(
   title: "Sales by Quarter",
-  series: series,  // Cada serie tendrá un color diferente
+  series: series,  // Each series will have a different color
   anchor: anchor,
   showLegend: true,
 )
 ```
 
 **Visual:**
-- Barras verticales con colores sólidos distinguibles
-- Ideal para comparar categorías
+- Vertical bars with distinguishable solid colors
+- Ideal for comparing categories
 
 ---
 
-## 2️⃣ Bar Chart (Gráfico de Barras Horizontales)
+## 2️⃣ Bar Chart (Horizontal Bar Chart)
 
-**Características:**
-- ✅ Idéntico a Column Chart pero horizontal
-- ✅ Colores sólidos (100% opacidad)
-- ✅ Bordes del mismo color
+**Features:**
+- ✅ Identical to Column Chart but horizontal
+- ✅ Solid colors (100% opacity)
+- ✅ Borders of the same color
 
-**Uso:**
+**Usage:**
 ```dart
 BarChart(
   title: "Revenue by Product",
@@ -70,20 +70,20 @@ BarChart(
 ```
 
 **Visual:**
-- Barras horizontales con colores sólidos
-- Mejor para labels largos
+- Horizontal bars with solid colors
+- Better for long labels
 
 ---
 
-## 3️⃣ Line Chart (Gráfico de Líneas)
+## 3️⃣ Line Chart
 
-**Características:**
-- ✅ Líneas gruesas: 28575 EMUs
-- ✅ Marcadores circulares (tamaño 5)
-- ✅ Marcadores del mismo color que la línea
-- ✅ Sin transparencia (100% opacidad)
+**Features:**
+- ✅ Thick lines: 28575 EMUs
+- ✅ Circular markers (size 5)
+- ✅ Markers of the same color as the line
+- ✅ No transparency (100% opacity)
 
-**Uso:**
+**Usage:**
 ```dart
 LineChart(
   title: "Trends Over Time",
@@ -94,19 +94,19 @@ LineChart(
 ```
 
 **Visual:**
-- Líneas coloridas con puntos circulares
-- Ideal para tendencias temporales
+- Colorful lines with circular points
+- Ideal for temporal trends
 
 ---
 
-## 4️⃣ Area Chart (Gráfico de Áreas)
+## 4️⃣ Area Chart
 
-**Características:**
-- ✅ Líneas: 90% opacidad (alpha: 90000)
-- ✅ Relleno: 50% opacidad (alpha: 50000)
-- ✅ Grosor de línea: 28575 EMUs (grueso)
+**Features:**
+- ✅ Lines: 90% opacity (alpha: 90000)
+- ✅ Fill: 50% opacity (alpha: 50000)
+- ✅ Line thickness: 28575 EMUs (thick)
 
-**Uso:**
+**Usage:**
 ```dart
 AreaChart(
   title: "Market Share Evolution",
@@ -117,21 +117,21 @@ AreaChart(
 ```
 
 **Visual:**
-- Áreas semitransparentes que permiten ver superposiciones
-- Líneas más opacas para definir contornos
-- Perfecto para mostrar acumulación o partes de un todo
+- Semi-transparent areas that allow seeing overlaps
+- More opaque lines to define contours
+- Perfect for showing accumulation or parts of a whole
 
 ---
 
-## 5️⃣ Scatter Chart (Gráfico de Dispersión)
+## 5️⃣ Scatter Chart
 
-**Características:**
-- ✅ Puntos circulares (tamaño 7)
-- ✅ Relleno sólido del color de la serie
-- ✅ Borde blanco (#FFFFFF) grosor 9525
-- ✅ Sin transparencia
+**Features:**
+- ✅ Circular points (size 7)
+- ✅ Solid fill of the series color
+- ✅ White border (#FFFFFF) thickness 9525
+- ✅ No transparency
 
-**Uso:**
+**Usage:**
 ```dart
 ScatterChart(
   title: "Correlation Analysis",
@@ -142,15 +142,15 @@ ScatterChart(
 ```
 
 **Visual:**
-- Puntos coloridos con halo blanco
-- El borde blanco ayuda a distinguir puntos superpuestos
-- Ideal para correlaciones y distribuciones
+- Colorful dots with a white halo
+- The white border helps distinguish overlapping points
+- Ideal for correlations and distributions
 
 ---
 
-## 🥧 Gráficos Circulares (Pie, Doughnut)
+## 🥧 Circular Charts (Pie, Doughnut)
 
-### Paleta de Colores (20 colores)
+### Color Palette (20 colors)
 ```
 1.  #4472C4 - Blue          11. #255E91 - Navy Blue
 2.  #ED7D31 - Orange        12. #43682B - Dark Green
@@ -164,66 +164,66 @@ ScatterChart(
 10. #997300 - Dark Gold     20. #FF6F61 - Coral
 ```
 
-### Algoritmo de Asignación
-1. Shuffle (aleatorizar) la paleta
-2. Tomar los primeros N colores (N = número de segmentos)
-3. Asignar uno por uno a cada segmento
+### Assignment Algorithm
+1. Shuffle (randomize) the palette
+2. Take the first N colors (N = number of segments)
+3. Assign one by one to each segment
 
-**Resultado:** Cada ejecución genera combinaciones aleatorias SIN repetición
+**Result:** Each execution generates random combinations WITHOUT repetition
 
 ---
 
-## 6️⃣ Pie Chart (Gráfico Circular)
+## 6️⃣ Pie Chart
 
-**Características:**
-- ✅ Colores aleatorios sin repetición
-- ✅ Colores sólidos (100% opacidad)
-- ✅ 20 colores disponibles
-- ✅ Shuffle antes de asignar
+**Features:**
+- ✅ Random colors without repetition
+- ✅ Solid colors (100% opacity)
+- ✅ 20 colors available
+- ✅ Shuffle before assigning
 
-**Uso:**
+**Usage:**
 ```dart
 PieChart(
   title: "Market Share",
-  series: [series[0]], // Solo una serie
+  series: [series[0]], // Only one series
   anchor: anchor,
   showLegend: true,
 )
 ```
 
 **Visual:**
-- Cada segmento tiene un color vibrante diferente
-- Colores randomizados cada vez
-- Máximo 20 segmentos con colores únicos
+- Each segment has a different vibrant color
+- Randomized colors every time
+- Maximum 20 segments with unique colors
 
 ---
 
-## 7️⃣ Doughnut Chart (Gráfico de Dona)
+## 7️⃣ Doughnut Chart
 
-**Características:**
-- ✅ Idéntico a Pie Chart en colores
-- ✅ Hueco central (holeSize: 50%)
-- ✅ Colores aleatorios sin repetición
+**Features:**
+- ✅ Identical to Pie Chart in colors
+- ✅ Central hole (holeSize: 50%)
+- ✅ Random colors without repetition
 
-**Uso:**
+**Usage:**
 ```dart
 DoughnutChart(
   title: "Budget Distribution",
-  series: [series[0]], // Solo una serie
+  series: [series[0]], // Only one series
   anchor: anchor,
   showLegend: true,
 )
 ```
 
 **Visual:**
-- Como Pie Chart pero con hueco central
-- Mismo sistema de colores aleatorios
+- Like Pie Chart but with a central hole
+- Same randomized color system
 
 ---
 
-## 🕸️ Radar Chart (Gráfico de Radar)
+## 🕸️ Radar Chart
 
-### Paleta de Colores (8 colores)
+### Color Palette (8 colors)
 ```
 1. #4472C4 - Blue
 2. #ED7D31 - Orange
@@ -237,114 +237,114 @@ DoughnutChart(
 
 ---
 
-## 8️⃣ Radar Chart - Filled (Rellenado)
+## 8️⃣ Radar Chart - Filled
 
-**Características:**
-- ✅ Líneas: 85% opacidad (alpha: 85000)
-- ✅ Relleno: 45% opacidad (alpha: 45000)
-- ✅ Grosor de línea: 28575 EMUs (grueso)
+**Features:**
+- ✅ Lines: 85% opacity (alpha: 85000)
+- ✅ Fill: 45% opacity (alpha: 45000)
+- ✅ Line thickness: 28575 EMUs (thick)
 
-**Uso:**
+**Usage:**
 ```dart
 RadarChart(
   title: "Skills Assessment",
   series: series,
   anchor: anchor,
   showLegend: true,
-  filled: true, // ← IMPORTANTE
+  filled: true, // ← IMPORTANT
 )
 ```
 
 **Visual:**
-- Áreas muy transparentes (45%) permite ver superposiciones
-- Líneas más visibles (85%)
-- Perfecto para comparar múltiples perfiles
+- Very transparent areas (45%) allow seeing overlaps
+- More visible lines (85%)
+- Perfect for comparing multiple profiles
 
 ---
 
-## 9️⃣ Radar Chart - Lines (Solo Líneas)
+## 9️⃣ Radar Chart - Lines
 
-**Características:**
-- ✅ Líneas: 85% opacidad (alpha: 85000)
-- ✅ Sin relleno
-- ✅ Grosor de línea: 28575 EMUs
+**Features:**
+- ✅ Lines: 85% opacity (alpha: 85000)
+- ✅ No fill
+- ✅ Line thickness: 28575 EMUs
 
-**Uso:**
+**Usage:**
 ```dart
 RadarChart(
   title: "Performance Metrics",
   series: series,
   anchor: anchor,
   showLegend: true,
-  filled: false, // ← IMPORTANTE
+  filled: false, // ← IMPORTANT
 )
 ```
 
 **Visual:**
-- Solo contornos sin relleno
-- Más limpio cuando hay muchas series superpuestas
+- Only contours without fill
+- Cleaner when there are many overlapping series
 
 ---
 
-## 📊 Comparativa de Transparencias
+## 📊 Transparency Comparison
 
-| Tipo de Gráfico | Líneas | Relleno | Marcadores | Bordes |
-|-----------------|--------|---------|------------|--------|
+| Chart Type | Lines | Fill | Markers | Borders |
+|------------|-------|------|---------|---------|
 | Column/Bar | - | 100% | - | 100% |
 | Line | 100% | - | 100% | - |
 | Area | 90% | 50% | - | - |
-| Scatter | - | 100% | 100% | Blanco |
+| Scatter | - | 100% | 100% | White |
 | Pie/Doughnut | - | 100% | - | - |
 | Radar (filled) | 85% | 45% | - | - |
 | Radar (lines) | 85% | - | - | - |
 
 ---
 
-## 🎯 Principios de Diseño Aplicados
+## 🎯 Applied Design Principles
 
-### 1. **Distinguibilidad**
-- Colores suficientemente diferentes entre sí
-- Evita confusión visual
+### 1. **Distinguishability**
+- Colors are sufficiently different from each other
+- Avoids visual confusion
 
-### 2. **Transparencia Estratégica**
-- **Gráficos de área/radar:** Transparencia para ver superposiciones
-- **Gráficos de barras/puntos:** Sólidos para máxima claridad
+### 2. **Strategic Transparency**
+- **Area/Radar charts:** Transparency to see overlaps
+- **Bar/Scatter charts:** Solid for maximum clarity
 
-### 3. **Consistencia**
-- Misma paleta base para todos los gráficos de series
-- Paleta extendida para gráficos circulares (más segmentos)
+### 3. **Consistency**
+- Same base palette for all series charts
+- Extended palette for circular charts (more segments)
 
-### 4. **Profesionalismo**
-- Colores basados en paletas de Office/Excel
-- No demasiado brillantes ni apagados
+### 4. **Professionalism**
+- Colors based on Office/Excel palettes
+- Neither too bright nor too dull
 
-### 5. **Accesibilidad**
-- Incluye variaciones de tono (claro/oscuro)
-- Buenos contrastes
+### 5. **Accessibility**
+- Includes tone variations (light/dark)
+- Good contrasts
 
 ---
 
-## 📝 Notas de Implementación
+## 📝 Implementation Notes
 
-### Unidades de Medida
+### Measurement Units
 - **EMUs (English Metric Units):** 914400 EMUs = 1 inch
-- **Grosor de línea delgada:** 9525 EMUs ≈ 0.75 pt
-- **Grosor de línea gruesa:** 28575 EMUs ≈ 2.25 pt
+- **Thin line thickness:** 9525 EMUs ≈ 0.75 pt
+- **Thick line thickness:** 28575 EMUs ≈ 2.25 pt
 
-### Valores de Alpha (Transparencia)
-- **100% opaco:** Sin elemento `<a:alpha>`
-- **90% opaco:** `alpha="90000"`
-- **85% opaco:** `alpha="85000"`
-- **50% opaco:** `alpha="50000"`
-- **45% opaco:** `alpha="45000"`
+### Alpha Values (Transparency)
+- **100% opaque:** No `<a:alpha>` element
+- **90% opaque:** `alpha="90000"`
+- **85% opaque:** `alpha="85000"`
+- **50% opaque:** `alpha="50000"`
+- **45% opaque:** `alpha="45000"`
 
-El valor de alpha va de 0 a 100000 (0% a 100%)
+The alpha value ranges from 0 to 100000 (0% to 100%)
 
 ---
 
-## 🧪 Archivos de Prueba Generados
+## 🧪 Generated Test Files
 
-Ejecuta `dart run test_all_colors.dart` para generar:
+Run `dart run test_all_colors.dart` to generate:
 
 1. `COLOR_TEST_column_chart.xlsx`
 2. `COLOR_TEST_bar_chart.xlsx`
@@ -356,75 +356,75 @@ Ejecuta `dart run test_all_colors.dart` para generar:
 8. `COLOR_TEST_radar_filled_chart.xlsx`
 9. `COLOR_TEST_radar_lines_chart.xlsx`
 
-**Todos** los gráficos incluyen:
-- 3 series de datos (excepto circulares que usan 1)
-- 6 categorías
-- Leyenda activada
-- Títulos descriptivos
+**All** charts include:
+- 3 data series (except circular which use 1)
+- 6 categories
+- Legend enabled
+- Descriptive titles
 
 ---
 
-## ✅ Verificación de Calidad
+## ✅ Quality Verification
 
-Abre los archivos generados en Microsoft Excel y verifica:
+Open the generated files in Microsoft Excel and verify:
 
-- ✅ Todos los colores son distintos y visibles
-- ✅ Las transparencias funcionan correctamente
-- ✅ Los bordes y marcadores se ven bien
-- ✅ Las leyendas muestran los colores correctos
-- ✅ No hay colores repetidos en el mismo gráfico
-- ✅ Los gráficos circulares tienen variedad aleatoria
+- ✅ All colors are distinct and visible
+- ✅ Transparencies work correctly
+- ✅ Borders and markers look good
+- ✅ Legends show correct colors
+- ✅ No repeated colors in the same chart
+- ✅ Circular charts have random variety
 
 ---
 
-## 🚀 Uso Recomendado
+## 🚀 Recommended Usage
 
 ### Column/Bar Charts
-- Comparaciones entre categorías
-- Datos discretos
-- Cada categoría claramente separada
+- Comparisons between categories
+- Discrete data
+- Each category clearly separated
 
 ### Line Charts
-- Tendencias temporales
-- Datos continuos
-- Cambios a lo largo del tiempo
+- Temporal trends
+- Continuous data
+- Changes over time
 
 ### Area Charts
-- Acumulación de valores
-- Contribución de partes al total
-- Cuando la superposición es importante
+- Accumulation of values
+- Contribution of parts to the total
+- When overlap is important
 
 ### Scatter Charts
-- Correlaciones
-- Distribuciones
-- Relaciones entre variables
+- Correlations
+- Distributions
+- Relationships between variables
 
 ### Pie/Doughnut Charts
-- Partes de un todo (porcentajes)
-- Máximo 6-8 segmentos para legibilidad
-- Cuando el total suma 100%
+- Parts of a whole (percentages)
+- Maximum 6-8 segments for readability
+- When the total adds up to 100%
 
 ### Radar Charts
-- Comparar múltiples métricas
-- Perfiles multidimensionales
-- Evaluaciones de competencias
+- Compare multiple metrics
+- Multidimensional profiles
+- Skills assessments
 
 ---
 
-## 📦 Conclusión
+## 📦 Conclusion
 
-Cada tipo de gráfico tiene una estrategia de color optimizada para su caso de uso específico:
+Each chart type has a color strategy optimized for its specific use case:
 
-- **Gráficos de barras/columnas:** Sólidos y distinguibles
-- **Gráficos de líneas:** Marcadores visibles
-- **Gráficos de área/radar:** Transparentes para ver superposiciones
-- **Gráficos circulares:** Aleatorios para variedad
-- **Gráficos de dispersión:** Bordes blancos para separación
+- **Bar/Column charts:** Solid and distinguishable
+- **Line charts:** Visible markers
+- **Area/Radar charts:** Transparent to see overlaps
+- **Circular charts:** Random for variety
+- **Scatter charts:** White borders for separation
 
-Este sistema garantiza visualizaciones profesionales y fáciles de interpretar en todos los casos.
+This system ensures professional and easy-to-interpret visualizations across all cases.
 
 ---
 
-**Fecha de implementación:** 14 de marzo de 2026  
-**Librería:** excel_community  
-**Archivo de implementación:** `lib/src/utilities/chart_xml_writer.dart`
+**Implementation Date:** March 14, 2026  
+**Library:** excel_community  
+**Implementation File:** `lib/src/utilities/chart_xml_writer.dart`
