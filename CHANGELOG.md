@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.4] - 2026-03-15
 - Apply Clean Architecture in Save class.
-- Added support for formulas in Excel files.
-- Added support for borders in Excel files.
-- Added support for colors in Excel files.
-- Added support for charts in Excel files.
+- Refactor Sheet class.
+- Refactor Color class.
+- Refactor Border class.
+- Refactor Formula class.
+- Refactor NumberFormat class.
 
 ## [1.0.3] - 2026-03-15
 
