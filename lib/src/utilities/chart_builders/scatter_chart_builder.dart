@@ -9,26 +9,36 @@ class ScatterChartBuilder implements ChartStyleBuilder {
 
   @override
   void buildSeriesStyle(XmlBuilder builder, Chart chart, ChartSeries series, int seriesIndex) {
-    final color = ChartColorConfig.getSeriesColor(seriesIndex);
+    final color = ChartColorConfig.getSeriesColor(seriesIndex).colorHex6;
     
-    // Point fill
     builder.element('c:spPr', nest: () {
+      // No line for scatter points by default
+      builder.element('a:ln', nest: () {
+        builder.element('a:noFill');
+      });
+      // Marker fill
       builder.element('a:solidFill', nest: () {
         builder.element('a:srgbClr', attributes: {'val': color});
       });
+      // Marker border
+      builder.element('a:ln', attributes: {'w': ChartColorConfig.thinLineWidth}, nest: () {
+        builder.element('a:solidFill', nest: () {
+          builder.element('a:srgbClr', attributes: {'val': color});
+        });
+      });
     });
     
-    // Marker with white border
+    // Marker style
     builder.element('c:marker', nest: () {
       builder.element('c:symbol', attributes: {'val': 'circle'});
-      builder.element('c:size', attributes: {'val': ChartColorConfig.largeMarker});
+      builder.element('c:size', attributes: {'val': ChartColorConfig.smallMarker});
       builder.element('c:spPr', nest: () {
         builder.element('a:solidFill', nest: () {
           builder.element('a:srgbClr', attributes: {'val': color});
         });
         builder.element('a:ln', attributes: {'w': ChartColorConfig.thinLineWidth}, nest: () {
           builder.element('a:solidFill', nest: () {
-            builder.element('a:srgbClr', attributes: {'val': ChartColorConfig.white});
+            builder.element('a:srgbClr', attributes: {'val': ChartColorConfig.white.colorHex6});
           });
         });
       });

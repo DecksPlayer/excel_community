@@ -19,18 +19,22 @@ class PieChartBuilder implements ChartStyleBuilder {
     
     final startRow = int.parse(rangeMatch.group(2)!);
     final endRow = int.parse(rangeMatch.group(4)!);
-    final numPoints = endRow - startRow + 1;
+    final valuesCount = endRow - startRow + 1;
     
     // Get randomized colors
-    final colors = ChartColorConfig.getRandomizedPieColors(numPoints);
+    final colors = ChartColorConfig.getRandomizedPieColors(valuesCount);
     
-    // Build data point colors
-    for (int ptIdx = 0; ptIdx < numPoints; ptIdx++) {
+    for (int i = 0; i < valuesCount; i++) {
       builder.element('c:dPt', nest: () {
-        builder.element('c:idx', attributes: {'val': '$ptIdx'});
+        builder.element('c:idx', attributes: {'val': '$i'});
         builder.element('c:spPr', nest: () {
           builder.element('a:solidFill', nest: () {
-            builder.element('a:srgbClr', attributes: {'val': colors[ptIdx]});
+            builder.element('a:srgbClr', attributes: {'val': colors[i].colorHex6});
+          });
+          builder.element('a:ln', attributes: {'w': ChartColorConfig.thinLineWidth}, nest: () {
+            builder.element('a:solidFill', nest: () {
+              builder.element('a:srgbClr', attributes: {'val': ChartColorConfig.white.colorHex6});
+            });
           });
         });
       });

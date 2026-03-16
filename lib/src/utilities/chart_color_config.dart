@@ -13,57 +13,57 @@ class ChartColorConfig {
 
   /// Color palette for series-based charts (Column, Bar, Line, Area, Scatter)
   /// 12 vibrant, distinguishable colors
-  static final List<String> seriesPalette = [
-    '4472C4', // Blue
-    'ED7D31', // Orange
-    '70AD47', // Green
-    'FFC000', // Gold
-    '5B9BD5', // Light Blue
-    'C5504B', // Red
-    '8064A2', // Purple
-    '4BACC6', // Cyan
-    '9BBB59', // Olive
-    'F79646', // Light Orange
-    '17B897', // Teal
-    'E83352', // Crimson
+  static final List<ExcelColor> seriesPalette = [
+    ExcelColor.fromHexString('4472C4'), // Blue
+    ExcelColor.fromHexString('ED7D31'), // Orange
+    ExcelColor.fromHexString('70AD47'), // Green
+    ExcelColor.fromHexString('FFC000'), // Gold
+    ExcelColor.fromHexString('5B9BD5'), // Light Blue
+    ExcelColor.fromHexString('C5504B'), // Red
+    ExcelColor.fromHexString('8064A2'), // Purple
+    ExcelColor.fromHexString('4BACC6'), // Cyan
+    ExcelColor.fromHexString('9BBB59'), // Olive
+    ExcelColor.fromHexString('F79646'), // Light Orange
+    ExcelColor.fromHexString('17B897'), // Teal
+    ExcelColor.fromHexString('E83352'), // Crimson
   ];
 
   /// Color palette for radar charts
   /// 8 colors optimized for multi-dimensional comparison
-  static final List<String> radarPalette = [
-    '4472C4', // Blue
-    'ED7D31', // Orange
-    '70AD47', // Green
-    'FFC000', // Gold
-    '5B9BD5', // Light Blue
-    'C5504B', // Red
-    '8064A2', // Purple
-    '4BACC6', // Cyan
+  static final List<ExcelColor> radarPalette = [
+    ExcelColor.fromHexString('4472C4'), // Blue
+    ExcelColor.fromHexString('ED7D31'), // Orange
+    ExcelColor.fromHexString('70AD47'), // Green
+    ExcelColor.fromHexString('FFC000'), // Gold
+    ExcelColor.fromHexString('5B9BD5'), // Light Blue
+    ExcelColor.fromHexString('C5504B'), // Red
+    ExcelColor.fromHexString('8064A2'), // Purple
+    ExcelColor.fromHexString('4BACC6'), // Cyan
   ];
 
   /// Color palette for pie/doughnut charts
   /// 20 colors for maximum segment variety with random distribution
-  static final List<String> piePalette = [
-    '4472C4', // Blue
-    'ED7D31', // Orange
-    'A5A5A5', // Gray
-    'FFC000', // Gold
-    '5B9BD5', // Light Blue
-    '70AD47', // Green
-    '264478', // Dark Blue
-    '9E480E', // Brown
-    '636363', // Dark Gray
-    '997300', // Dark Gold
-    '255E91', // Navy Blue
-    '43682B', // Dark Green
-    'C5504B', // Red
-    '8064A2', // Purple
-    '4BACC6', // Cyan
-    'F79646', // Light Orange
-    '9BBB59', // Olive
-    'E83352', // Crimson
-    '17B897', // Teal
-    'FF6F61', // Coral
+  static final List<ExcelColor> piePalette = [
+    ExcelColor.fromHexString('4472C4'), // Blue
+    ExcelColor.fromHexString('ED7D31'), // Orange
+    ExcelColor.fromHexString('A5A5A5'), // Gray
+    ExcelColor.fromHexString('FFC000'), // Gold
+    ExcelColor.fromHexString('5B9BD5'), // Light Blue
+    ExcelColor.fromHexString('70AD47'), // Green
+    ExcelColor.fromHexString('264478'), // Dark Blue
+    ExcelColor.fromHexString('9E480E'), // Brown
+    ExcelColor.fromHexString('636363'), // Dark Gray
+    ExcelColor.fromHexString('997300'), // Dark Gold
+    ExcelColor.fromHexString('255E91'), // Navy Blue
+    ExcelColor.fromHexString('43682B'), // Dark Green
+    ExcelColor.fromHexString('C5504B'), // Red
+    ExcelColor.fromHexString('8064A2'), // Purple
+    ExcelColor.fromHexString('4BACC6'), // Cyan
+    ExcelColor.fromHexString('F79646'), // Light Orange
+    ExcelColor.fromHexString('9BBB59'), // Olive
+    ExcelColor.fromHexString('E83352'), // Crimson
+    ExcelColor.fromHexString('17B897'), // Teal
+    ExcelColor.fromHexString('FF6F61'), // Coral
   ];
 
   // ========================================================================
@@ -71,18 +71,18 @@ class ChartColorConfig {
   // ========================================================================
 
   /// Gets a color from the series palette by index (with rotation)
-  static String getSeriesColor(int index) {
+  static ExcelColor getSeriesColor(int index) {
     return seriesPalette[index % seriesPalette.length];
   }
 
   /// Gets a color from the radar palette by index (with rotation)
-  static String getRadarColor(int index) {
+  static ExcelColor getRadarColor(int index) {
     return radarPalette[index % radarPalette.length];
   }
 
   /// Gets a randomized list of pie colors for the specified number of points
-  static List<String> getRandomizedPieColors(int numPoints) {
-    final shuffled = List<String>.from(piePalette)..shuffle();
+  static List<ExcelColor> getRandomizedPieColors(int numPoints) {
+    final shuffled = List<ExcelColor>.from(piePalette)..shuffle();
     return shuffled.take(numPoints).toList();
   }
 
@@ -104,7 +104,7 @@ class ChartColorConfig {
   static const String opacity45 = '45000';
 
   /// White color for borders/backgrounds
-  static const String white = 'FFFFFF';
+  static const ExcelColor white = ExcelColor.white;
 
   /// Marker sizes
   static const String smallMarker = '5';

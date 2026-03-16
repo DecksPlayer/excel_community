@@ -364,6 +364,24 @@ class _MyHomePageState extends State<MyHomePage> {
         bottomBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: ExcelColor.fromHexString('#000000')),
       );
 
+      final multiColorStyle = CellStyle(
+        bold: true,
+        horizontalAlign: HorizontalAlign.Center,
+        verticalAlign: VerticalAlign.Center,
+        leftBorder: Border(
+            borderStyle: BorderStyle.Thick,
+            borderColorHex: ExcelColor.fromHexString('#00FF00')), // Green
+        rightBorder: Border(
+            borderStyle: BorderStyle.Thick,
+            borderColorHex: ExcelColor.fromHexString('#FFFF00')), // Yellow
+        topBorder: Border(
+            borderStyle: BorderStyle.Thick,
+            borderColorHex: ExcelColor.fromHexString('#FF0000')), // Red
+        bottomBorder: Border(
+            borderStyle: BorderStyle.Thick,
+            borderColorHex: ExcelColor.fromHexString('#0000FF')), // Blue
+      );
+
       // 2. Headers
       sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Month"), cellStyle: headerStyle);
       sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Revenue"), cellStyle: headerStyle);
@@ -390,6 +408,12 @@ class _MyHomePageState extends State<MyHomePage> {
       sheet.updateCell(CellIndex.indexByString("B$totalRow"), FormulaCellValue("SUM(B2:B${totalRow - 1})"), cellStyle: formulaStyle);
       sheet.updateCell(CellIndex.indexByString("C$totalRow"), FormulaCellValue("SUM(C2:C${totalRow - 1})"), cellStyle: formulaStyle);
       sheet.updateCell(CellIndex.indexByString("D$totalRow"), FormulaCellValue("SUM(D2:D${totalRow - 1})"), cellStyle: formulaStyle);
+
+      // 5. Multi-colored Border Demo
+      sheet.updateCell(CellIndex.indexByString("A${totalRow + 2}"), 
+          TextCellValue("Multi-colored Borders"), 
+          cellStyle: multiColorStyle);
+      sheet.setColumnWidth(0, 25.0);
 
       // 5. Chart using the data
       final series = [

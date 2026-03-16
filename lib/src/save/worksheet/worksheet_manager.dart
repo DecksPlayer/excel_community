@@ -226,69 +226,30 @@ class _WorksheetManager {
       );
     }
 
+
     final List<XmlElement> children;
     switch (value) {
       case null:
         children = [];
-      case FormulaCellValue():
-        children = [
-          XmlElement(XmlName('f'), [], [XmlText(value.formula)]),
-          XmlElement(XmlName('v'), [], [XmlText('')]),
-        ];
-      case IntCellValue():
-        final String v = switch (numberFormat) {
-          NumericNumFormat() => numberFormat.writeInt(value),
-          _ => throw Exception(
-              '$numberFormat does not work for ${value.runtimeType}'),
-        };
-        children = [
-          XmlElement(XmlName('v'), [], [XmlText(v)]),
-        ];
-      case DoubleCellValue():
-        final String v = switch (numberFormat) {
-          NumericNumFormat() => numberFormat.writeDouble(value),
-          _ => throw Exception(
-              '$numberFormat does not work for ${value.runtimeType}'),
-        };
-        children = [
-          XmlElement(XmlName('v'), [], [XmlText(v)]),
-        ];
-      case DateTimeCellValue():
-        final String v = switch (numberFormat) {
-          DateTimeNumFormat() => numberFormat.writeDateTime(value),
-          _ => throw Exception(
-              '$numberFormat does not work for ${value.runtimeType}'),
-        };
-        children = [
-          XmlElement(XmlName('v'), [], [XmlText(v)]),
-        ];
-      case DateCellValue():
-        final String v = switch (numberFormat) {
-          DateTimeNumFormat() => numberFormat.writeDate(value),
-          _ => throw Exception(
-              '$numberFormat does not work for ${value.runtimeType}'),
-        };
-        children = [
-          XmlElement(XmlName('v'), [], [XmlText(v)]),
-        ];
-      case TimeCellValue():
-        final String v = switch (numberFormat) {
-          TimeNumFormat() => numberFormat.writeTime(value),
-          _ => throw Exception(
-              '$numberFormat does not work for ${value.runtimeType}'),
-        };
-        children = [
-          XmlElement(XmlName('v'), [], [XmlText(v)]),
-        ];
       case TextCellValue():
         children = [
           XmlElement(XmlName('v'), [], [
             XmlText(_excel._sharedStrings.indexOf(sharedString!).toString())
           ]),
         ];
-      case BoolCellValue():
+      case FormulaCellValue():
         children = [
-          XmlElement(XmlName('v'), [], [XmlText(value.value ? '1' : '0')]),
+          XmlElement(XmlName('f'), [], [XmlText(value.formula)]),
+          XmlElement(XmlName('v'), [], [XmlText(value.write(numberFormat))]),
+        ];
+      case IntCellValue() ||
+            DoubleCellValue() ||
+            DateCellValue() ||
+            TimeCellValue() ||
+            DateTimeCellValue() ||
+            BoolCellValue():
+        children = [
+          XmlElement(XmlName('v'), [], [XmlText(value.write(numberFormat))]),
         ];
     }
 

@@ -11,16 +11,18 @@ class RadarChartBuilder implements ChartStyleBuilder {
   @override
   void buildSeriesStyle(XmlBuilder builder, Chart chart, ChartSeries series, int seriesIndex) {
     final radarChart = chart as RadarChart;
-    final color = ChartColorConfig.getRadarColor(seriesIndex);
+    final color = ChartColorConfig.getRadarColor(seriesIndex).colorHex6;
     
     builder.element('c:spPr', nest: () {
-      // Line with 85% opacity
+      // Line formatting
       builder.element('a:ln', attributes: {'w': ChartColorConfig.thickLineWidth}, nest: () {
         builder.element('a:solidFill', nest: () {
-          builder.element('a:srgbClr', attributes: {'val': color}, nest: () {
-            builder.element('a:alpha', attributes: {'val': ChartColorConfig.opacity85});
-          });
+          builder.element('a:srgbClr', attributes: {'val': color});
         });
+      });
+      // Marker formatting
+      builder.element('a:solidFill', nest: () {
+        builder.element('a:srgbClr', attributes: {'val': color});
       });
       
       // Fill with 45% opacity (only if filled style)

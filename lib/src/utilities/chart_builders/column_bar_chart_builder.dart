@@ -14,7 +14,7 @@ class ColumnBarChartBuilder implements ChartStyleBuilder {
 
   @override
   void buildSeriesStyle(XmlBuilder builder, Chart chart, ChartSeries series, int seriesIndex) {
-    final color = ChartColorConfig.getSeriesColor(seriesIndex);
+    final color = ChartColorConfig.getSeriesColor(seriesIndex).colorHex6;
     
     builder.element('c:spPr', nest: () {
       // Solid fill
