@@ -430,7 +430,8 @@ class Parser {
                 textWrapping = TextWrapping.Clip;
               }
 
-              var vertical = node.getAttribute('vertical');
+              var vertical = child.getAttribute('vertical') ??
+                  node.getAttribute('vertical');
               if (vertical != null) {
                 if (vertical.toString() == 'top') {
                   verticalAlign = VerticalAlign.Top;
@@ -439,7 +440,8 @@ class Parser {
                 }
               }
 
-              var horizontal = node.getAttribute('horizontal');
+              var horizontal = child.getAttribute('horizontal') ??
+                  node.getAttribute('horizontal');
               if (horizontal != null) {
                 if (horizontal.toString() == 'center') {
                   horizontalAlign = HorizontalAlign.Center;
@@ -448,7 +450,8 @@ class Parser {
                 }
               }
 
-              var rotationString = node.getAttribute('textRotation');
+              var rotationString = child.getAttribute('textRotation') ??
+                  node.getAttribute('textRotation');
               if (rotationString != null) {
                 rotation = (double.tryParse(rotationString) ?? 0.0).floor();
               }
@@ -605,8 +608,8 @@ class Parser {
     switch (type) {
       // sharedString
       case 's':
-        final sharedString = _excel._sharedStrings.value(
-            int.parse(_parseValue(node.findElements('v').first).trim()));
+        final sharedString = _excel._sharedStrings
+            .value(int.parse(_parseValue(node.findElements('v').first).trim()));
         value = TextCellValue.span(sharedString!.textSpan);
         break;
       // boolean
