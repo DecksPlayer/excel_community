@@ -4,6 +4,7 @@ version: 1.0.6
 homepage: https://github.com/decksplayer/excel_community
 repository: https://github.com/decksplayer/excel_community
 issue_tracker: https://github.com/decksplayer/excel_community/issues
+funding: https://paypal.me/gonojuarez
 topics:
   - excel
   - office

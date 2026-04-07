@@ -36,6 +36,7 @@ class _StyleResourceCollector {
       final fs = _FontStyle(
           bold: cellStyle.isBold,
           italic: cellStyle.isItalic,
+          strikethrough: cellStyle.isStrikethrough,
           fontColorHex: cellStyle.fontColor,
           underline: cellStyle.underline,
           fontSize: cellStyle.fontSize,

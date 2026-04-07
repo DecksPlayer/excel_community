@@ -338,6 +338,7 @@ class Parser {
 
           int fontSize = 12;
           bool isBold = false, isItalic = false;
+          bool isStrikethrough = false;
           Underline underline = Underline.None;
           HorizontalAlign horizontalAlign = HorizontalAlign.Left;
           VerticalAlign verticalAlign = VerticalAlign.Bottom;
@@ -374,16 +375,25 @@ class Parser {
               isItalic = true;
             }
 
-            /// Checking for double underline
-            var _underline = _nodeChildren(font, 'u', attribute: 'val');
-            if (_underline != null) {
-              underline = Underline.Double;
+            /// Checking for strikethrough
+            var _strike = _nodeChildren(font, 'strike');
+            if (_strike != null && _strike) {
+              isStrikethrough = true;
             }
 
-            /// Checking for single underline
-            var _singleUnderline = _nodeChildren(font, 'u');
-            if (_singleUnderline != null) {
-              underline = Underline.Single;
+            /// Checking for underline
+            var _underlineVal = _nodeChildren(font, 'u', attribute: 'val');
+            if (_underlineVal != null && _underlineVal != true) {
+              // Has 'val' attribute, check if it's double
+              if (_underlineVal.toString().toLowerCase() == 'double') {
+                underline = Underline.Double;
+              }
+            } else {
+              // No 'val' attribute, check if element exists (single underline)
+              var _underlineElement = _nodeChildren(font, 'u');
+              if (_underlineElement != null && _underlineElement == true) {
+                underline = Underline.Single;
+              }
             }
 
             /// Checking for font Family
@@ -401,6 +411,7 @@ class Parser {
 
             _fontStyle.isBold = isBold;
             _fontStyle.isItalic = isItalic;
+            _fontStyle.isStrikethrough = isStrikethrough;
             _fontStyle.fontSize = fontSize;
             _fontStyle.fontFamily = fontFamily;
             _fontStyle.fontScheme = fontScheme;
@@ -470,6 +481,7 @@ class Parser {
             fontSize: fontSize,
             bold: isBold,
             italic: isItalic,
+            strikethrough: isStrikethrough,
             underline: underline,
             backgroundColorHex:
                 backgroundColor == 'none' || backgroundColor.isEmpty
