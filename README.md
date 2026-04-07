@@ -34,7 +34,7 @@
 
 - ✅ **Read & Write XLSX**: Full support for reading and writing Excel files
 - ✅ **Multiple Data Types**: Text, Numbers, Formulas, Dates, Times, Booleans
-- ✅ **Cell Styling**: Fonts, Colors, Borders, Alignment, Number Formats
+- ✅ **Cell Styling**: Fonts (Bold, Italic, Underline, Strikethrough), Colors, Borders, Alignment, Number Formats
 - ✅ **Charts**: Column, Bar, Line, Area, Pie, Doughnut, Scatter, and Radar charts
 - ✅ **Cell Operations**: Merge cells, insert/delete rows and columns
 - ✅ **Sheet Management**: Create, copy, rename, delete sheets
@@ -209,6 +209,7 @@ Sheet sheetObject = excel['SheetName'];
 CellStyle cellStyle = CellStyle(backgroundColorHex: '#1AFF1A', fontFamily :getFontFamily(FontFamily.Calibri));
 
 cellStyle.underline = Underline.Single; // or Underline.Double
+cellStyle.isStrikethrough = true; // enable strikethrough text
 
 
 var cell = sheetObject.cell(CellIndex.indexByString('A1'));
@@ -289,6 +290,7 @@ sheetObject.removeRow(80);
 | bold               | makes text bold - when set to `true`, by-default it is set to `false`                                                                   |
 | italic             | makes text italic - when set to `true`, by-default it is set to `false`                                                                 |
 | underline          | Gives underline to text `enum Underline { None, Single, Double }` eg. Underline.Single, by-default it is set to Underline.None          |
+| strikethrough      | makes text strikethrough (struck through) - when set to `true`, by-default it is set to `false`                                         |
 | fontColorHex       | Font Color eg. '#0000FF'                                                                                                                |
 | rotation (degree)  | rotation of text eg. 50, rotation varies from `-90 to 90`, with including `90` and `-90`                                                |
 | backgroundColorHex | Background color of cell eg. '#faf487'                                                                                                  |

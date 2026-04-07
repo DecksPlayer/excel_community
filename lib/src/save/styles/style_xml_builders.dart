@@ -27,6 +27,7 @@ class _StyleXmlBuilders {
 
         if (fontStyleElement.isBold) XmlElement(XmlName('b'), [], []),
         if (fontStyleElement.isItalic) XmlElement(XmlName('i'), [], []),
+        if (fontStyleElement.isStrikethrough) XmlElement(XmlName('strike'), [], []),
 
         if (fontStyleElement.underline != Underline.None &&
             fontStyleElement.underline == Underline.Single)
@@ -175,6 +176,7 @@ class _StyleXmlBuilders {
       _FontStyle fs = _FontStyle(
           bold: cellStyle.isBold,
           italic: cellStyle.isItalic,
+          strikethrough: cellStyle.isStrikethrough,
           fontColorHex: cellStyle.fontColor,
           underline: cellStyle.underline,
           fontSize: cellStyle.fontSize,
