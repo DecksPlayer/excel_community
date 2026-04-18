@@ -1,6 +1,6 @@
 name: excel_community
 description: A community fork of the excel library to read, create, and edit XLSX files. Cross-platform, high-performance, and supports charts, borders, and formulas.
-version: 1.0.8
+version: 1.0.9
 homepage: https://github.com/decksplayer/excel_community
 repository: https://github.com/decksplayer/excel_community
 issue_tracker: https://github.com/decksplayer/excel_community/issues
