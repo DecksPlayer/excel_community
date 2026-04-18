@@ -957,3 +957,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Current Maintainer:** DecksPlayer  
 **Community Fork:** https://github.com/DecksPlayer/excel_community
+
+## Donation
+If you find this package helpful and want to support its development, consider making a donation. Thank you for your support!
+
+[![PayPal](https://img.shields.io/badge/Donate-PayPal-ff3f59.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/paypalme/gonojuarez)
