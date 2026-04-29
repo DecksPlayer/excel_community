@@ -251,6 +251,10 @@ class Parser {
 
       Iterable<XmlElement> fontList = document.findAllElements('font');
 
+      for (final font in fontList) {
+        _excel._fontStyleList.add(_parseFontStyle(font));
+      }
+
       document.findAllElements('patternFill').forEach((node) {
         String patternType = node.getAttribute('patternType') ?? '', rgb;
         if (node.children.isNotEmpty) {
@@ -345,82 +349,19 @@ class Parser {
           TextWrapping? textWrapping;
           int rotation = 0;
           int fontId = _getFontIndex(node, 'fontId');
-          _FontStyle _fontStyle = _FontStyle();
 
           /// checking for other font values
           if (fontId < fontList.length) {
             XmlElement font = fontList.elementAt(fontId);
-
-            /// Checking for font Size.
-            var _clr = _nodeChildren(font, 'color', attribute: 'rgb');
-            if (_clr != null && !(_clr is bool)) {
-              fontColor = _clr.toString();
-            }
-
-            /// Checking for font Size.
-            String? _size = _nodeChildren(font, 'sz', attribute: 'val');
-            if (_size != null) {
-              fontSize = double.parse(_size).round();
-            }
-
-            /// Checking for bold
-            var _bold = _nodeChildren(font, 'b');
-            if (_bold != null && _bold is bool && _bold) {
-              isBold = true;
-            }
-
-            /// Checking for italic
-            var _italic = _nodeChildren(font, 'i');
-            if (_italic != null && _italic) {
-              isItalic = true;
-            }
-
-            /// Checking for strikethrough
-            var _strike = _nodeChildren(font, 'strike');
-            if (_strike != null && _strike) {
-              isStrikethrough = true;
-            }
-
-            /// Checking for underline
-            var _underlineVal = _nodeChildren(font, 'u', attribute: 'val');
-            if (_underlineVal != null && _underlineVal != true) {
-              // Has 'val' attribute, check if it's double
-              if (_underlineVal.toString().toLowerCase() == 'double') {
-                underline = Underline.Double;
-              }
-            } else {
-              // No 'val' attribute, check if element exists (single underline)
-              var _underlineElement = _nodeChildren(font, 'u');
-              if (_underlineElement != null && _underlineElement == true) {
-                underline = Underline.Single;
-              }
-            }
-
-            /// Checking for font Family
-            var _family = _nodeChildren(font, 'name', attribute: 'val');
-            if (_family != null && _family != true) {
-              fontFamily = _family;
-            }
-
-            /// Checking for font Scheme
-            var _scheme = _nodeChildren(font, 'scheme', attribute: 'val');
-            if (_scheme != null) {
-              fontScheme =
-                  _scheme == "major" ? FontScheme.Major : FontScheme.Minor;
-            }
-
-            _fontStyle.isBold = isBold;
-            _fontStyle.isItalic = isItalic;
-            _fontStyle.isStrikethrough = isStrikethrough;
-            _fontStyle.fontSize = fontSize;
-            _fontStyle.fontFamily = fontFamily;
-            _fontStyle.fontScheme = fontScheme;
-            _fontStyle._fontColorHex = fontColor.excelColor;
-          }
-
-          /// If `-1` is returned then it indicates that `_fontStyle` is not present in the `_fontStyleList`
-          if (_fontStyleIndex(_excel._fontStyleList, _fontStyle) == -1) {
-            _excel._fontStyleList.add(_fontStyle);
+            final fontStyle = _parseFontStyle(font);
+            fontColor = fontStyle.fontColor.colorHex;
+            fontSize = fontStyle.fontSize ?? fontSize;
+            isBold = fontStyle.isBold;
+            isItalic = fontStyle.isItalic;
+            isStrikethrough = fontStyle.isStrikethrough;
+            underline = fontStyle.underline;
+            fontFamily = fontStyle.fontFamily;
+            fontScheme = fontStyle.fontScheme;
           }
 
           int fillId = _getFontIndex(node, 'fillId');
@@ -536,6 +477,60 @@ class Parser {
       }
     }
     return 0;
+  }
+
+  _FontStyle _parseFontStyle(XmlElement font) {
+    final fontStyle = _FontStyle();
+
+    final color = _nodeChildren(font, 'color', attribute: 'rgb');
+    if (color != null && color is! bool) {
+      fontStyle._fontColorHex = color.toString().excelColor;
+    }
+
+    final size = _nodeChildren(font, 'sz', attribute: 'val');
+    if (size != null) {
+      fontStyle.fontSize = double.parse(size).round();
+    }
+
+    final bold = _nodeChildren(font, 'b');
+    if (bold != null && bold is bool && bold) {
+      fontStyle.isBold = true;
+    }
+
+    final italic = _nodeChildren(font, 'i');
+    if (italic != null && italic is bool && italic) {
+      fontStyle.isItalic = true;
+    }
+
+    final strike = _nodeChildren(font, 'strike');
+    if (strike != null && strike is bool && strike) {
+      fontStyle.isStrikethrough = true;
+    }
+
+    final underlineValue = _nodeChildren(font, 'u', attribute: 'val');
+    if (underlineValue != null && underlineValue != true) {
+      if (underlineValue.toString().toLowerCase() == 'double') {
+        fontStyle.underline = Underline.Double;
+      }
+    } else {
+      final underlineElement = _nodeChildren(font, 'u');
+      if (underlineElement != null && underlineElement == true) {
+        fontStyle.underline = Underline.Single;
+      }
+    }
+
+    final family = _nodeChildren(font, 'name', attribute: 'val');
+    if (family != null && family != true) {
+      fontStyle.fontFamily = family;
+    }
+
+    final scheme = _nodeChildren(font, 'scheme', attribute: 'val');
+    if (scheme != null) {
+      fontStyle.fontScheme =
+          scheme == 'major' ? FontScheme.Major : FontScheme.Minor;
+    }
+
+    return fontStyle;
   }
 
   void _parseTable(XmlElement node) {
