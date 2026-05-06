@@ -1,3 +1,4 @@
+![Logo del paquete](assets/logo.png)
 # Excel Community
 
 > [!NOTE]
