@@ -28,7 +28,11 @@
     alt='Stars' />  
 </a>
 
-### [Excel Community](https://www.pub.dev/packages/excel_community) is a flutter and dart library for reading, creating and updating excel-sheets for XLSX files.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/decksplayer/excel_community/master/assets/logo.png" height="150" alt="Excel Community Logo" />
+</p>
+
+### [Excel Community](https://www.pub.dev/packages/excel_community) is a community-maintained fork of the [excel](https://github.com/justkawal/excel) library. It provides a robust and high-performance way to read, create, and update XLSX files.
 
 ## Features
 
@@ -49,28 +53,8 @@
  - 🔐 Encrypt and Decrypt excel on the go.
  - Many more **features**
 
-<details>
-<summary><h2>📋 Breaking Changes</h2></summary>
+<!-- Breaking changes moved to the end -->
 
-### Breaking changes from 4.x.x to 5.x.x
-
-- Updated minimum Dart SDK to 3.6.0
-
-### Breaking changes from 3.x.x to 4.x.x
-
-- Renamed `Formula` to `FormulaCellValue`
-- Cells value now represented by the sealed class `CellValue` instead of `dynamic`. Subtypes are `TextCellValue` `FormulaCellValue`, `IntCellValue`, `DoubleCellValue`, `DateCellValue`, `TextCellValue`, `BoolCellValue`, `TimeCellValue`, `DateTimeCellValue` and they allow for exhaustive switch (see [Dart Docs (sealed class modifier)](https://dart.dev/language/class-modifiers#sealed)).
-
-### Breaking changes from 2.x.x to 3.x.x
-
-- Renamed `getColAutoFits()` to `getColumnAutoFits()`, and changed return type to `Map<int, bool>` in `Sheet`
-- Renamed `getColWidths()` to `getColumnWidths()`, and changed return type to `Map<int, double>` in `Sheet`
-- Renamed `getColAutoFit()` to `getColumnAutoFit()` in `Sheet`
-- Renamed `getColWidth()` to `getColumnWidth()` in `Sheet`
-- Renamed `setColAutoFit()` to `setColumnAutoFit()` in `Sheet`
-- Renamed `setColWidth()` to `setColumnWidth()` in `Sheet`
-
-</details>
 
 ## If you find this tool useful, please drop a ⭐️
 
@@ -968,3 +952,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you find this package helpful and want to support its development, consider making a donation. Thank you for your support!
 
 [![PayPal](https://img.shields.io/badge/Donate-PayPal-ff3f59.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/paypalme/gonojuarez)
+<details>
+<summary><h2>📜 History & Legacy Breaking Changes</h2></summary>
+
+### Breaking changes from 4.x.x to 5.x.x (Original excel library)
+
+- Updated minimum Dart SDK to 3.6.0
+
+### Breaking changes from 3.x.x to 4.x.x (Original excel library)
+
+- Renamed `Formula` to `FormulaCellValue`
+- Cells value now represented by the sealed class `CellValue` instead of `dynamic`. Subtypes are `TextCellValue` `FormulaCellValue`, `IntCellValue`, `DoubleCellValue`, `DateCellValue`, `TextCellValue`, `BoolCellValue`, `TimeCellValue`, `DateTimeCellValue` and they allow for exhaustive switch.
+
+### Breaking changes from 2.x.x to 3.x.x (Original excel library)
+
+- Renamed `getColAutoFits()` to `getColumnAutoFits()`, and changed return type to `Map<int, bool>` in `Sheet`
+- Renamed `getColWidths()` to `getColumnWidths()`, and changed return type to `Map<int, double>` in `Sheet`
+- Renamed `setColWidth()` to `setColumnWidth()` in `Sheet`
+
+</details>
