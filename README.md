@@ -28,9 +28,6 @@
     alt='Stars' />  
 </a>
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/decksplayer/excel_community/master/assets/logo.png" height="150" alt="Excel Community Logo" />
-</p>
 
 ### [Excel Community](https://www.pub.dev/packages/excel_community) is a community-maintained fork of the [excel](https://github.com/justkawal/excel) library. It provides a robust and high-performance way to read, create, and update XLSX files.
 

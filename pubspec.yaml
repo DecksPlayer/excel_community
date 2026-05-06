@@ -5,7 +5,7 @@ homepage: https://github.com/decksplayer/excel_community
 repository: https://github.com/decksplayer/excel_community
 issue_tracker: https://github.com/decksplayer/excel_community/issues
 screenshots:
-path: assets/logo.svg
+path: assets/logo.png
 funding:
   - https://paypal.me/gonojuarez
 topics:
