@@ -1,4 +1,5 @@
-![Logo del paquete](assets/logo.png)
+![Logo](https://raw.githubusercontent.com/decksplayer/excel_community/main/assets/logo.png)
+
 # Excel Community
 
 > [!NOTE]
