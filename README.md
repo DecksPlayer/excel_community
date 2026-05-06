@@ -780,25 +780,31 @@ sheet.addChart(chart);
 </details>
 
 <details>
-<summary><h3>✨ Scatter Chart</h3></summary>
+<summary><h3>✨ Scatter Chart (XY)</h3></summary>
 
-Scatter/XY chart for showing correlations between two variables.
+Scatter charts (XY) are ideal for showing the relationship between two numeric variables. For a proper representation, ensure your data consists of numbers in both the X and Y columns.
 
 ```dart
 var chart = ScatterChart(
-  title: "Price vs Demand",
+  title: "Height vs Weight Correlation",
   series: [
     ChartSeries(
-      name: "Products",
-      categoriesRange: r"Sheet1!$A$2:$A$20",  // X values
-      valuesRange: r"Sheet1!$B$2:$B$20",      // Y values
+      name: "Sample Data",
+      // For Scatter charts, categoriesRange acts as the X-axis (numeric)
+      categoriesRange: r"Sheet1!$A$2:$A$20",  
+      // valuesRange acts as the Y-axis (numeric)
+      valuesRange: r"Sheet1!$B$2:$B$20",      
     ),
   ],
   anchor: ChartAnchor.at(column: 5, row: 1, width: 12, height: 15),
+  showLegend: true,
 );
 
 sheet.addChart(chart);
 ```
+
+> [!TIP]
+> Use `DoubleCellValue` or `IntCellValue` in your cells for the best visual representation in Scatter Charts.
 
 </details>
 

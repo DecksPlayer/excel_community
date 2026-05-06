@@ -180,7 +180,7 @@ class ChartXmlWriter {
       });
       
       _buildSeriesColors(builder, chart, series, index);
-      _buildSeriesData(builder, series);
+      _buildSeriesData(builder, chart, series);
     });
   }
 
@@ -190,23 +190,43 @@ class ChartXmlWriter {
     styleBuilder.buildSeriesStyle(builder, chart, series, index);
   }
 
-  void _buildSeriesData(XmlBuilder builder, ChartSeries series) {
-    builder.element('c:cat', nest: () {
-      builder.element('c:strRef', nest: () {
-        builder.element('c:f', nest: () => builder.text(series.categoriesRange));
-        if (series.categories != null && series.categories!.isNotEmpty) {
-          _buildStrCache(builder, series.categories!);
-        }
+  void _buildSeriesData(XmlBuilder builder, Chart chart, ChartSeries series) {
+    if (chart is ScatterChart) {
+      builder.element('c:xVal', nest: () {
+        builder.element('c:numRef', nest: () {
+          builder.element('c:f', nest: () => builder.text(series.categoriesRange));
+          if (series.values != null && series.values!.isNotEmpty) {
+            // We reuse numCache logic for X values in scatter
+            _buildNumCache(builder, series.values!.map((e) => 0.0).toList()); 
+          }
+        });
       });
-    });
-    builder.element('c:val', nest: () {
-      builder.element('c:numRef', nest: () {
-        builder.element('c:f', nest: () => builder.text(series.valuesRange));
-        if (series.values != null && series.values!.isNotEmpty) {
-          _buildNumCache(builder, series.values!);
-        }
+      builder.element('c:yVal', nest: () {
+        builder.element('c:numRef', nest: () {
+          builder.element('c:f', nest: () => builder.text(series.valuesRange));
+          if (series.values != null && series.values!.isNotEmpty) {
+            _buildNumCache(builder, series.values!);
+          }
+        });
       });
-    });
+    } else {
+      builder.element('c:cat', nest: () {
+        builder.element('c:strRef', nest: () {
+          builder.element('c:f', nest: () => builder.text(series.categoriesRange));
+          if (series.categories != null && series.categories!.isNotEmpty) {
+            _buildStrCache(builder, series.categories!);
+          }
+        });
+      });
+      builder.element('c:val', nest: () {
+        builder.element('c:numRef', nest: () {
+          builder.element('c:f', nest: () => builder.text(series.valuesRange));
+          if (series.values != null && series.values!.isNotEmpty) {
+            _buildNumCache(builder, series.values!);
+          }
+        });
+      });
+    }
   }
 
   void _buildStrCache(XmlBuilder builder, List<String> categories) {
@@ -238,8 +258,13 @@ class ChartXmlWriter {
   }
 
   void _buildAxes(XmlBuilder builder, Chart chart) {
-    _buildCategoryAxis(builder, chart);
-    _buildValueAxis(builder);
+    if (chart is ScatterChart) {
+      _buildValueAxis(builder, id: '10000001', pos: 'b', crossAx: '10000002');
+      _buildValueAxis(builder, id: '10000002', pos: 'l', crossAx: '10000001');
+    } else {
+      _buildCategoryAxis(builder, chart);
+      _buildValueAxis(builder, id: '10000002', pos: 'l', crossAx: '10000001');
+    }
   }
 
   void _buildCategoryAxis(XmlBuilder builder, Chart chart) {
@@ -261,20 +286,20 @@ class ChartXmlWriter {
     });
   }
 
-  void _buildValueAxis(XmlBuilder builder) {
+  void _buildValueAxis(XmlBuilder builder, {String id = '10000002', String pos = 'l', String crossAx = '10000001'}) {
     builder.element('c:valAx', nest: () {
-      builder.element('c:axId', attributes: {'val': '10000002'});
+      builder.element('c:axId', attributes: {'val': id});
       builder.element('c:scaling', nest: () {
         builder.element('c:orientation', attributes: {'val': 'minMax'});
       });
       builder.element('c:delete', attributes: {'val': '0'});
-      builder.element('c:axPos', attributes: {'val': 'l'});
+      builder.element('c:axPos', attributes: {'val': pos});
       builder.element('c:majorGridlines');
       builder.element('c:numFmt', attributes: {'val': 'General', 'sourceLinked': '1'});
       builder.element('c:majorTickMark', attributes: {'val': 'out'});
       builder.element('c:minorTickMark', attributes: {'val': 'none'});
       builder.element('c:tickLblPos', attributes: {'val': 'nextTo'});
-      builder.element('c:crossAx', attributes: {'val': '10000001'});
+      builder.element('c:crossAx', attributes: {'val': crossAx});
       builder.element('c:crosses', attributes: {'val': 'autoZero'});
       builder.element('c:crossBetween', attributes: {'val': 'between'});
     });

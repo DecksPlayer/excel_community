@@ -84,7 +84,7 @@ class Parser {
             .first
             .children
             .add(XmlElement(
-              XmlName.parts('Relationship'),
+              XmlName('Relationship'),
               <XmlAttribute>[
                 XmlAttribute(XmlName('Id'), 'rId$rIdNumber'),
                 XmlAttribute(XmlName('Type'),

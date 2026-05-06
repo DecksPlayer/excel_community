@@ -824,6 +824,135 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _generateAllChartsExample() async {
+    setState(() {
+      _isGenerating = true;
+      _status = 'Generating Excel with ALL chart types...';
+    });
+
+    try {
+      var excel = Excel.createExcel();
+      var sheet = excel['All Charts Demo'];
+      excel.delete('Sheet1');
+
+      // Add Data for charts
+      sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Category"));
+      sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Series A"));
+      sheet.updateCell(CellIndex.indexByString("C1"), TextCellValue("Series B"));
+
+      final data = [
+        ['Q1', 10, 15],
+        ['Q2', 25, 20],
+        ['Q3', 15, 30],
+        ['Q4', 30, 25],
+      ];
+
+      for (var i = 0; i < data.length; i++) {
+        sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1), TextCellValue(data[i][0] as String));
+        sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1), IntCellValue(data[i][1] as int));
+        sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1), IntCellValue(data[i][2] as int));
+      }
+
+      final seriesMulti = [
+        ChartSeries(name: "Series A", categoriesRange: "'All Charts Demo'!\$A\$2:\$A\$5", valuesRange: "'All Charts Demo'!\$B\$2:\$B\$5"),
+        ChartSeries(name: "Series B", categoriesRange: "'All Charts Demo'!\$A\$2:\$A\$5", valuesRange: "'All Charts Demo'!\$C\$2:\$C\$5"),
+      ];
+      final seriesSingle = [seriesMulti[0]];
+
+      // Add all charts in a grid
+      // Row 1
+      sheet.addChart(ColumnChart(title: "Column Chart", series: seriesMulti, anchor: ChartAnchor.at(column: 5, row: 1, width: 8, height: 12)));
+      sheet.addChart(BarChart(title: "Bar Chart", series: seriesMulti, anchor: ChartAnchor.at(column: 14, row: 1, width: 8, height: 12)));
+      
+      // Row 2
+      sheet.addChart(LineChart(title: "Line Chart", series: seriesMulti, anchor: ChartAnchor.at(column: 5, row: 14, width: 8, height: 12)));
+      sheet.addChart(AreaChart(title: "Area Chart", series: seriesMulti, anchor: ChartAnchor.at(column: 14, row: 14, width: 8, height: 12)));
+      
+      // Row 3
+      sheet.addChart(PieChart(title: "Pie Chart", series: seriesSingle, anchor: ChartAnchor.at(column: 5, row: 27, width: 8, height: 12)));
+      sheet.addChart(DoughnutChart(title: "Doughnut Chart", series: seriesSingle, anchor: ChartAnchor.at(column: 14, row: 27, width: 8, height: 12)));
+      
+      // Row 4
+      sheet.addChart(RadarChart(title: "Radar Chart", series: seriesMulti, anchor: ChartAnchor.at(column: 5, row: 40, width: 8, height: 12), filled: true));
+
+      // Scatter Chart Improvement: Needs numeric X and Y values to look good
+      sheet.updateCell(CellIndex.indexByString("E1"), TextCellValue("X Values"));
+      sheet.updateCell(CellIndex.indexByString("F1"), TextCellValue("Y Values A"));
+      sheet.updateCell(CellIndex.indexByString("G1"), TextCellValue("Y Values B"));
+      
+      final scatterData = [
+        [1.0, 5.0, 10.0],
+        [2.5, 12.0, 8.0],
+        [4.0, 18.0, 15.0],
+        [5.5, 25.0, 22.0],
+        [7.0, 30.0, 28.0],
+        [8.5, 45.0, 35.0],
+        [10.0, 55.0, 48.0],
+      ];
+
+      for (var i = 0; i < scatterData.length; i++) {
+        sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1), DoubleCellValue(scatterData[i][0]));
+        sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1), DoubleCellValue(scatterData[i][1]));
+        sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: i + 1), DoubleCellValue(scatterData[i][2]));
+      }
+
+      final scatterSeries = [
+        ChartSeries(
+          name: "Trend A", 
+          categoriesRange: "'All Charts Demo'!\$E\$2:\$E\$8", 
+          valuesRange: "'All Charts Demo'!\$F\$2:\$F\$8"
+        ),
+        ChartSeries(
+          name: "Trend B", 
+          categoriesRange: "'All Charts Demo'!\$E\$2:\$E\$8", 
+          valuesRange: "'All Charts Demo'!\$G\$2:\$G\$8"
+        ),
+      ];
+
+      sheet.addChart(ScatterChart(
+        title: "Scatter Chart (XY Relationship)", 
+        series: scatterSeries, 
+        anchor: ChartAnchor.at(column: 14, row: 40, width: 8, height: 12)
+      ));
+
+      if (kIsWeb) {
+        final bytes = excel.save(fileName: 'all_charts_demo.xlsx');
+        if (bytes != null && bytes.isNotEmpty) {
+          setState(() {
+            _status = '✅ Excel with ALL charts generated successfully!\n'
+                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
+                'The download should start automatically.\n'
+                '📌 Includes: Column, Bar, Line, Area, Pie, Doughnut, Radar, Scatter.';
+          });
+        }
+      } else {
+        var bytes = excel.encode();
+        if (bytes != null) {
+          String? outputFile = await FilePicker.platform.saveFile(
+            dialogTitle: 'Save All Charts Excel',
+            fileName: 'all_charts_demo.xlsx',
+            type: FileType.custom,
+            allowedExtensions: ['xlsx'],
+          );
+          if (outputFile != null) {
+            await File(outputFile).writeAsBytes(bytes);
+            setState(() {
+              _status = '✅ Excel with ALL charts saved successfully!\n'
+                  'Location: $outputFile';
+            });
+          }
+        }
+      }
+    } catch (e, stackTrace) {
+      setState(() => _status = 'Error: $e');
+      if (kDebugMode) {
+        print('Error generating all charts: $e');
+        print(stackTrace);
+      }
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -930,6 +1059,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple.shade50,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: _generateAllChartsExample,
+                  icon: const Icon(Icons.grid_view, color: Colors.indigo),
+                  label: const Text('GENERATE ALL CHARTS EXCEL'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade50,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(height: 10),
