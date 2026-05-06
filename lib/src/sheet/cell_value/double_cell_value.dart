@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Represents a double (floating-point) value in a cell.
 class DoubleCellValue extends CellValue {

@@ -73,4 +73,40 @@ void main() {
     expect(archive.files.any((f) => f.name == 'xl/charts/chart1.xml'), isTrue);
     expect(archive.files.any((f) => f.name == 'xl/charts/chart2.xml'), isTrue);
   });
+  
+  test('Create Excel with RadarChart and verify integrity', () {
+    var excel = Excel.createExcel();
+    var sheet = excel['Sheet1'];
+
+    sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Skill"));
+    sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Level"));
+    sheet.updateCell(CellIndex.indexByString("A2"), TextCellValue("Dart"));
+    sheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(95));
+
+    var chart = RadarChart(
+      title: "Skills Radar",
+      series: [
+        ChartSeries(
+          name: "Series 1",
+          categoriesRange: r"Sheet1!$A$2:$A$2",
+          valuesRange: r"Sheet1!$B$2:$B$2",
+        ),
+      ],
+      anchor: ChartAnchor.at(column: 4, row: 1),
+      filled: true,
+    );
+
+    sheet.addChart(chart);
+
+    var bytes = excel.save();
+    expect(bytes, isNotNull);
+
+    var archive = ZipDecoder().decodeBytes(bytes!);
+    bool foundChart = archive.files.any((f) => f.name == 'xl/charts/chart1.xml');
+    expect(foundChart, isTrue);
+
+    // Verify it can be decoded back
+    var excel2 = Excel.decodeBytes(bytes);
+    expect(excel2.sheets.containsKey('Sheet1'), isTrue);
+  });
 }

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 /// Configuration for chart colors and palettes.
 /// 

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 /// Internal utility to generate XML for Charts and Drawings.
 /// 

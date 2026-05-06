@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Builder for Radar chart styles with optional fill
 class RadarChartBuilder implements ChartStyleBuilder {
@@ -14,17 +14,6 @@ class RadarChartBuilder implements ChartStyleBuilder {
     final color = ChartColorConfig.getRadarColor(seriesIndex).colorHex6;
     
     builder.element('c:spPr', nest: () {
-      // Line formatting
-      builder.element('a:ln', attributes: {'w': ChartColorConfig.thickLineWidth}, nest: () {
-        builder.element('a:solidFill', nest: () {
-          builder.element('a:srgbClr', attributes: {'val': color});
-        });
-      });
-      // Marker formatting
-      builder.element('a:solidFill', nest: () {
-        builder.element('a:srgbClr', attributes: {'val': color});
-      });
-      
       // Fill with 45% opacity (only if filled style)
       if (radarChart.filled) {
         builder.element('a:solidFill', nest: () {
@@ -33,6 +22,15 @@ class RadarChartBuilder implements ChartStyleBuilder {
           });
         });
       }
+
+      // Line formatting (85% opacity)
+      builder.element('a:ln', attributes: {'w': ChartColorConfig.thickLineWidth}, nest: () {
+        builder.element('a:solidFill', nest: () {
+          builder.element('a:srgbClr', attributes: {'val': color}, nest: () {
+            builder.element('a:alpha', attributes: {'val': ChartColorConfig.opacity85});
+          });
+        });
+      });
     });
   }
 }

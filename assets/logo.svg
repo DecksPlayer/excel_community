@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 120" width="500" height="120">
+    <defs>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;800&amp;display=swap');
+            .font-inter { font-family: 'Inter', sans-serif; }
+        </style>
+    </defs>
+    <!-- Icono X Network -->
+    <g transform="translate(10, 10)">
+        <!-- Líneas de la X -->
+        <line x1="25" y1="25" x2="75" y2="75" stroke="#107C41" stroke-width="12" stroke-linecap="round"/>
+        <line x1="25" y1="75" x2="75" y2="25" stroke="#21A366" stroke-width="12" stroke-linecap="round"/>
+        <!-- Nodos de la comunidad (Personas/Datos) -->
+        <circle cx="25" cy="25" r="9" fill="#0A4A25"/>
+        <circle cx="75" cy="75" r="9" fill="#0A4A25"/>
+        <circle cx="25" cy="75" r="9" fill="#0A4A25"/>
+        <circle cx="75" cy="25" r="9" fill="#0A4A25"/>
+        <!-- Nodo central -->
+        <circle cx="50" cy="50" r="12" fill="#ffffff" stroke="#107C41" stroke-width="4"/>
+    </g>
+    <!-- Texto -->
+    <text x="130" y="75" class="font-inter" font-size="42" font-weight="800" fill="#107C41">excel</text>
+    <text x="258" y="75" class="font-inter" font-size="42" font-weight="300" fill="#4B5563">_community</text>
+</svg>

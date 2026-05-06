@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Excel does not know if this is UTC or not. Use methods [asDateTimeLocal]
 /// or [asDateTimeUtc] to get the DateTime object you prefer.

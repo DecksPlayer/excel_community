@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 class CellIndex extends Equatable {
   CellIndex._({required this.columnIndex, required this.rowIndex});

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 class YellowOrangeColors {
   static const yellow = ExcelColor._('FFFFEB3B', 'yellow', ColorType.material);

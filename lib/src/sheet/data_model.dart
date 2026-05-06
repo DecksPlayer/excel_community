@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 // ignore: must_be_immutable
 class Data extends Equatable {

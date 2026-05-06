@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Represents an integer value in a cell.
 class IntCellValue extends CellValue {

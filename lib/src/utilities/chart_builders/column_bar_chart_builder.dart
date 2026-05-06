@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Builder for Column and Bar chart styles
 class ColumnBarChartBuilder implements ChartStyleBuilder {

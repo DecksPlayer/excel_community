@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Represents a text value in a cell, supporting rich text through spans.
 class TextCellValue extends CellValue {

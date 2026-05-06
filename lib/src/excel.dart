@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../excel_community.dart';
 
 Excel _newExcel(Archive archive) {
   // Lookup at file format
@@ -120,7 +120,7 @@ class Excel {
   ///
   ///Newly created sheet with name = `sheet` will have seperate reference and will not be linked to sheetObject.
   ///
-  operator []=(String sheet, Sheet sheetObject) {
+  void operator []=(String sheet, Sheet sheetObject) {
     _availSheet(sheet);
 
     _sheetMap[sheet] = Sheet._clone(this, sheet, sheetObject);

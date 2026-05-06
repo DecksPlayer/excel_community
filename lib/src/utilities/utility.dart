@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 final List<String> _noCompression = <String>[
   'mimetype',
@@ -137,7 +137,7 @@ void _damagedExcel({String text = ''}) {
 }
 
 ///
-///return A2:B2 for spanning storage in unmerge list when [0,2] [2,2] is passed
+///return A2:B2 for spanning storage in unmerge list when `[0,2]` `[2,2]` is passed
 ///
 String getSpanCellId(int startColumn, int startRow, int endColumn, int endRow) {
   return '${getCellId(startColumn, startRow)}:${getCellId(endColumn, endRow)}';

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 /// Represents an Excel Column/Bar Chart.
 class ColumnChart extends Chart {

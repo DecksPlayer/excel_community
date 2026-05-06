@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 // A helper class to optimized the usage of Maps
 class FastList<K> {

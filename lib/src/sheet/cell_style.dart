@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 /// Styling class for cells
 // ignore: must_be_immutable
@@ -218,7 +218,7 @@ class CellStyle extends Equatable {
     return _rotation;
   }
 
-  ///Rotation varies from [90 to -90]
+  ///Rotation varies from `[-90 to 90]`
   ///
   set rotation(int _rotate) {
     if (_rotate > 90 || _rotate < -90) {

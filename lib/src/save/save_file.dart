@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 class Save {
   final Excel _excel;
@@ -14,7 +14,7 @@ class Save {
     _chartManager = _ChartManager(_excel, this);
     _styleManager = _StyleManager(_excel, this);
     _worksheetManager = _WorksheetManager(_excel, this);
-    _workbookManager = _WorkbookManager(_excel, this);
+    _workbookManager = _WorkbookManager(_excel);
   }
 
   List<int>? _save() {

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Builder for Area chart styles with transparency.
 class AreaChartBuilder implements ChartStyleBuilder {

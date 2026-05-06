@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 class OtherColors {
   static const purple = ExcelColor._('FF9C27B0', 'purple', ColorType.material);

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../../excel_community.dart';
 
 const Map<int, NumFormat> _standardNumFormats = {
   0: NumFormat.standard_0,
