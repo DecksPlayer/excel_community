@@ -1,4 +1,4 @@
-![Logo](https://raw.githubusercontent.com/decksplayer/excel_community/main/assets/logo.png)
+![Logo](https://raw.githubusercontent.com/Decksplayer/excel_community/main/assets/logo.png)
 
 # Excel Community
 
