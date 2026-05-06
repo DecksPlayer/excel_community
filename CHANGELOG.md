@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-05-06
+- Update logo to open source version.
+- Improve package README.md and add a preview image.
+- Update package metadata for pub.dev.
+- Fix chart x-axis labels for scatter charts.
+
 ## [1.0.10] - 2026-05-02
 - Fix Losing Cell styling when setting a new value to a cell.
 

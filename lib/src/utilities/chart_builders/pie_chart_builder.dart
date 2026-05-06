@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Builder for Pie and Doughnut chart styles
 class PieChartBuilder implements ChartStyleBuilder {

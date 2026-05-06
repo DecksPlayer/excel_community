@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 String _decimalToHexadecimal(int decimalVal) {
   if (decimalVal == 0) {

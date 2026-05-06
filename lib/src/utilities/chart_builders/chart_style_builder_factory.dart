@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Factory to get the appropriate style builder for a chart type
 /// 

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Builder for Line chart styles
 class LineChartBuilder implements ChartStyleBuilder {

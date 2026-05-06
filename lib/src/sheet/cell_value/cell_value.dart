@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Base class for all cell value types in an Excel sheet.
 sealed class CellValue {

@@ -1,6 +1,8 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
+/// Accent colors for Excel.
 class AccentColors {
+  /// Red accent color.
   static const redAccent = ExcelColor._('FFFF5252', 'redAccent', ColorType.materialAccent);
   static const pinkAccent = ExcelColor._('FFFF4081', 'pinkAccent', ColorType.materialAccent);
   static const purpleAccent = ExcelColor._('FFE040FB', 'purpleAccent', ColorType.materialAccent);
@@ -14,6 +16,7 @@ class AccentColors {
   static const lightGreenAccent = ExcelColor._('FFB2FF59', 'lightGreenAccent', ColorType.materialAccent);
   static const limeAccent = ExcelColor._('FFEEFF41', 'limeAccent', ColorType.materialAccent);
   static const yellowAccent = ExcelColor._('FFFFFF00', 'yellowAccent', ColorType.materialAccent);
+  /// Amber accent color.
   static const amberAccent = ExcelColor._('FFFFD740', 'amberAccent', ColorType.materialAccent);
   static const orangeAccent = ExcelColor._('FFFFAB40', 'orangeAccent', ColorType.materialAccent);
   static const deepOrangeAccent = ExcelColor._('FFFF6E40', 'deepOrangeAccent', ColorType.materialAccent);
@@ -57,7 +60,9 @@ class AccentColors {
   static const yellowAccent100 = ExcelColor._('FFFFFF8D', 'yellowAccent100', ColorType.materialAccent);
   static const yellowAccent400 = ExcelColor._('FFFFEA00', 'yellowAccent400', ColorType.materialAccent);
   static const yellowAccent700 = ExcelColor._('FFFFD600', 'yellowAccent700', ColorType.materialAccent);
+  /// Amber accent color with 100 weight.
   static const amberAccent100 = ExcelColor._('FFFFE57F', 'amberAccent100', ColorType.materialAccent);
+  /// Amber accent color with 400 weight.
   static const amberAccent400 = ExcelColor._('FFFFC400', 'amberAccent400', ColorType.materialAccent);
   static const amberAccent700 = ExcelColor._('FFFFAB00', 'amberAccent700', ColorType.materialAccent);
   static const orangeAccent100 = ExcelColor._('FFFFD180', 'orangeAccent100', ColorType.materialAccent);

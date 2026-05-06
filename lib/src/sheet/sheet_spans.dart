@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 extension SheetSpans on Sheet {
   ///

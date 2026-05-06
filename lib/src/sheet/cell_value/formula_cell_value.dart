@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Represents a formula in a cell.
 class FormulaCellValue extends CellValue {

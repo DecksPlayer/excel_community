@@ -2,9 +2,8 @@ part of '../../../excel_community.dart';
 
 class _WorkbookManager {
   final Excel _excel;
-  final Save _save;
 
-  _WorkbookManager(this._excel, this._save);
+  _WorkbookManager(this._excel);
 
   bool setDefaultSheet(String? sheetName) {
     if (sheetName == null || _excel._xmlFiles['xl/workbook.xml'] == null) {

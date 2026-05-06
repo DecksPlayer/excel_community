@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Represents a boolean value in a cell.
 class BoolCellValue extends CellValue {

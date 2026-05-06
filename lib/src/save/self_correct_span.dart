@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 ///Self correct the spanning of rows and columns by checking their cross-sectional relationship between if exists.
 _selfCorrectSpanMap(Excel _excel) {

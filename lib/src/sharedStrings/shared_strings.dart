@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 class _SharedStringsMaintainer {
   final Map<SharedString, _IndexingHolder> _map =
@@ -17,7 +17,7 @@ class _SharedStringsMaintainer {
     final newSharedString = SharedString(
         node: XmlElement(XmlName('si'), [], [
       XmlElement(XmlName('t'),
-          [XmlAttribute(XmlName("space", "xml"), "preserve")], [XmlText(val)]),
+          [XmlAttribute(XmlName('xml:space'), 'preserve')], [XmlText(val)]),
     ]));
 
     add(newSharedString, val);

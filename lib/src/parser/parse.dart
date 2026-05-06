@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../excel_community.dart';
 
 class Parser {
   final Excel _excel;
@@ -419,6 +419,7 @@ class Parser {
           CellStyle cellStyle = CellStyle(
             fontColorHex: fontColor.excelColor,
             fontFamily: fontFamily,
+            fontScheme: fontScheme,
             fontSize: fontSize,
             bold: isBold,
             italic: isItalic,
@@ -465,7 +466,7 @@ class Parser {
     return null; // pretending that the node's children is not having specified child.
   }
 
-  int _getFontIndex(var node, String text) {
+  int _getFontIndex(XmlElement node, String text) {
     String? applyFont = node.getAttribute(text)?.trim();
     if (applyFont != null) {
       try {

@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 /// Builder for Scatter chart styles
 class ScatterChartBuilder implements ChartStyleBuilder {

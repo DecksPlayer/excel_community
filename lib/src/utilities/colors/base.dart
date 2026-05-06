@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 class BaseColors {
   static const black = ExcelColor._('FF000000', 'black', ColorType.color);

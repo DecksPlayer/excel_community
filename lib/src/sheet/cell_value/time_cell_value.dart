@@ -1,4 +1,4 @@
-part of excel_community;
+part of '../../../excel_community.dart';
 
 class TimeCellValue extends CellValue {
   final int hour;
