@@ -30,6 +30,9 @@ part 'src/number_format/formats/numbers/time_format.dart';
 part 'src/chart/chart_base.dart';
 part 'src/chart/chart_types.dart';
 
+/// Image
+part 'src/sheet/excel_image.dart';
+
 /// Utilities
 part 'src/utilities/span.dart';
 part 'src/utilities/fast_list.dart';
@@ -61,6 +64,7 @@ part 'src/utilities/chart_builders/chart_style_builder_factory.dart';
 /// Save
 part 'src/save/save_file.dart';
 part 'src/save/charts/chart_manager.dart';
+part 'src/save/images/image_manager.dart';
 part 'src/save/styles/style_manager.dart';
 part 'src/save/styles/style_resource_collector.dart';
 part 'src/save/styles/style_xml_builders.dart';
@@ -74,6 +78,7 @@ part 'src/sheet/sheet.dart';
 part 'src/sheet/sheet_dimensions.dart';
 part 'src/sheet/sheet_spans.dart';
 part 'src/sheet/sheet_charts.dart';
+part 'src/sheet/sheet_images.dart';
 part 'src/sheet/sheet_data_ext.dart';
 part 'src/sheet/font_family.dart';
 part 'src/sheet/data_model.dart';
