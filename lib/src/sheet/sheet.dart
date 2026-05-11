@@ -16,6 +16,7 @@ class Sheet {
   Map<int, Map<int, Data>> _sheetData = {};
   HeaderFooter? _headerFooter;
   final List<Chart> _charts = [];
+  final List<ExcelImage> _images = [];
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -29,7 +30,8 @@ class Sheet {
             columnAutoFitVal: oldSheetObject._columnAutoFit,
             isRTLVal: oldSheetObject._isRTL,
             headerFooter: oldSheetObject._headerFooter,
-            charts: oldSheetObject._charts);
+            charts: oldSheetObject._charts,
+            images: oldSheetObject._images);
 
   Sheet._(this._excel, this._sheet,
       {Map<int, Map<int, Data>>? sh,
@@ -42,10 +44,14 @@ class Sheet {
       Map<int, double>? rowHeightsVal,
       Map<int, bool>? columnAutoFitVal,
       HeaderFooter? headerFooter,
-      List<Chart>? charts}) {
+      List<Chart>? charts,
+      List<ExcelImage>? images}) {
     _headerFooter = headerFooter;
     if (charts != null) {
       _charts.addAll(charts);
+    }
+    if (images != null) {
+      _images.addAll(images);
     }
 
     if (spanL_ != null) {

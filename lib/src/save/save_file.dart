@@ -3,15 +3,19 @@ part of '../../excel_community.dart';
 class Save {
   final Excel _excel;
   final Map<String, ArchiveFile> _archiveFiles = {};
+  /// Binary (non-XML) files to include in the archive, e.g. images.
+  final Map<String, List<int>> _binaryFiles = {};
   final List<CellStyle> _innerCellStyle = [];
   final Parser parser;
   late final _ChartManager _chartManager;
+  late final _ImageManager _imageManager;
   late final _StyleManager _styleManager;
   late final _WorksheetManager _worksheetManager;
   late final _WorkbookManager _workbookManager;
 
   Save._(this._excel, this.parser) {
     _chartManager = _ChartManager(_excel, this);
+    _imageManager = _ImageManager(_excel, this);
     _styleManager = _StyleManager(_excel, this);
     _worksheetManager = _WorksheetManager(_excel, this);
     _workbookManager = _WorkbookManager(_excel);
@@ -39,12 +43,20 @@ class Save {
     }
 
     _chartManager.processCharts();
+    _imageManager.processImages();
 
     for (var xmlFile in _excel._xmlFiles.keys) {
       var xml = _excel._xmlFiles[xmlFile].toString();
       var content = utf8.encode(xml);
       _archiveFiles[xmlFile] = ArchiveFile(xmlFile, content.length, content);
     }
+
+    // Add binary media files (images, etc.) to the archive
+    for (final entry in _binaryFiles.entries) {
+      _archiveFiles[entry.key] =
+          ArchiveFile(entry.key, entry.value.length, entry.value);
+    }
+
     return ZipEncoder().encode(_cloneArchive(_excel._archive, _archiveFiles));
   }
 
@@ -78,5 +90,31 @@ class Save {
         XmlAttribute(XmlName('ContentType'), contentType),
       ]));
     }
+  }
+
+  /// Registers a `<Default Extension="…" ContentType="…"/>` entry in
+  /// [Content_Types].xml (used for binary media such as images).
+  void _addDefaultContentType(String contentType, String extension) {
+    final contentTypes = _excel._xmlFiles['[Content_Types].xml'];
+    if (contentTypes == null) return;
+
+    final typesElement = contentTypes.findAllElements('Types').first;
+
+    final exists = typesElement.children.any((node) =>
+        node is XmlElement &&
+        node.name.local == 'Default' &&
+        node.getAttribute('Extension') == extension);
+
+    if (!exists) {
+      typesElement.children.add(XmlElement(XmlName('Default'), [
+        XmlAttribute(XmlName('Extension'), extension),
+        XmlAttribute(XmlName('ContentType'), contentType),
+      ]));
+    }
+  }
+
+  /// Stores binary [bytes] at [path] inside the XLSX archive.
+  void _addMediaFile(String path, List<int> bytes) {
+    _binaryFiles[path] = bytes;
   }
 }

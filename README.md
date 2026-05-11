@@ -39,6 +39,7 @@
 - ✅ **Multiple Data Types**: Text, Numbers, Formulas, Dates, Times, Booleans
 - ✅ **Cell Styling**: Fonts (Bold, Italic, Underline, Strikethrough), Colors, Borders, Alignment, Number Formats
 - ✅ **Charts**: Column, Bar, Line, Area, Pie, Doughnut, Scatter, and Radar charts
+- ✅ **Images**: Embed PNG, JPEG, BMP, GIF, TIFF, WMF, EMF, SVG, WebP and ICO images
 - ✅ **Cell Operations**: Merge cells, insert/delete rows and columns
 - ✅ **Sheet Management**: Create, copy, rename, delete sheets
 - ✅ **Cross-platform**: Works on Flutter Web, Android, iOS, Desktop
@@ -47,7 +48,7 @@
  - ➕ Formulas and Calculations
  - 💾 Support Multiple Data type efficiently
  - ✅ Charts (Implemented!)
- - 🌄 Add Pictures
+ - ✅ Images (Implemented!)
  - 📰 Create Tables and style
  - 🔐 Encrypt and Decrypt excel on the go.
  - Many more **features**
@@ -532,6 +533,107 @@ if (isSet) {
   print('Unable to set $sheet to default sheet.');
 }
 ```
+
+</details>
+
+<details open>
+<summary><h2>🌄 Images</h2></summary>
+
+### Embed an Image
+
+Use `sheet.addImage(ExcelImage(...))` to embed an image into a worksheet.
+The image floats over the cells at the position defined by its `ImageAnchor`.
+
+```dart
+import 'dart:io';
+import 'package:excel_community/excel_community.dart';
+
+final sheet = excel['Sheet1'];
+
+// Option A — explicit bytes + type
+final pngBytes = File('assets/logo.png').readAsBytesSync();
+sheet.addImage(ExcelImage(
+  imageBytes: pngBytes,
+  imageType: ExcelImageType.png,
+  anchor: ImageAnchor.fromPixels(
+    column: 0, row: 2,        // top-left corner: column A, row 3
+    widthPixels: 200,
+    heightPixels: 80,
+  ),
+));
+```
+
+### Auto-detect type from file
+
+`ExcelImage.fromFile` reads the bytes and infers `ExcelImageType` from the
+file extension automatically:
+
+```dart
+sheet.addImage(ExcelImage.fromFile(
+  File('assets/logo.png'),
+  anchor: ImageAnchor.fromPixels(
+    column: 0, row: 2, widthPixels: 200, heightPixels: 80,
+  ),
+));
+
+// SVG — visible in Excel 2016+ / Microsoft 365
+sheet.addImage(ExcelImage.fromFile(
+  File('assets/logo.svg'),
+  anchor: ImageAnchor.fromPixels(
+    column: 3, row: 2, widthPixels: 200, heightPixels: 80,
+  ),
+));
+```
+
+### Infer type from extension string
+
+```dart
+final bytes = File('assets/photo.jpg').readAsBytesSync();
+sheet.addImage(ExcelImage(
+  imageBytes: bytes,
+  imageType: ExcelImageType.fromExtension('photo.jpg'), // → ExcelImageType.jpeg
+  anchor: ImageAnchor.fromPixels(
+    column: 0, row: 5, widthPixels: 300, heightPixels: 200,
+  ),
+));
+```
+
+### ImageAnchor — pixels vs EMUs
+
+```dart
+// fromPixels — assumes 96 DPI (1 px = 9 525 EMUs)
+ImageAnchor.fromPixels(
+  column: 1, row: 3,
+  widthPixels: 200, heightPixels: 100,
+  colOffsetPixels: 5,   // optional sub-column offset
+  rowOffsetPixels: 5,   // optional sub-row offset
+)
+
+// Direct EMU values — full precision
+// 1 cm ≈ 360 000 EMUs
+ImageAnchor(
+  fromColumn: 1, fromRow: 3,
+  colOffset: 47_625,    // 5 px
+  rowOffset: 47_625,    // 5 px
+  widthEmu:  1_905_000, // ≈ 5.29 cm
+  heightEmu:   952_500, // ≈ 2.65 cm
+)
+```
+
+### Supported formats
+
+| `ExcelImageType` | Extensions | Notes |
+|---|---|---|
+| `png` | `.png` | |
+| `jpeg` | `.jpg` `.jpeg` `.jfif` | |
+| `gif` | `.gif` | |
+| `bmp` | `.bmp` `.dib` | |
+| `tiff` | `.tif` `.tiff` | |
+| `wmf` | `.wmf` | |
+| `emf` | `.emf` | |
+| `svg` | `.svg` `.svgz` | Excel 2016+ / 365 |
+| `webp` | `.webp` | Excel 365 |
+| `ico` | `.ico` | |
 
 </details>
 

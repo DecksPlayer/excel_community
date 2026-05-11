@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2026-05-11
+
+### Added
+- Image embedding support: embed PNG, JPEG, GIF, BMP, TIFF, WMF, EMF, SVG, WebP, and ICO images into worksheets.
+- `ExcelImage` model class with `fromFile` factory for automatic type detection from file extension.
+- `ExcelImageType` enum with `fromExtension` factory covering 10 image formats.
+- `ImageAnchor` class with `fromPixels` factory (96 DPI) and direct EMU constructor.
+- `SheetImages` extension on `Sheet` exposing `addImage()` and `images` getter.
+- `_ImageManager` save-pipeline component that writes OOXML drawing, relationship, and media files.
+- New example `example/excel_images.dart` demonstrating PNG and SVG embedding.
+- README "Images" section with full usage examples and supported-formats table.
+
+
+
 ## [1.1.3] - 2026-05-07
 - Fix Excel Community logo.
 
