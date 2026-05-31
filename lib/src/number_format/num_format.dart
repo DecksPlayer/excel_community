@@ -16,13 +16,8 @@ class NumFormatMaintainer {
   Map<NumFormat, int> _inverseMap = _createInverseMap(_standardNumFormats);
 
   void add(int numFmtId, CustomNumFormat format) {
-    if (_map.containsKey(numFmtId)) {
-      throw Exception('numFmtId $numFmtId already exists');
-    }
-    if (numFmtId < _firstCustomFmtId) {
-      throw Exception(
-          'invalid numFmtId $numFmtId, custom numFmtId must be $_firstCustomFmtId or greater');
-    }
+    // Allow overriding any ID. Excel files can explicitly declare built-in
+    // format IDs (0–163) in numFmts to override them for a specific file.
     _map[numFmtId] = format;
     _inverseMap[format] = numFmtId;
     if (numFmtId >= _nextFmtId) {
@@ -48,7 +43,13 @@ class NumFormatMaintainer {
   }
 
   NumFormat? getByNumFmtId(int numFmtId) {
-    return _map[numFmtId];
+    final result = _map[numFmtId];
+    if (result != null) return result;
+    // IDs 0–163 are built-in. If not in our map it is a locale-specific
+    // format (50–163) that varies per Excel installation. Fall back to
+    // General (standard_0) so the file opens without crashing.
+    if (numFmtId >= 0 && numFmtId < 164) return NumFormat.standard_0;
+    return null;
   }
 }
 
@@ -67,6 +68,11 @@ sealed class NumFormat {
   static const standard_2 = StandardFormats.standard_2;
   static const standard_3 = StandardFormats.standard_3;
   static const standard_4 = StandardFormats.standard_4;
+  // Currency (5–8)
+  static const standard_5 = StandardFormats.standard_5;
+  static const standard_6 = StandardFormats.standard_6;
+  static const standard_7 = StandardFormats.standard_7;
+  static const standard_8 = StandardFormats.standard_8;
   static const standard_9 = StandardFormats.standard_9;
   static const standard_10 = StandardFormats.standard_10;
   static const standard_11 = StandardFormats.standard_11;
@@ -81,10 +87,31 @@ sealed class NumFormat {
   static const standard_20 = StandardFormats.standard_20;
   static const standard_21 = StandardFormats.standard_21;
   static const standard_22 = StandardFormats.standard_22;
+  // Reserved (23–26)
+  static const standard_23 = StandardFormats.standard_23;
+  static const standard_24 = StandardFormats.standard_24;
+  static const standard_25 = StandardFormats.standard_25;
+  static const standard_26 = StandardFormats.standard_26;
+  // CJK locale Date/Time (27–36)
+  static const standard_27 = StandardFormats.standard_27;
+  static const standard_28 = StandardFormats.standard_28;
+  static const standard_29 = StandardFormats.standard_29;
+  static const standard_30 = StandardFormats.standard_30;
+  static const standard_31 = StandardFormats.standard_31;
+  static const standard_32 = StandardFormats.standard_32;
+  static const standard_33 = StandardFormats.standard_33;
+  static const standard_34 = StandardFormats.standard_34;
+  static const standard_35 = StandardFormats.standard_35;
+  static const standard_36 = StandardFormats.standard_36;
   static const standard_37 = StandardFormats.standard_37;
   static const standard_38 = StandardFormats.standard_38;
   static const standard_39 = StandardFormats.standard_39;
   static const standard_40 = StandardFormats.standard_40;
+  // Accounting with fill character (41–44)
+  static const standard_41 = StandardFormats.standard_41;
+  static const standard_42 = StandardFormats.standard_42;
+  static const standard_43 = StandardFormats.standard_43;
+  static const standard_44 = StandardFormats.standard_44;
   static const standard_45 = StandardFormats.standard_45;
   static const standard_46 = StandardFormats.standard_46;
   static const standard_47 = StandardFormats.standard_47;
