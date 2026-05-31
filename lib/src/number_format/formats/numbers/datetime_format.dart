@@ -68,6 +68,14 @@ class StandardDateTimeNumFormat extends DateTimeNumFormat
     required super.formatCode,
   });
 
+  // Standard formats are uniquely identified by their numFmtId.
+  @override
+  int get hashCode => Object.hash(runtimeType, numFmtId);
+
+  @override
+  bool operator ==(Object other) =>
+      other is StandardDateTimeNumFormat && other.numFmtId == numFmtId;
+
   @override
   String toString() {
     return 'StandardDateTimeNumFormat($numFmtId, "$formatCode")';

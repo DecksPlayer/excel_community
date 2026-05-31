@@ -181,7 +181,7 @@ class SharedString {
     node.findAllElements('t').forEach((child) {
       if (child.parentElement == null ||
           child.parentElement!.name.local != 'rPh') {
-        buffer.write(Parser._parseValue(child));
+        buffer.write(_parseXmlValue(child));
       }
     });
     return buffer.toString();
