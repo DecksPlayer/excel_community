@@ -663,6 +663,172 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _generateNumberFormatsExample() async {
+    setState(() {
+      _isGenerating = true;
+      _status = 'Generating Number Formats Example...';
+    });
+
+    try {
+      var excel = Excel.createExcel();
+      var sheet = excel['Number Formats'];
+      excel.delete('Sheet1');
+
+      // Title
+      sheet.updateCell(
+        CellIndex.indexByString('A1'),
+        TextCellValue('DEMO DE FORMATOS DE NÚMERO (BUILT-IN IDs)'),
+        cellStyle: CellStyle(
+          bold: true,
+          fontSize: 16,
+          fontColorHex: ExcelColor.blue,
+          horizontalAlign: HorizontalAlign.Center,
+        ),
+      );
+      sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('D1'));
+
+      int row = 3;
+
+      // Table Headers
+      final headerStyle = CellStyle(
+        bold: true,
+        backgroundColorHex: ExcelColor.blue300,
+        fontColorHex: ExcelColor.white,
+        horizontalAlign: HorizontalAlign.Center,
+        leftBorder: Border(borderStyle: BorderStyle.Thin),
+        rightBorder: Border(borderStyle: BorderStyle.Thin),
+        topBorder: Border(borderStyle: BorderStyle.Thin),
+        bottomBorder: Border(borderStyle: BorderStyle.Thin),
+      );
+
+      sheet.updateCell(CellIndex.indexByString('A$row'), TextCellValue('ID de Formato'), cellStyle: headerStyle);
+      sheet.updateCell(CellIndex.indexByString('B$row'), TextCellValue('Nombre / Descripción'), cellStyle: headerStyle);
+      sheet.updateCell(CellIndex.indexByString('C$row'), TextCellValue('Valor de Ejemplo'), cellStyle: headerStyle);
+      sheet.updateCell(CellIndex.indexByString('D$row'), TextCellValue('Formateado'), cellStyle: headerStyle);
+      row++;
+
+      final cellBorderStyle = CellStyle(
+        leftBorder: Border(borderStyle: BorderStyle.Thin),
+        rightBorder: Border(borderStyle: BorderStyle.Thin),
+        topBorder: Border(borderStyle: BorderStyle.Thin),
+        bottomBorder: Border(borderStyle: BorderStyle.Thin),
+      );
+
+      // We will define a list of formats to test
+      final formats = [
+        {'id': 0, 'desc': 'General (Sin formato)', 'value': DoubleCellValue(1234.567), 'format': NumFormat.standard_0},
+        {'id': 1, 'desc': 'Integer (0)', 'value': IntCellValue(1234), 'format': NumFormat.standard_1},
+        {'id': 2, 'desc': 'Float (0.00)', 'value': DoubleCellValue(1234.567), 'format': NumFormat.standard_2},
+        {'id': 3, 'desc': 'Integer con comas (#,##0)', 'value': IntCellValue(1234567), 'format': NumFormat.standard_3},
+        {'id': 4, 'desc': 'Float con comas (#,##0.00)', 'value': DoubleCellValue(1234567.89), 'format': NumFormat.standard_4},
+        {'id': 9, 'desc': 'Porcentaje (0%)', 'value': DoubleCellValue(0.756), 'format': NumFormat.standard_9},
+        {'id': 10, 'desc': 'Porcentaje con decimales (0.00%)', 'value': DoubleCellValue(0.7563), 'format': NumFormat.standard_10},
+        {'id': 11, 'desc': 'Científico (0.00E+00)', 'value': DoubleCellValue(123456789), 'format': NumFormat.standard_11},
+        {'id': 14, 'desc': 'Fecha corta (mm-dd-yy)', 'value': DateCellValue(year: 2026, month: 5, day: 31), 'format': NumFormat.standard_14},
+        {'id': 15, 'desc': 'Fecha larga (d-mmm-yy)', 'value': DateCellValue(year: 2026, month: 5, day: 31), 'format': NumFormat.standard_15},
+        {'id': 18, 'desc': 'Hora 12h (h:mm AM/PM)', 'value': DateTimeCellValue(year: 2026, month: 5, day: 31, hour: 14, minute: 30, second: 0), 'format': NumFormat.standard_18},
+        {'id': 20, 'desc': 'Hora 24h (h:mm)', 'value': DateTimeCellValue(year: 2026, month: 5, day: 31, hour: 14, minute: 30, second: 0), 'format': NumFormat.standard_20},
+        {'id': 22, 'desc': 'Fecha y Hora (m/d/yy h:mm)', 'value': DateTimeCellValue(year: 2026, month: 5, day: 31, hour: 14, minute: 30, second: 0), 'format': NumFormat.standard_22},
+        {'id': 37, 'desc': 'Contabilidad entera con parént. (#,##0 ;(#,##0))', 'value': DoubleCellValue(-1234.5), 'format': NumFormat.standard_37},
+        {'id': 38, 'desc': 'Contabilidad entera en rojo (#,##0 ;[Red](#,##0))', 'value': DoubleCellValue(-1234.5), 'format': NumFormat.standard_38},
+        {'id': 39, 'desc': 'Contabilidad float con parént. (#,##0.00;(#,##0.00))', 'value': DoubleCellValue(-1234.56), 'format': NumFormat.standard_39},
+        {'id': 40, 'desc': 'Contabilidad float en rojo (#,##0.00;[Red](#,##0.00))', 'value': DoubleCellValue(-1234.56), 'format': NumFormat.standard_40},
+        {'id': 44, 'desc': 'Contabilidad (Moneda) con sangría (Accounting ID 44!)', 'value': DoubleCellValue(1234.56), 'format': NumFormat.standard_44},
+      ];
+
+      for (var f in formats) {
+        // ID Col A
+        sheet.updateCell(
+          CellIndex.indexByString('A$row'),
+          IntCellValue(f['id'] as int),
+          cellStyle: cellBorderStyle.copyWith(horizontalAlignVal: HorizontalAlign.Center),
+        );
+        // Desc Col B
+        sheet.updateCell(
+          CellIndex.indexByString('B$row'),
+          TextCellValue(f['desc'] as String),
+          cellStyle: cellBorderStyle,
+        );
+        // Raw Value Col C
+        sheet.updateCell(
+          CellIndex.indexByString('C$row'),
+          TextCellValue(f['value'].toString()),
+          cellStyle: cellBorderStyle,
+        );
+        // Formatted Value Col D
+        sheet.updateCell(
+          CellIndex.indexByString('D$row'),
+          f['value'] as CellValue,
+          cellStyle: cellBorderStyle.copyWith(
+            numberFormat: f['format'] as NumFormat,
+            horizontalAlignVal: HorizontalAlign.Right,
+          ),
+        );
+        row++;
+      }
+
+      sheet.setColumnWidth(0, 15.0);
+      sheet.setColumnWidth(1, 45.0);
+      sheet.setColumnWidth(2, 25.0);
+      sheet.setColumnWidth(3, 25.0);
+
+      // Save
+      if (kIsWeb) {
+        final bytes = excel.save(fileName: 'number_formats_example.xlsx');
+        if (bytes != null && bytes.isNotEmpty) {
+          setState(() {
+            _status = '✅ Number Formats Example generated successfully!\n'
+                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
+                'The download should start automatically.\n'
+                '\n📥 Check your Downloads folder\n'
+                '📌 File: number_formats_example.xlsx\n'
+                '\n🔍 Open with Excel to verify implicit built-in formatting (including ID 44)!';
+          });
+        } else {
+          setState(() {
+            _status = '❌ Error: Failed to generate file.';
+          });
+        }
+      } else {
+        var bytes = excel.encode();
+        if (bytes == null) {
+          setState(() => _status = 'Error: Failed to encode Excel file.');
+          return;
+        }
+
+        String? outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save Number Formats Example',
+          fileName: 'number_formats_example.xlsx',
+          type: FileType.custom,
+          allowedExtensions: ['xlsx'],
+        );
+
+        if (outputFile != null) {
+          final file = File(outputFile);
+          await file.writeAsBytes(bytes);
+          final savedFileSize = await file.length();
+          
+          setState(() {
+            _status = '✅ Number Formats Example saved successfully!\n'
+                'Location: $outputFile\n'
+                'Size: ${(savedFileSize / 1024).toStringAsFixed(2)} KB\n'
+                '\n🔍 Open with Excel to verify implicit built-in formatting (including ID 44)!';
+          });
+        } else {
+          setState(() => _status = 'Save cancelled.');
+        }
+      }
+    } catch (e, stackTrace) {
+      setState(() => _status = 'Error: $e');
+      if (kDebugMode) {
+        print('Error generating number formats example: $e');
+        print(stackTrace);
+      }
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
+
   Future<void> _generateFullExample() async {
     setState(() {
       _isGenerating = true;
@@ -961,12 +1127,13 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
               const Icon(Icons.table_chart, size: 80, color: Colors.blue),
               const SizedBox(height: 20),
               Text(
@@ -1063,6 +1230,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton.icon(
+                  onPressed: _generateNumberFormatsExample,
+                  icon: const Icon(Icons.pin, color: Colors.teal),
+                  label: const Text('GENERATE NUMBER FORMATS (Built-in IDs)'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal.shade50,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
                   onPressed: _generateAllChartsExample,
                   icon: const Icon(Icons.grid_view, color: Colors.indigo),
                   label: const Text('GENERATE ALL CHARTS EXCEL'),
@@ -1088,8 +1265,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }
