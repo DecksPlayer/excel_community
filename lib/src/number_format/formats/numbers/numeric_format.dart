@@ -62,6 +62,15 @@ class StandardNumericNumFormat extends NumericNumFormat
         DateTimeCellValue() => false,
       };
 
+  // Standard formats are uniquely identified by their numFmtId,
+  // not just their formatCode (multiple IDs can share the same formatCode).
+  @override
+  int get hashCode => Object.hash(runtimeType, numFmtId);
+
+  @override
+  bool operator ==(Object other) =>
+      other is StandardNumericNumFormat && other.numFmtId == numFmtId;
+
   @override
   String toString() {
     return 'StandardNumericNumFormat($numFmtId, "$formatCode")';

@@ -72,6 +72,8 @@ part 'src/save/worksheet/worksheet_manager.dart';
 part 'src/save/workbook/workbook_manager.dart';
 part 'src/save/self_correct_span.dart';
 part 'src/parser/parse.dart';
+part 'src/parser/styles_parser.dart';
+part 'src/parser/worksheet_parser.dart';
 
 /// Sheet
 part 'src/sheet/sheet.dart';
