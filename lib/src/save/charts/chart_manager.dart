@@ -23,8 +23,8 @@ class _ChartManager {
       // 1. Generate Chart XMLs and Drawing Relationships
       final drawingRelsBuilder = XmlBuilder();
       drawingRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-      drawingRelsBuilder.element('Relationships', namespaces: <String, String>{
-        'http://schemas.openxmlformats.org/package/2006/relationships': '',
+      drawingRelsBuilder.element('Relationships', attributes: {
+        'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
       }, nest: () {
         for (int i = 0; i < sheet.charts.length; i++) {
           chartCount++;
@@ -50,6 +50,15 @@ class _ChartManager {
 
           // Generate Chart XML
           _excel._xmlFiles[chartPath] = writer.generateChartXml(chart);
+
+          // Generate Chart .rels file (required by Excel for each chart part)
+          final chartRelsPath = 'xl/charts/_rels/chart$chartCount.xml.rels';
+          final chartRelsBuilder = XmlBuilder();
+          chartRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+          chartRelsBuilder.element('Relationships', attributes: {
+            'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
+          }, nest: () {});
+          _excel._xmlFiles[chartRelsPath] = chartRelsBuilder.buildDocument();
 
           // Add to Drawing Relationships
           drawingRelsBuilder.element('Relationship', attributes: {
@@ -81,8 +90,8 @@ class _ChartManager {
       if (sheetRels == null) {
         final relsBuilder = XmlBuilder();
         relsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-        relsBuilder.element('Relationships', namespaces: <String, String>{
-          'http://schemas.openxmlformats.org/package/2006/relationships': '',
+        relsBuilder.element('Relationships', attributes: {
+          'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
         }, nest: () {});
         sheetRels = relsBuilder.buildDocument();
         _excel._xmlFiles[sheetRelsPath] = sheetRels;
