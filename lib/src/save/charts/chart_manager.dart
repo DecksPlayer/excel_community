@@ -9,140 +9,234 @@ class _ChartManager {
   void processCharts() {
     final writer = ChartXmlWriter();
     int chartCount = 0;
-    int drawingCount = 0;
 
     _excel._sheetMap.forEach((sheetName, sheet) {
       if (sheet.charts.isEmpty) return;
 
-      drawingCount++;
-      final drawingPath = 'xl/drawings/drawing$drawingCount.xml';
-      final drawingRelsPath = 'xl/drawings/_rels/drawing$drawingCount.xml.rels';
       final sheetId = _excel._xmlSheetId[sheetName]!;
-      final sheetRelsPath = 'xl/worksheets/_rels/${sheetId.split("/").last}.rels';
+      final sheetFileName = sheetId.split('/').last; // e.g. sheet1.xml
+      final sheetRelsPath = 'xl/worksheets/_rels/$sheetFileName.rels';
 
-      // 1. Generate Chart XMLs and Drawing Relationships
-      final drawingRelsBuilder = XmlBuilder();
-      drawingRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-      drawingRelsBuilder.element('Relationships', attributes: {
-        'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
-      }, nest: () {
-        for (int i = 0; i < sheet.charts.length; i++) {
-          chartCount++;
-          final chart = sheet.charts[i];
-          
-          // Resolve ranges for each series
-          for (var series in chart.series) {
-            final catData = _resolveChartRange(series.categoriesRange);
-            final valData = _resolveChartRange(series.valuesRange);
-            
-            series.categories = catData.map((e) => e?.toString() ?? "").toList();
-            series.values = valData.map((e) {
-              if (e is IntCellValue) return e.value;
-              if (e is DoubleCellValue) return e.value;
-              if (e is TextCellValue) {
-                return num.tryParse(e.toString()) ?? 0;
-              }
-              return 0;
-            }).toList();
-          }
-          
-          final chartPath = 'xl/charts/chart$chartCount.xml';
+      // --- Resolve or create the drawing for this sheet ---
+      String drawingPath;
+      String drawingRelsPath;
+      bool drawingIsNew;
+      int drawingIdx;
 
-          // Generate Chart XML
-          _excel._xmlFiles[chartPath] = writer.generateChartXml(chart);
+      final existing = _findExistingDrawing(sheetRelsPath);
+      if (existing != null) {
+        drawingPath = existing.$1;
+        drawingRelsPath = existing.$2;
+        drawingIsNew = false;
+        final nameOnly = drawingPath.split('/').last; // drawing2.xml
+        final digits = RegExp(r'\d+').stringMatch(nameOnly) ?? '1';
+        drawingIdx = int.parse(digits);
+      } else {
+        final idx = _countExistingDrawings() + 1;
+        drawingPath = 'xl/drawings/drawing$idx.xml';
+        drawingRelsPath = 'xl/drawings/_rels/drawing$idx.xml.rels';
+        drawingIsNew = true;
+        drawingIdx = idx;
+      }
 
-          // Generate Chart .rels file (required by Excel for each chart part)
-          final chartRelsPath = 'xl/charts/_rels/chart$chartCount.xml.rels';
-          final chartRelsBuilder = XmlBuilder();
-          chartRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-          chartRelsBuilder.element('Relationships', attributes: {
-            'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
-          }, nest: () {});
-          _excel._xmlFiles[chartRelsPath] = chartRelsBuilder.buildDocument();
-
-          // Add to Drawing Relationships
-          drawingRelsBuilder.element('Relationship', attributes: {
-            'Id': 'rId${i + 1}',
-            'Type': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
-            'Target': '../charts/chart$chartCount.xml',
-          });
-
-          // Add Content Type for Chart
-          _save._addContentType(
-            'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
-            '/$chartPath',
-          );
-        }
-      });
-      _excel._xmlFiles[drawingRelsPath] = drawingRelsBuilder.buildDocument();
-
-      // 2. Generate Drawing XML (linking to rId1, rId2... in drawingRels)
-      _excel._xmlFiles[drawingPath] = writer.generateDrawingXml(sheet.charts, drawingCount);
-
-      // Add Content Type for Drawing
-      _save._addContentType(
-        'application/vnd.openxmlformats-officedocument.drawing+xml',
-        '/$drawingPath',
-      );
-
-      // 3. Update Sheet Relationships
-      var sheetRels = _excel._xmlFiles[sheetRelsPath];
-      if (sheetRels == null) {
+      // --- Ensure drawing rels XML exists ---
+      var drawingRels = _excel._xmlFiles[drawingRelsPath];
+      if (drawingRels == null) {
         final relsBuilder = XmlBuilder();
         relsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
         relsBuilder.element('Relationships', attributes: {
           'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
         }, nest: () {});
-        sheetRels = relsBuilder.buildDocument();
-        _excel._xmlFiles[sheetRelsPath] = sheetRels;
+        drawingRels = relsBuilder.buildDocument();
+        _excel._xmlFiles[drawingRelsPath] = drawingRels;
       }
+      final relsRoot = drawingRels.findAllElements('Relationships').first;
+      int nextRId = relsRoot.children.whereType<XmlElement>().length + 1;
 
-      final relsElement = sheetRels.findAllElements('Relationships').first;
-      
-      // Look for existing rId to avoid duplicates
-      int rIdIndex = relsElement.children.whereType<XmlElement>().length + 1;
-      final drawingRId = 'rId$rIdIndex';
-      
-      relsElement.children.add(XmlElement(XmlName('Relationship'), [
-        XmlAttribute(XmlName('Id'), drawingRId),
-        XmlAttribute(XmlName('Type'), 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing'),
-        XmlAttribute(XmlName('Target'), '../drawings/drawing$drawingCount.xml'),
-      ]));
+      // --- Ensure drawing XML exists ---
+      var drawingDoc = _excel._xmlFiles[drawingPath];
+      if (drawingDoc == null) {
+        drawingDoc = _buildEmptyDrawing();
+        _excel._xmlFiles[drawingPath] = drawingDoc;
+      }
+      final drawingRoot = drawingDoc.rootElement;
 
-      // 4. Update Worksheet XML with <drawing> tag at the correct position
-      final worksheet = _excel._xmlFiles[sheetId]!.findAllElements('worksheet').first;
-      final existingDrawings = worksheet.findAllElements('drawing').toList();
-      if (existingDrawings.isEmpty) {
-        final drawingElement = XmlElement(XmlName('drawing'), [
-          XmlAttribute(
-              XmlName('id', 'r'),
-              drawingRId),
-        ]);
+      // --- Process each chart ---
+      for (int i = 0; i < sheet.charts.length; i++) {
+        chartCount++;
+        final chart = sheet.charts[i];
+        
+        // Resolve ranges for each series
+        for (var series in chart.series) {
+          final catData = _resolveChartRange(series.categoriesRange);
+          final valData = _resolveChartRange(series.valuesRange);
+          
+          series.categories = catData.map((e) => e?.toString() ?? "").toList();
+          series.values = valData.map((e) {
+            if (e is IntCellValue) return e.value;
+            if (e is DoubleCellValue) return e.value;
+            if (e is TextCellValue) {
+              return num.tryParse(e.toString()) ?? 0;
+            }
+            return 0;
+          }).toList();
 
-        int insertIndex = -1;
-        final tagsAfterDrawing = [
-          'legacyDrawing',
-          'picture',
-          'oleObjects',
-          'drawingHF',
-          'extLst'
-        ];
-
-        for (int i = 0; i < worksheet.children.length; i++) {
-          final child = worksheet.children[i];
-          if (child is XmlElement && tagsAfterDrawing.contains(child.name.local)) {
-            insertIndex = i;
-            break;
+          // Fix #4: para ScatterChart resolver xValues (categoriesRange es eje X numérico)
+          if (chart is ScatterChart) {
+            series.xValues = catData.map((e) {
+              if (e is IntCellValue) return e.value as num;
+              if (e is DoubleCellValue) return e.value as num;
+              if (e is TextCellValue) return num.tryParse(e.toString()) ?? 0;
+              return 0 as num;
+            }).toList();
           }
         }
+        
+        final chartPath = 'xl/charts/chart$chartCount.xml';
 
-        if (insertIndex != -1) {
-          worksheet.children.insert(insertIndex, drawingElement);
-        } else {
-          worksheet.children.add(drawingElement);
+        // Generate Chart XML
+        _excel._xmlFiles[chartPath] = writer.generateChartXml(chart);
+
+        // Generate Chart .rels file (required by Excel for each chart part)
+        final chartRelsPath = 'xl/charts/_rels/chart$chartCount.xml.rels';
+        final chartRelsBuilder = XmlBuilder();
+        chartRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+        chartRelsBuilder.element('Relationships', attributes: {
+          'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
+        }, nest: () {});
+        _excel._xmlFiles[chartRelsPath] = chartRelsBuilder.buildDocument();
+
+        // Add to Drawing Relationships
+        final rId = 'rId$nextRId';
+        nextRId++;
+
+        relsRoot.children.add(XmlElement(XmlName('Relationship'), [
+          XmlAttribute(XmlName('Id'), rId),
+          XmlAttribute(
+            XmlName('Type'),
+            'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
+          ),
+          XmlAttribute(XmlName('Target'), '../charts/chart$chartCount.xml'),
+        ]));
+
+        // Add to Drawing XML using the actual relationship ID
+        drawingRoot.children.add(
+          writer.buildChartAnchorElement(chart, i, drawingIdx, rId),
+        );
+
+        // Add Content Type for Chart
+        _save._addContentType(
+          'application/vnd.openxmlformats-officedocument.drawingml.chart+xml',
+          '/$chartPath',
+        );
+      }
+
+      // --- If drawing is new, wire it up to the worksheet ---
+      if (drawingIsNew) {
+        _save._addContentType(
+          'application/vnd.openxmlformats-officedocument.drawing+xml',
+          '/$drawingPath',
+        );
+
+        // Add drawing relationship to the sheet's rels file
+        var sheetRels = _excel._xmlFiles[sheetRelsPath];
+        if (sheetRels == null) {
+          final relsBuilder = XmlBuilder();
+          relsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+          relsBuilder.element('Relationships', attributes: {
+            'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
+          }, nest: () {});
+          sheetRels = relsBuilder.buildDocument();
+          _excel._xmlFiles[sheetRelsPath] = sheetRels;
+        }
+
+        final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
+        final drawingRIdIndex = sheetRelsRoot.children.whereType<XmlElement>().length + 1;
+        final drawingRId = 'rId$drawingRIdIndex';
+        final drawingFileName = drawingPath.split('/').last;
+
+        sheetRelsRoot.children.add(XmlElement(XmlName('Relationship'), [
+          XmlAttribute(XmlName('Id'), drawingRId),
+          XmlAttribute(
+            XmlName('Type'),
+            'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
+          ),
+          XmlAttribute(XmlName('Target'), '../drawings/$drawingFileName'),
+        ]));
+
+        // Add <drawing r:id="…"> to the worksheet XML
+        final worksheet = _excel._xmlFiles[sheetId]!.findAllElements('worksheet').first;
+        final existingDrawings = worksheet.findAllElements('drawing').toList();
+        if (existingDrawings.isEmpty) {
+          final drawingElement = XmlElement(XmlName('drawing'), [
+            XmlAttribute(XmlName('id', 'r'), drawingRId),
+          ]);
+
+          int insertIndex = -1;
+          final tagsAfterDrawing = [
+            'legacyDrawing',
+            'legacyDrawingHF',
+            'picture',
+            'oleObjects',
+            'drawingHF',
+            'extLst'
+          ];
+
+          for (int i = 0; i < worksheet.children.length; i++) {
+            final child = worksheet.children[i];
+            if (child is XmlElement && tagsAfterDrawing.contains(child.name.local)) {
+              insertIndex = i;
+              break;
+            }
+          }
+
+          if (insertIndex != -1) {
+            worksheet.children.insert(insertIndex, drawingElement);
+          } else {
+            worksheet.children.add(drawingElement);
+          }
         }
       }
     });
+  }
+
+  (String, String)? _findExistingDrawing(String sheetRelsPath) {
+    final sheetRels = _excel._xmlFiles[sheetRelsPath];
+    if (sheetRels == null) return null;
+
+    for (final rel in sheetRels.findAllElements('Relationship')) {
+      final type = rel.getAttribute('Type') ?? '';
+      if (type.endsWith('/drawing')) {
+        final target = rel.getAttribute('Target') ?? '';
+        final drawingFileName = target.split('/').last;
+        return (
+          'xl/drawings/$drawingFileName',
+          'xl/drawings/_rels/$drawingFileName.rels',
+        );
+      }
+    }
+    return null;
+  }
+
+  int _countExistingDrawings() {
+    return _excel._xmlFiles.keys
+        .where((k) =>
+            k.startsWith('xl/drawings/drawing') &&
+            k.endsWith('.xml') &&
+            !k.contains('/_rels/'))
+        .length;
+  }
+
+  XmlDocument _buildEmptyDrawing() {
+    final b = XmlBuilder();
+    b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+    b.element('xdr:wsDr', namespaces: {
+      'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing': 'xdr',
+      'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
+      'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
+    }, nest: () {});
+    return b.buildDocument();
   }
 
   List<CellValue?> _resolveChartRange(String range) {

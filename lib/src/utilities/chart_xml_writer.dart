@@ -21,21 +21,37 @@ class ChartXmlWriter {
     builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
     builder.element('xdr:wsDr', namespaces: _buildDrawingNamespaces(), nest: () {
       for (int i = 0; i < charts.length; i++) {
-        _buildChartAnchor(builder, charts[i], i, drawingCount);
+        _buildChartAnchor(builder, charts[i], i, drawingCount, 'rId${i + 1}');
       }
     });
     return builder.buildDocument();
   }
 
-  /// Generates the Chart XML (xl/charts/chart*.xml)
+  /// Builds a `<xdr:twoCellAnchor>` element for the given [chart] using [XmlBuilder].
+  XmlElement buildChartAnchorElement(Chart chart, int index, int drawingCount, String rId) {
+    final builder = XmlBuilder();
+    builder.element('xdr:twoCellAnchor', namespaces: _buildDrawingNamespaces(), nest: () {
+      _buildAnchorPosition(builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
+      _buildAnchorPosition(builder, 'xdr:to', chart.anchor.toColumn, chart.anchor.toRow);
+      _buildGraphicFrame(builder, index, drawingCount, rId);
+      builder.element('xdr:clientData');
+    });
+    return builder.buildDocument().rootElement.copy();
+  }
+
+  // Generates the Chart XML (xl/charts/chart*.xml)
   XmlDocument generateChartXml(Chart chart) {
     final builder = XmlBuilder();
     builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
     builder.element('c:chartSpace', namespaces: _buildChartNamespaces(), nest: () {
-      builder.element('c:autoTitleDeleted', attributes: {'val': '0'});
+      // c:lang is required by Excel as first child of chartSpace
+      builder.element('c:lang', attributes: {'val': 'en-US'});
       builder.element('c:chart', nest: () {
+        // CT_Chart sequence (OOXML §21.2.2.29): title comes BEFORE autoTitleDeleted
         _buildChartTitle(builder, chart.title);
+        builder.element('c:autoTitleDeleted', attributes: {'val': '0'});
         _buildPlotArea(builder, chart);
+        // plotVisOnly/dispBlanksAs/showDLblsOverMax must come AFTER legend inside c:chart
         if (chart.showLegend) {
           _buildLegend(builder);
         }
@@ -54,14 +70,15 @@ class ChartXmlWriter {
       'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing': 'xdr',
       'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
       'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
+      'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
     };
   }
 
-  void _buildChartAnchor(XmlBuilder builder, Chart chart, int index, int drawingCount) {
-    builder.element('xdr:twoCellAnchor', attributes: {'editAs': 'oneCell'}, nest: () {
+  void _buildChartAnchor(XmlBuilder builder, Chart chart, int index, int drawingCount, String rId) {
+    builder.element('xdr:twoCellAnchor', nest: () {
       _buildAnchorPosition(builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
       _buildAnchorPosition(builder, 'xdr:to', chart.anchor.toColumn, chart.anchor.toRow);
-      _buildGraphicFrame(builder, index, drawingCount);
+      _buildGraphicFrame(builder, index, drawingCount, rId);
       builder.element('xdr:clientData');
     });
   }
@@ -75,8 +92,8 @@ class ChartXmlWriter {
     });
   }
 
-  void _buildGraphicFrame(XmlBuilder builder, int index, int drawingCount) {
-    builder.element('xdr:graphicFrame', attributes: {'macro': ''}, nest: () {
+  void _buildGraphicFrame(XmlBuilder builder, int index, int drawingCount, String rId) {
+    builder.element('xdr:graphicFrame', nest: () {
       builder.element('xdr:nvGraphicFramePr', nest: () {
         builder.element('xdr:cNvPr', attributes: {
           'id': '${index + 1 + (drawingCount * 1024)}',
@@ -92,11 +109,8 @@ class ChartXmlWriter {
         builder.element('a:graphicData',
             attributes: {'uri': 'http://schemas.openxmlformats.org/drawingml/2006/chart'},
             nest: () {
-          builder.element('c:chart', namespaces: <String, String>{
-            'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
-            'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
-          }, attributes: {
-            'r:id': 'rId${index + 1}'
+          builder.element('c:chart', attributes: {
+            'r:id': rId
           });
         });
       });
@@ -175,10 +189,12 @@ class ChartXmlWriter {
     builder.element('c:ser', nest: () {
       builder.element('c:idx', attributes: {'val': '$index'});
       builder.element('c:order', attributes: {'val': '$index'});
+      // CT_SerTx (OOXML spec §21.2.2.174) is a choice between c:strRef and c:v only.
+      // c:strLit is NOT valid here — use c:v directly for a literal series name.
       builder.element('c:tx', nest: () {
         builder.element('c:v', nest: () => builder.text(series.name));
       });
-      
+
       _buildSeriesColors(builder, chart, series, index);
       _buildSeriesData(builder, chart, series);
     });
@@ -195,9 +211,9 @@ class ChartXmlWriter {
       builder.element('c:xVal', nest: () {
         builder.element('c:numRef', nest: () {
           builder.element('c:f', nest: () => builder.text(series.categoriesRange));
-          if (series.values != null && series.values!.isNotEmpty) {
-            // We reuse numCache logic for X values in scatter
-            _buildNumCache(builder, series.values!.map((e) => 0.0).toList()); 
+          // Fix #4: usar xValues reales (resueltos en chart_manager), no ceros
+          if (series.xValues != null && series.xValues!.isNotEmpty) {
+            _buildNumCache(builder, series.xValues!);
           }
         });
       });
@@ -275,6 +291,8 @@ class ChartXmlWriter {
       });
       builder.element('c:delete', attributes: {'val': '0'});
       builder.element('c:axPos', attributes: {'val': 'b'});
+      // Fix #5: c:numFmt es requerido en catAx según OOXML spec
+      builder.element('c:numFmt', attributes: {'formatCode': 'General', 'sourceLinked': '1'});
       builder.element('c:majorTickMark', attributes: {'val': 'out'});
       builder.element('c:minorTickMark', attributes: {'val': 'none'});
       builder.element('c:tickLblPos', attributes: {'val': 'nextTo'});
@@ -295,7 +313,7 @@ class ChartXmlWriter {
       builder.element('c:delete', attributes: {'val': '0'});
       builder.element('c:axPos', attributes: {'val': pos});
       builder.element('c:majorGridlines');
-      builder.element('c:numFmt', attributes: {'val': 'General', 'sourceLinked': '1'});
+      builder.element('c:numFmt', attributes: {'formatCode': 'General', 'sourceLinked': '1'});
       builder.element('c:majorTickMark', attributes: {'val': 'out'});
       builder.element('c:minorTickMark', attributes: {'val': 'none'});
       builder.element('c:tickLblPos', attributes: {'val': 'nextTo'});
