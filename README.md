@@ -225,6 +225,16 @@ cell.cellStyle = (cell.cellStyle ?? CellStyle()).copyWith(
   /// a builtin format that uses a red text color for negative numbers
   numberFormat: NumFormat.standard_38,
 
+  /// currency formats (v1.2.0+)
+  numberFormat: NumFormat.standard_5,  // $#,##0_);($#,##0)
+  numberFormat: NumFormat.standard_6,  // $#,##0_);[Red]($#,##0)
+  numberFormat: NumFormat.standard_7,  // $#,##0.00_);($#,##0.00)
+  numberFormat: NumFormat.standard_8,  // $#,##0.00_);[Red]($#,##0.00)
+
+  /// accounting with fill character (v1.2.0+)
+  numberFormat: NumFormat.standard_41, // _(* #,##0_);...
+  numberFormat: NumFormat.standard_44, // _($* #,##0.00_);...
+
   // The numberFormat changes automatially if you set a CellValue that 
   // does not work with the numberFormat set previously. So in case you
   // want to set a new value, e.g. from a date to a decimal number, 
@@ -1003,6 +1013,7 @@ For more details about chart colors and customization, see the [CHART_COLORS_GUI
 - **Multiple Series**: Column, Bar, Line, Area, Scatter, and Radar charts support multiple series
 - **Chart Title**: The title parameter is optional but recommended for clarity
 - **Legend**: Set `showLegend: false` to hide the chart legend
+- **Microsoft Excel Compatibility** *(v1.2.0+)*: Chart XML is fully compliant with the OOXML spec. Series names use the correct `<c:tx><c:v>` structure and element ordering inside `<c:chart>` follows the required CT_Chart sequence, ensuring charts open without errors in Microsoft Excel and Excel 365.
 
 </details>
 

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-04
+
+### Fixed
+- **Chart XML — series name (`c:tx`)**: The series name inside `<c:tx>` was incorrectly wrapped in `<c:strLit>`, which is not a valid child according to the OOXML `CT_SerTx` schema (§21.2.2.174). It now correctly uses `<c:v>` directly, fixing broken/missing series names when opening generated files in Microsoft Excel.
+- **Chart XML — element order in `CT_Chart`**: `<c:autoTitleDeleted>` was emitted before `<c:title>`, violating the required sequence defined in OOXML §21.2.2.29. The order is now `<c:title>` → `<c:autoTitleDeleted>`, fixing chart validation errors in strict Excel readers.
+- **`standard_21` format code**: Was `'h:mm:dd'` (invalid), corrected to `'h:mm:ss'` per ECMA-376 §18.8.30.
+- **`standard_40` format code**: Was `'#,##0.00;[Red](#,#)'` (truncated), corrected to `'#,##0.00;[Red](#,##0.00)'`.
+
+### Added
+- **Complete OOXML standard number format table** (ECMA-376 §18.8.30): added previously missing built-in format IDs:
+  - Currency formats `standard_5`–`standard_8` (`$#,##0`, `$#,##0.00` with normal/red negative variants).
+  - Reserved/fallback formats `standard_23`–`standard_26` (mapped to `General`).
+  - CJK locale date/time formats `standard_27`–`standard_36`.
+  - Accounting with fill-character formats `standard_41`–`standard_44` (`_(* …)` / `_($* …)` patterns).
+- **Parser refactor**: split monolithic `parse.dart` into `styles_parser.dart` (style/XF resolution) and `worksheet_parser.dart` (row/cell parsing) for improved maintainability.
+
 ## [1.1.4] - 2026-05-11
 
 ### Added
