@@ -181,8 +181,8 @@ class _ImageManager {
   XmlDocument _buildEmptyRelationships() {
     final b = XmlBuilder();
     b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('Relationships', namespaces: {
-      'http://schemas.openxmlformats.org/package/2006/relationships': '',
+    b.element('Relationships', attributes: {
+      'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
     }, nest: () {});
     return b.buildDocument();
   }
