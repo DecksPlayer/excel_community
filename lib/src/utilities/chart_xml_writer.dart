@@ -1,7 +1,7 @@
 part of '../../excel_community.dart';
 
 /// Internal utility to generate XML for Charts and Drawings.
-/// 
+///
 /// Organized by responsibility:
 /// - Drawing XML: Structure for drawing elements
 /// - Chart Orchestration: High-level chart building logic
@@ -18,8 +18,10 @@ class ChartXmlWriter {
   /// Generates the Drawing XML (xl/drawings/drawing*.xml)
   XmlDocument generateDrawingXml(List<Chart> charts, int drawingCount) {
     final builder = XmlBuilder();
-    builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    builder.element('xdr:wsDr', namespaces: _buildDrawingNamespaces(), nest: () {
+    builder.processing(
+        'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+    builder.element('xdr:wsDr', namespaces: _buildDrawingNamespaces(),
+        nest: () {
       for (int i = 0; i < charts.length; i++) {
         _buildChartAnchor(builder, charts[i], i, drawingCount, 'rId${i + 1}');
       }
@@ -28,11 +30,15 @@ class ChartXmlWriter {
   }
 
   /// Builds a `<xdr:twoCellAnchor>` element for the given [chart] using [XmlBuilder].
-  XmlElement buildChartAnchorElement(Chart chart, int index, int drawingCount, String rId) {
+  XmlElement buildChartAnchorElement(
+      Chart chart, int index, int drawingCount, String rId) {
     final builder = XmlBuilder();
-    builder.element('xdr:twoCellAnchor', namespaces: _buildDrawingNamespaces(), nest: () {
-      _buildAnchorPosition(builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
-      _buildAnchorPosition(builder, 'xdr:to', chart.anchor.toColumn, chart.anchor.toRow);
+    builder.element('xdr:twoCellAnchor', namespaces: _buildDrawingNamespaces(),
+        nest: () {
+      _buildAnchorPosition(
+          builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
+      _buildAnchorPosition(
+          builder, 'xdr:to', chart.anchor.toColumn, chart.anchor.toRow);
       _buildGraphicFrame(builder, index, drawingCount, rId);
       builder.element('xdr:clientData');
     });
@@ -42,8 +48,10 @@ class ChartXmlWriter {
   // Generates the Chart XML (xl/charts/chart*.xml)
   XmlDocument generateChartXml(Chart chart) {
     final builder = XmlBuilder();
-    builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    builder.element('c:chartSpace', namespaces: _buildChartNamespaces(), nest: () {
+    builder.processing(
+        'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+    builder.element('c:chartSpace', namespaces: _buildChartNamespaces(),
+        nest: () {
       // c:lang is required by Excel as first child of chartSpace
       builder.element('c:lang', attributes: {'val': 'en-US'});
       builder.element('c:chart', nest: () {
@@ -67,23 +75,29 @@ class ChartXmlWriter {
 
   Map<String, String> _buildDrawingNamespaces() {
     return {
-      'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing': 'xdr',
+      'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing':
+          'xdr',
       'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
-      'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships':
+          'r',
       'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
     };
   }
 
-  void _buildChartAnchor(XmlBuilder builder, Chart chart, int index, int drawingCount, String rId) {
+  void _buildChartAnchor(XmlBuilder builder, Chart chart, int index,
+      int drawingCount, String rId) {
     builder.element('xdr:twoCellAnchor', nest: () {
-      _buildAnchorPosition(builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
-      _buildAnchorPosition(builder, 'xdr:to', chart.anchor.toColumn, chart.anchor.toRow);
+      _buildAnchorPosition(
+          builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
+      _buildAnchorPosition(
+          builder, 'xdr:to', chart.anchor.toColumn, chart.anchor.toRow);
       _buildGraphicFrame(builder, index, drawingCount, rId);
       builder.element('xdr:clientData');
     });
   }
 
-  void _buildAnchorPosition(XmlBuilder builder, String element, int column, int row) {
+  void _buildAnchorPosition(
+      XmlBuilder builder, String element, int column, int row) {
     builder.element(element, nest: () {
       builder.element('xdr:col', nest: () => builder.text(column.toString()));
       builder.element('xdr:colOff', nest: () => builder.text('0'));
@@ -92,7 +106,8 @@ class ChartXmlWriter {
     });
   }
 
-  void _buildGraphicFrame(XmlBuilder builder, int index, int drawingCount, String rId) {
+  void _buildGraphicFrame(
+      XmlBuilder builder, int index, int drawingCount, String rId) {
     builder.element('xdr:graphicFrame', nest: () {
       builder.element('xdr:nvGraphicFramePr', nest: () {
         builder.element('xdr:cNvPr', attributes: {
@@ -106,12 +121,10 @@ class ChartXmlWriter {
         builder.element('a:ext', attributes: {'cx': '0', 'cy': '0'});
       });
       builder.element('a:graphic', nest: () {
-        builder.element('a:graphicData',
-            attributes: {'uri': 'http://schemas.openxmlformats.org/drawingml/2006/chart'},
-            nest: () {
-          builder.element('c:chart', attributes: {
-            'r:id': rId
-          });
+        builder.element('a:graphicData', attributes: {
+          'uri': 'http://schemas.openxmlformats.org/drawingml/2006/chart'
+        }, nest: () {
+          builder.element('c:chart', attributes: {'r:id': rId});
         });
       });
     });
@@ -125,7 +138,8 @@ class ChartXmlWriter {
     return {
       'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
       'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
-      'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships':
+          'r',
     };
   }
 
@@ -153,7 +167,7 @@ class ChartXmlWriter {
 
   void _buildPlotArea(XmlBuilder builder, Chart chart) {
     final bool hasAxes = chart is! PieChart && chart is! DoughnutChart;
-    
+
     builder.element('c:plotArea', nest: () {
       builder.element('c:layout');
       _buildChartElement(builder, chart, hasAxes);
@@ -185,7 +199,8 @@ class ChartXmlWriter {
     }
   }
 
-  void _buildSeries(XmlBuilder builder, Chart chart, ChartSeries series, int index) {
+  void _buildSeries(
+      XmlBuilder builder, Chart chart, ChartSeries series, int index) {
     builder.element('c:ser', nest: () {
       builder.element('c:idx', attributes: {'val': '$index'});
       builder.element('c:order', attributes: {'val': '$index'});
@@ -200,7 +215,8 @@ class ChartXmlWriter {
     });
   }
 
-  void _buildSeriesColors(XmlBuilder builder, Chart chart, ChartSeries series, int index) {
+  void _buildSeriesColors(
+      XmlBuilder builder, Chart chart, ChartSeries series, int index) {
     // Delegate to chart-specific builder
     final styleBuilder = ChartStyleBuilderFactory.getBuilder(chart);
     styleBuilder.buildSeriesStyle(builder, chart, series, index);
@@ -210,7 +226,8 @@ class ChartXmlWriter {
     if (chart is ScatterChart) {
       builder.element('c:xVal', nest: () {
         builder.element('c:numRef', nest: () {
-          builder.element('c:f', nest: () => builder.text(series.categoriesRange));
+          builder.element('c:f',
+              nest: () => builder.text(series.categoriesRange));
           // Fix #4: usar xValues reales (resueltos en chart_manager), no ceros
           if (series.xValues != null && series.xValues!.isNotEmpty) {
             _buildNumCache(builder, series.xValues!);
@@ -228,7 +245,8 @@ class ChartXmlWriter {
     } else {
       builder.element('c:cat', nest: () {
         builder.element('c:strRef', nest: () {
-          builder.element('c:f', nest: () => builder.text(series.categoriesRange));
+          builder.element('c:f',
+              nest: () => builder.text(series.categoriesRange));
           if (series.categories != null && series.categories!.isNotEmpty) {
             _buildStrCache(builder, series.categories!);
           }
@@ -262,7 +280,8 @@ class ChartXmlWriter {
       builder.element('c:ptCount', attributes: {'val': '${values.length}'});
       for (int i = 0; i < values.length; i++) {
         builder.element('c:pt', attributes: {'idx': '$i'}, nest: () {
-          builder.element('c:v', nest: () => builder.text(values[i].toString()));
+          builder.element('c:v',
+              nest: () => builder.text(values[i].toString()));
         });
       }
     });
@@ -292,7 +311,8 @@ class ChartXmlWriter {
       builder.element('c:delete', attributes: {'val': '0'});
       builder.element('c:axPos', attributes: {'val': 'b'});
       // Fix #5: c:numFmt es requerido en catAx según OOXML spec
-      builder.element('c:numFmt', attributes: {'formatCode': 'General', 'sourceLinked': '1'});
+      builder.element('c:numFmt',
+          attributes: {'formatCode': 'General', 'sourceLinked': '1'});
       builder.element('c:majorTickMark', attributes: {'val': 'out'});
       builder.element('c:minorTickMark', attributes: {'val': 'none'});
       builder.element('c:tickLblPos', attributes: {'val': 'nextTo'});
@@ -304,7 +324,8 @@ class ChartXmlWriter {
     });
   }
 
-  void _buildValueAxis(XmlBuilder builder, {String id = '10000002', String pos = 'l', String crossAx = '10000001'}) {
+  void _buildValueAxis(XmlBuilder builder,
+      {String id = '10000002', String pos = 'l', String crossAx = '10000001'}) {
     builder.element('c:valAx', nest: () {
       builder.element('c:axId', attributes: {'val': id});
       builder.element('c:scaling', nest: () {
@@ -313,7 +334,8 @@ class ChartXmlWriter {
       builder.element('c:delete', attributes: {'val': '0'});
       builder.element('c:axPos', attributes: {'val': pos});
       builder.element('c:majorGridlines');
-      builder.element('c:numFmt', attributes: {'formatCode': 'General', 'sourceLinked': '1'});
+      builder.element('c:numFmt',
+          attributes: {'formatCode': 'General', 'sourceLinked': '1'});
       builder.element('c:majorTickMark', attributes: {'val': 'out'});
       builder.element('c:minorTickMark', attributes: {'val': 'none'});
       builder.element('c:tickLblPos', attributes: {'val': 'nextTo'});
