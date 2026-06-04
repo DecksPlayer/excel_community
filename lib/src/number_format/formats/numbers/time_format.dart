@@ -81,6 +81,14 @@ class StandardTimeNumFormat extends TimeNumFormat implements StandardNumFormat {
     required super.formatCode,
   });
 
+  // Standard formats are uniquely identified by their numFmtId.
+  @override
+  int get hashCode => Object.hash(runtimeType, numFmtId);
+
+  @override
+  bool operator ==(Object other) =>
+      other is StandardTimeNumFormat && other.numFmtId == numFmtId;
+
   @override
   String toString() {
     return 'StandardTimeNumFormat($numFmtId, "$formatCode")';

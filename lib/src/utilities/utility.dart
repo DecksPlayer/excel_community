@@ -107,6 +107,10 @@ String _normalizeNewLine(String text) {
   return text.replaceAll('\r\n', '\n');
 }
 
+/// Extracts and normalizes the text content of an XML element.
+/// Used by both the worksheet parser and shared string reader.
+String _parseXmlValue(XmlElement node) => _normalizeNewLine(node.innerText);
+
 ///
 ///Returns the coordinates from a cell name.
 ///
