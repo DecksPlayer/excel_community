@@ -33,7 +33,6 @@ class Parser {
     _StylesParser(_excel).parse(_excel._stylesTarget);
     _parseSharedStrings();
     _parseContent();
-    _parseMergedCells();
   }
 
   // ---------------------------------------------------------------------------
@@ -152,10 +151,30 @@ class Parser {
     }
 
     sharedStrings!.decompress();
-    var document = XmlDocument.parse(utf8.decode(sharedStrings.content));
-    _excel._xmlFiles['xl/${_excel._sharedStringsTarget}'] = document;
-
-    document.findAllElements('si').forEach(_parseSharedString);
+    final contentString = utf8.decode(sharedStrings.content);
+    final events = xml_events.parseEvents(contentString);
+    List<xml_events.XmlEvent>? currentSiEvents;
+    for (final event in events) {
+      if (event is xml_events.XmlStartElementEvent &&
+          (event.name == 'si' || event.name.endsWith(':si'))) {
+        currentSiEvents = [event];
+        if (event.isSelfClosing) {
+          final siXml = event.toString();
+          final node = XmlDocument.parse(siXml).rootElement;
+          _parseSharedString(node);
+          currentSiEvents = null;
+        }
+      } else if (currentSiEvents != null) {
+        currentSiEvents.add(event);
+        if (event is xml_events.XmlEndElementEvent &&
+            (event.name == 'si' || event.name.endsWith(':si'))) {
+          final siXml = currentSiEvents.map((e) => e.toString()).join();
+          final node = XmlDocument.parse(siXml).rootElement;
+          _parseSharedString(node);
+          currentSiEvents = null;
+        }
+      }
+    }
   }
 
   void _parseSharedString(XmlElement node) {
@@ -178,6 +197,10 @@ class Parser {
     _excel._xmlFiles['xl/workbook.xml'] = document;
 
     document.findAllElements('sheet').forEach((node) {
+      final name = node.getAttribute('name');
+      if (name != null) {
+        _excel._sheets[name] = node;
+      }
       if (run) {
         _WorksheetParser(_excel, _worksheetTargets).parseTable(node);
       } else {
@@ -189,61 +212,7 @@ class Parser {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Merged cells
-  // ---------------------------------------------------------------------------
 
-  /// Identifies merged cell regions in each sheet and removes all spanned
-  /// cells except the top-left one, which preserves its content.
-  void _parseMergedCells() {
-    final spannedCells = <String, List<String>>{};
-
-    _excel._sheets.forEach((sheetName, node) {
-      _excel._availSheet(sheetName);
-      final sheetDataNode = node as XmlElement;
-      final spanList = <String>[];
-      final sheet = _excel._sheetMap[sheetName]!;
-
-      sheetDataNode.parent!.findAllElements('mergeCell').forEach((element) {
-        final ref = element.getAttribute('ref');
-        if (ref == null || !ref.contains(':') || ref.split(':').length != 2) {
-          return;
-        }
-
-        if (!sheet._spannedItems.contains(ref)) {
-          sheet._spannedItems.add(ref);
-        }
-
-        final parts = ref.split(':');
-        final startCell = parts[0];
-        final endCell = parts[1];
-
-        if (!spanList.contains(startCell)) spanList.add(startCell);
-        spannedCells[sheetName] = spanList;
-
-        final spanObj = _Span.fromCellIndex(
-          start: CellIndex.indexByString(startCell),
-          end: CellIndex.indexByString(endCell),
-        );
-
-        if (!sheet._spanList.contains(spanObj)) {
-          sheet._spanList.add(spanObj);
-          _clearMergedCells(spanObj, sheet);
-        }
-        _excel._mergeChangeLookup = sheetName;
-      });
-    });
-  }
-
-  /// Removes all cells inside a merged span except the top-left cell.
-  void _clearMergedCells(_Span spanObj, Sheet sheet) {
-    for (var col = spanObj.columnSpanStart; col <= spanObj.columnSpanEnd; col++) {
-      for (var row = spanObj.rowSpanStart; row <= spanObj.rowSpanEnd; row++) {
-        final isOrigin = col == spanObj.columnSpanStart && row == spanObj.rowSpanStart;
-        if (!isOrigin) sheet._removeCell(row, col);
-      }
-    }
-  }
 
   // ---------------------------------------------------------------------------
   // Sheet creation
@@ -302,16 +271,20 @@ class Parser {
 
     if (!_rId.contains('rId$ridNumber')) _rId.add('rId$ridNumber');
 
+    final newSheetNode = XmlElement(XmlName('sheet'), <XmlAttribute>[
+      XmlAttribute(XmlName('state'), 'visible'),
+      XmlAttribute(XmlName('name'), newSheet),
+      XmlAttribute(XmlName('sheetId'), '$sheetNumber'),
+      XmlAttribute(XmlName('r:id'), 'rId$ridNumber'),
+    ]);
+
     _excel._xmlFiles['xl/workbook.xml']
         ?.findAllElements('sheets')
         .first
         .children
-        .add(XmlElement(XmlName('sheet'), <XmlAttribute>[
-          XmlAttribute(XmlName('state'), 'visible'),
-          XmlAttribute(XmlName('name'), newSheet),
-          XmlAttribute(XmlName('sheetId'), '$sheetNumber'),
-          XmlAttribute(XmlName('r:id'), 'rId$ridNumber'),
-        ]));
+        .add(newSheetNode);
+
+    _excel._sheets[newSheet] = newSheetNode;
 
     _worksheetTargets['rId$ridNumber'] = 'worksheets/sheet$sheetNumber.xml';
 
@@ -336,8 +309,8 @@ class Parser {
     final newFile =
         _excel._archive.findFile('xl/worksheets/sheet$sheetNumber.xml')!;
     newFile.decompress();
-    final document = XmlDocument.parse(utf8.decode(newFile.content));
-    _excel._xmlFiles['xl/worksheets/sheet$sheetNumber.xml'] = document;
+    final contentString = utf8.decode(newFile.content);
+    _excel._sheetXmls['xl/worksheets/sheet$sheetNumber.xml'] = contentString;
     _excel._xmlSheetId[newSheet] = 'xl/worksheets/sheet$sheetNumber.xml';
 
     _excel._xmlFiles['[Content_Types].xml']

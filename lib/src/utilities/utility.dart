@@ -5,7 +5,25 @@ final List<String> _noCompression = <String>[
   'Thumbnails/thumbnail.png'
 ];
 
+final List<String> _columnLetterList = List<String>.generate(16384, (i) {
+  var temp = i + 1;
+  var letters = '';
+  while (temp != 0) {
+    var remainder = temp % 26;
+    if (remainder == 0) {
+      remainder = 26;
+    }
+    var letter = String.fromCharCode(65 + remainder - 1);
+    letters = letter + letters;
+    temp = (temp - 1) ~/ 26;
+  }
+  return letters;
+});
+
 String getCellId(int columnIndex, int rowIndex) {
+  if (columnIndex < 16384) {
+    return '${_columnLetterList[columnIndex]}${rowIndex + 1}';
+  }
   return '${_numericToLetters(columnIndex + 1)}${rowIndex + 1}';
 }
 
@@ -77,13 +95,20 @@ String _twoDigits(int n) {
   return '0$n';
 }
 
+final Map<int, String> _columnLetterCache = {};
+
 /// Convert a number to character based column
 String _numericToLetters(int number) {
+  final cached = _columnLetterCache[number];
+  if (cached != null) {
+    return cached;
+  }
+  var temp = number;
   var letters = '';
 
-  while (number != 0) {
+  while (temp != 0) {
     // Set remainder from 1..26
-    var remainder = number % 26;
+    var remainder = temp % 26;
 
     if (remainder == 0) {
       remainder = 26;
@@ -96,9 +121,10 @@ String _numericToLetters(int number) {
     letters = letter + letters;
 
     // Get the next order of magnitude using bit shift.
-    number = (number - 1) ~/ 26;
+    temp = (temp - 1) ~/ 26;
   }
 
+  _columnLetterCache[number] = letters;
   return letters;
 }
 
@@ -111,6 +137,21 @@ String _normalizeNewLine(String text) {
 /// Used by both the worksheet parser and shared string reader.
 String _parseXmlValue(XmlElement node) => _normalizeNewLine(node.innerText);
 
+String _escapeXml(String input) {
+  for (int i = 0; i < input.length; i++) {
+    final char = input.codeUnitAt(i);
+    if (char == 38 || char == 60 || char == 62 || char == 34 || char == 39) {
+      return input
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&apos;');
+    }
+  }
+  return input;
+}
+
 ///
 ///Returns the coordinates from a cell name.
 ///
@@ -120,11 +161,18 @@ String _parseXmlValue(XmlElement node) => _normalizeNewLine(node.innerText);
 ///It is useful to convert CellId to Indexing.
 ///
 (int x, int y) _cellCoordsFromCellId(String cellId) {
-  var letters = cellId.runes.map(_letterOnly);
-  var lettersPart = utf8.decode(letters.where((rune) {
-    return rune > 0;
-  }).toList(growable: false));
-  var numericsPart = cellId.substring(lettersPart.length);
+  int i = 0;
+  while (i < cellId.length) {
+    int code = cellId.codeUnitAt(i);
+    // If it's a digit (48-57), stop.
+    if (code >= 48 && code <= 57) {
+      break;
+    }
+    i++;
+  }
+
+  final lettersPart = cellId.substring(0, i);
+  final numericsPart = cellId.substring(i);
 
   return (
     int.parse(numericsPart) - 1,

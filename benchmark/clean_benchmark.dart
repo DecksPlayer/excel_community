@@ -1,0 +1,89 @@
+import 'dart:convert';
+import 'dart:io';
+
+class Result {
+  final int build;
+  final int encode;
+  final int total;
+  final int size;
+
+  Result(this.build, this.encode, this.total, this.size);
+
+  factory Result.parse(String output) {
+    // Expected output format: RESULT:build:123|encode:456|total:579|size:1000
+    final line = output.split('\n').firstWhere((l) => l.startsWith('RESULT:'));
+    final parts = line.substring(7).split('|');
+    int build = 0;
+    int encode = 0;
+    int total = 0;
+    int size = 0;
+    for (var part in parts) {
+      final kv = part.split(':');
+      if (kv[0] == 'build') build = int.parse(kv[1]);
+      if (kv[0] == 'encode') encode = int.parse(kv[1]);
+      if (kv[0] == 'total') total = int.parse(kv[1]);
+      if (kv[0] == 'size') size = int.parse(kv[1]);
+    }
+    return Result(build, encode, total, size);
+  }
+}
+
+Future<Result> runProcess(String library, int cellsCount) async {
+  final process = await Process.start('dart', [
+    'run',
+    'run_single.dart',
+    library,
+    cellsCount.toString(),
+  ]);
+
+  final output = await process.stdout.transform(utf8.decoder).join();
+  final stderrOutput = await process.stderr.transform(utf8.decoder).join();
+
+  if (process.exitCode != 0 && !output.contains('RESULT:')) {
+    print('Error running process: $stderrOutput');
+    exit(1);
+  }
+
+  return Result.parse(output);
+}
+
+void printTable(String title, Result community, Result plus) {
+  print('\n=== $title ===');
+  print('-----------------------------------------------------------------------------');
+  print('${'Library'.padRight(20)} | ${'Build (ms)'.padLeft(12)} | ${'Encode (ms)'.padLeft(12)} | ${'Total (ms)'.padLeft(12)} | ${'Speed Ratio'.padLeft(12)}');
+  print('-----------------------------------------------------------------------------');
+  
+  final double commTotal = community.total.toDouble();
+  final double plusTotal = plus.total.toDouble();
+  final double minTotal = commTotal < plusTotal ? commTotal : plusTotal;
+  
+  final commRatio = commTotal / minTotal;
+  final plusRatio = plusTotal / minTotal;
+  
+  print('${'excel_community'.padRight(20)} | ${community.build.toString().padLeft(12)} | ${community.encode.toString().padLeft(12)} | ${community.total.toString().padLeft(12)} | ${commRatio.toStringAsFixed(2).padLeft(11)}x');
+  print('${'excel_plus'.padRight(20)} | ${plus.build.toString().padLeft(12)} | ${plus.encode.toString().padLeft(12)} | ${plus.total.toString().padLeft(12)} | ${plusRatio.toStringAsFixed(2).padLeft(11)}x');
+  print('-----------------------------------------------------------------------------');
+  print('File sizes: excel_community = ${community.size} bytes, excel_plus = ${plus.size} bytes\n');
+}
+
+Future<void> main() async {
+  print('=============================================================================');
+  print('EXCEL LIBRARIES CLEAN COLD-START SCALING BENCHMARK');
+  print('Running each benchmark run in a completely fresh Dart VM process (from scratch)');
+  print('=============================================================================');
+
+  print('\nRunning Benchmark 1: 10K Cells...');
+  final comm10k = await runProcess('community', 10000);
+  final plus10k = await runProcess('plus', 10000);
+  printTable('10K Cells Benchmark (1,000 rows x 10 cols)', comm10k, plus10k);
+
+  print('\nRunning Benchmark 2: 100K Cells...');
+  final comm100k = await runProcess('community', 100000);
+  final plus100k = await runProcess('plus', 100000);
+  printTable('100K Cells Benchmark (10,000 rows x 10 cols)', comm100k, plus100k);
+
+  print('\nRunning Benchmark 3: 5M Cells...');
+  final comm5m = await runProcess('community', 5000000);
+  final plus5m = await runProcess('plus', 5000000);
+  printTable('5M Cells Benchmark (500,000 rows x 10 cols)', comm5m, plus5m);
+}

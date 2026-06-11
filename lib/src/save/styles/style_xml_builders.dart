@@ -220,7 +220,7 @@ class _StyleXmlBuilders {
         CustomNumFormat() => _excel._numFormats.findOrAdd(numberFormat),
       };
 
-      celx.children.add(XmlElement(XmlName('xf'), [
+       celx.children.add(XmlElement(XmlName('xf'), [
         XmlAttribute(XmlName('applyFont'), '1'),
         XmlAttribute(XmlName('applyFill'), '1'),
         XmlAttribute(XmlName('applyBorder'), '1'),
@@ -229,6 +229,7 @@ class _StyleXmlBuilders {
         XmlAttribute(XmlName('fillId'), '$fillId'),
         XmlAttribute(XmlName('fontId'), '$fontId'),
         XmlAttribute(XmlName('numFmtId'), numFmtId.toString()),
+        XmlAttribute(XmlName('xfId'), '0'),
       ], [
         XmlElement(XmlName('alignment'), [
           XmlAttribute(XmlName('horizontal'),

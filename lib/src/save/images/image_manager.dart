@@ -124,21 +124,7 @@ class _ImageManager {
           XmlAttribute(XmlName('Target'), '../drawings/$drawingFileName'),
         ]));
 
-        // Add <drawing r:id="…"> to the worksheet XML
-        final worksheetDoc = _excel._xmlFiles[sheetId];
-        if (worksheetDoc != null) {
-          final worksheet =
-              worksheetDoc.findAllElements('worksheet').first;
-          final existingDrawing =
-              worksheet.findAllElements('drawing').toList();
-          if (existingDrawing.isEmpty) {
-            final drawingEl = XmlElement(
-              XmlName('drawing'),
-              [XmlAttribute(XmlName('id', 'r'), drawingRId)],
-            );
-            _insertBeforeTrailingTags(worksheet, drawingEl);
-          }
-        }
+        sheet._drawingRId = drawingRId;
       }
     });
   }

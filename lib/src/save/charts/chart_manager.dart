@@ -164,38 +164,7 @@ class _ChartManager {
           XmlAttribute(XmlName('Target'), '../drawings/$drawingFileName'),
         ]));
 
-        // Add <drawing r:id="…"> to the worksheet XML
-        final worksheet = _excel._xmlFiles[sheetId]!.findAllElements('worksheet').first;
-        final existingDrawings = worksheet.findAllElements('drawing').toList();
-        if (existingDrawings.isEmpty) {
-          final drawingElement = XmlElement(XmlName('drawing'), [
-            XmlAttribute(XmlName('id', 'r'), drawingRId),
-          ]);
-
-          int insertIndex = -1;
-          final tagsAfterDrawing = [
-            'legacyDrawing',
-            'legacyDrawingHF',
-            'picture',
-            'oleObjects',
-            'drawingHF',
-            'extLst'
-          ];
-
-          for (int i = 0; i < worksheet.children.length; i++) {
-            final child = worksheet.children[i];
-            if (child is XmlElement && tagsAfterDrawing.contains(child.name.local)) {
-              insertIndex = i;
-              break;
-            }
-          }
-
-          if (insertIndex != -1) {
-            worksheet.children.insert(insertIndex, drawingElement);
-          } else {
-            worksheet.children.add(drawingElement);
-          }
-        }
+        sheet._drawingRId = drawingRId;
       }
     });
   }

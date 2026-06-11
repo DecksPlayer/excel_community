@@ -1,0 +1,13 @@
+name: excel_benchmark
+description: A benchmark package comparing excel_community and excel_plus.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.11.0 <4.0.0"
+
+dependencies:
+  benchmark_harness: ^2.3.1
+  excel_community:
+    path: ../
+  excel_plus: ^0.0.4

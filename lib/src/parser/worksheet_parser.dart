@@ -1,9 +1,7 @@
 part of '../../../excel_community.dart';
 
-/// Parses individual worksheets: sheet data, rows, cells, header/footer,
-/// column widths and row heights.
-///
-/// Separated from [Parser] to keep each file focused on a single concern.
+/// Parses individual worksheets using SAX/event-based parsing to achieve
+/// high performance and a low memory footprint.
 class _WorksheetParser {
   final Excel _excel;
   final Map<String, String> _worksheetTargets;
@@ -23,37 +21,141 @@ class _WorksheetParser {
     sheet._countRowsAndColumns();
   }
 
-  /// Parses a single `<sheet>` node from the workbook, loads its XML file
-  /// and populates the [Sheet] object with all cell data and metadata.
+  /// Parses a single `<sheet>` node from the workbook, loads its XML file,
+  /// parses it using SAX event streaming, and populates the [Sheet] object.
   void parseTable(XmlElement node) {
     final name = node.getAttribute('name')!;
     final target = _worksheetTargets[node.getAttribute('r:id')];
+    if (target == null) {
+      throw ArgumentError('Worksheet target not found for relationship ID ${node.getAttribute('r:id')}');
+    }
+
+    String path = target;
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    } else if (!path.startsWith('xl/')) {
+      path = 'xl/$path';
+    }
 
     _excel._sheetMap['$name'] ??= Sheet._(_excel, '$name');
     final sheetObject = _excel._sheetMap['$name']!;
 
-    final file = _excel._archive.findFile('xl/$target')!;
+    final file = _excel._archive.findFile(path)!;
     file.decompress();
 
-    final content = XmlDocument.parse(utf8.decode(file.content));
-    final worksheet = content.findElements('worksheet').first;
+    final contentString = utf8.decode(file.content);
+    _excel._sheetXmls[path] = contentString;
+    _excel._xmlSheetId[name] = path;
 
-    // Right-to-left view
-    final sheetViews = worksheet.findAllElements('sheetView').toList();
-    if (sheetViews.isNotEmpty) {
-      final rtl = sheetViews.first.getAttribute('rightToLeft');
-      sheetObject.isRTL = rtl != null && rtl == '1';
+    final events = xml_events.parseEvents(contentString);
+
+    List<xml_events.XmlEvent>? currentCellEvents;
+    List<xml_events.XmlEvent>? currentHeaderFooterEvents;
+    int? currentWorksheetRowIndex;
+
+    for (final event in events) {
+      if (event is xml_events.XmlStartElementEvent) {
+        final tagName = event.name;
+
+        if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
+          final rtl = _getAttr(event, 'rightToLeft');
+          sheetObject.isRTL = rtl == '1';
+        } else if (tagName == 'sheetFormatPr' || tagName.endsWith(':sheetFormatPr')) {
+          final colW = double.tryParse(_getAttr(event, 'defaultColWidth') ?? '');
+          final rowH = double.tryParse(_getAttr(event, 'defaultRowHeight') ?? '');
+          if (colW != null && rowH != null) {
+            sheetObject._defaultColumnWidth = colW;
+            sheetObject._defaultRowHeight = rowH;
+          }
+        } else if (tagName == 'col' || tagName.endsWith(':col')) {
+          final col = int.tryParse(_getAttr(event, 'min') ?? '');
+          final width = double.tryParse(_getAttr(event, 'width') ?? '');
+          if (col != null && width != null) {
+            final zeroBasedCol = col - 1;
+            if (zeroBasedCol >= 0) {
+              sheetObject._columnWidths[zeroBasedCol] = width;
+            }
+          }
+        } else if (tagName == 'row' || tagName.endsWith(':row')) {
+          final rowNum = int.tryParse(_getAttr(event, 'r') ?? '');
+          if (rowNum != null) {
+            currentWorksheetRowIndex = rowNum - 1;
+            final height = double.tryParse(_getAttr(event, 'ht') ?? '');
+            if (height != null && currentWorksheetRowIndex >= 0) {
+              sheetObject._rowHeights[currentWorksheetRowIndex] = height;
+            }
+          }
+        } else if (tagName == 'c' || tagName.endsWith(':c')) {
+          currentCellEvents = [event];
+        } else if (tagName == 'headerFooter' || tagName.endsWith(':headerFooter')) {
+          currentHeaderFooterEvents = [event];
+        } else if (tagName == 'drawing' || tagName.endsWith(':drawing')) {
+          final rId = _getAttr(event, 'id');
+          if (rId != null) {
+            sheetObject._drawingRId = rId;
+          }
+        } else if (tagName == 'mergeCell' || tagName.endsWith(':mergeCell')) {
+          final ref = _getAttr(event, 'ref');
+          if (ref != null && ref.contains(':') && ref.split(':').length == 2) {
+            if (!sheetObject._spannedItems.contains(ref)) {
+              sheetObject._spannedItems.add(ref);
+            }
+            final parts = ref.split(':');
+            final startCell = parts[0];
+            final endCell = parts[1];
+            final spanObj = _Span.fromCellIndex(
+              start: CellIndex.indexByString(startCell),
+              end: CellIndex.indexByString(endCell),
+            );
+            if (!sheetObject._spanList.contains(spanObj)) {
+              sheetObject._spanList.add(spanObj);
+              // Clear merged cells from in-memory sheetData
+              for (var col = spanObj.columnSpanStart; col <= spanObj.columnSpanEnd; col++) {
+                for (var row = spanObj.rowSpanStart; row <= spanObj.rowSpanEnd; row++) {
+                  final isOrigin = col == spanObj.columnSpanStart && row == spanObj.rowSpanStart;
+                  if (!isOrigin) sheetObject._removeCell(row, col);
+                }
+              }
+            }
+            _excel._mergeChangeLookup = name;
+          }
+        } else if (currentCellEvents != null) {
+          currentCellEvents.add(event);
+        } else if (currentHeaderFooterEvents != null) {
+          currentHeaderFooterEvents.add(event);
+        }
+      } else if (event is xml_events.XmlEndElementEvent) {
+        final tagName = event.name;
+
+        if ((tagName == 'c' || tagName.endsWith(':c')) && currentCellEvents != null) {
+          currentCellEvents.add(event);
+          final cellXml = currentCellEvents.map((e) => e.toString()).join();
+          final cellNode = XmlDocument.parse(cellXml).rootElement;
+          if (currentWorksheetRowIndex != null && currentWorksheetRowIndex >= 0) {
+            _parseCell(cellNode, sheetObject, currentWorksheetRowIndex, name);
+          }
+          currentCellEvents = null;
+        } else if ((tagName == 'headerFooter' || tagName.endsWith(':headerFooter')) && currentHeaderFooterEvents != null) {
+          currentHeaderFooterEvents.add(event);
+          final hfXml = currentHeaderFooterEvents.map((e) => e.toString()).join();
+          final hfNode = XmlDocument.parse(hfXml).rootElement;
+          sheetObject.headerFooter = HeaderFooter.fromXmlElement(hfNode);
+          currentHeaderFooterEvents = null;
+        } else if (tagName == 'row' || tagName.endsWith(':row')) {
+          currentWorksheetRowIndex = null;
+        } else if (currentCellEvents != null) {
+          currentCellEvents.add(event);
+        } else if (currentHeaderFooterEvents != null) {
+          currentHeaderFooterEvents.add(event);
+        }
+      } else {
+        if (currentCellEvents != null) {
+          currentCellEvents.add(event);
+        } else if (currentHeaderFooterEvents != null) {
+          currentHeaderFooterEvents.add(event);
+        }
+      }
     }
-
-    final sheetData = worksheet.findElements('sheetData').first;
-    _findRows(sheetData).forEach((row) => _parseRow(row, sheetObject, name));
-
-    _parseHeaderFooter(worksheet, sheetObject);
-    _parseColWidthsRowHeights(worksheet, sheetObject);
-
-    _excel._sheets[name] = sheetData;
-    _excel._xmlFiles['xl/$target'] = content;
-    _excel._xmlSheetId[name] = 'xl/$target';
 
     normalizeTable(sheetObject);
   }
@@ -62,10 +164,13 @@ class _WorksheetParser {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  void _parseRow(XmlElement node, Sheet sheetObject, String name) {
-    final rowIndex = (_getRowNumber(node) ?? -1) - 1;
-    if (rowIndex < 0) return;
-    _findCells(node).forEach((cell) => _parseCell(cell, sheetObject, rowIndex, name));
+  String? _getAttr(xml_events.XmlStartElementEvent event, String name) {
+    for (final attr in event.attributes) {
+      if (attr.name == name || attr.name.endsWith(':$name')) {
+        return attr.value;
+      }
+    }
+    return null;
   }
 
   void _parseCell(XmlElement node, Sheet sheetObject, int rowIndex, String name) {
@@ -136,56 +241,5 @@ class _WorksheetParser {
       value,
       cellStyle: _excel._cellStyleList[s],
     );
-  }
-
-  void _parseHeaderFooter(XmlElement worksheet, Sheet sheetObject) {
-    final results = worksheet.findAllElements('headerFooter');
-    if (results.isEmpty) return;
-    sheetObject.headerFooter =
-        HeaderFooter.fromXmlElement(results.first);
-  }
-
-  void _parseColWidthsRowHeights(XmlElement worksheet, Sheet sheetObject) {
-    // --- Default column width / default row height ---
-    // Example: <sheetFormatPr defaultColWidth="26.33" defaultRowHeight="13"/>
-    final formatPr = worksheet.findAllElements('sheetFormatPr');
-    if (formatPr.isNotEmpty) {
-      for (final element in formatPr) {
-        final colW = double.tryParse(element.getAttribute('defaultColWidth') ?? '');
-        final rowH = double.tryParse(element.getAttribute('defaultRowHeight') ?? '');
-        if (colW != null && rowH != null) {
-          sheetObject._defaultColumnWidth = colW;
-          sheetObject._defaultRowHeight = rowH;
-        }
-      }
-    }
-
-    // --- Custom column widths ---
-    // Example: <col min="2" max="2" width="71.83" customWidth="1"/>
-    final cols = worksheet.findAllElements('col');
-    for (final element in cols) {
-      final col = int.tryParse(element.getAttribute('min') ?? '');
-      final width = double.tryParse(element.getAttribute('width') ?? '');
-      if (col != null && width != null) {
-        final zeroBasedCol = col - 1;
-        if (zeroBasedCol >= 0) {
-          sheetObject._columnWidths[zeroBasedCol] = width;
-        }
-      }
-    }
-
-    // --- Custom row heights ---
-    // Example: <row r="1" ht="44" customHeight="1"/>
-    final rows = worksheet.findAllElements('row');
-    for (final element in rows) {
-      final row = int.tryParse(element.getAttribute('r') ?? '');
-      final height = double.tryParse(element.getAttribute('ht') ?? '');
-      if (row != null && height != null) {
-        final zeroBasedRow = row - 1;
-        if (zeroBasedRow >= 0) {
-          sheetObject._rowHeights[zeroBasedRow] = height;
-        }
-      }
-    }
   }
 }

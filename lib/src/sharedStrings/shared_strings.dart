@@ -1,8 +1,6 @@
 part of '../../excel_community.dart';
 
 class _SharedStringsMaintainer {
-  final Map<SharedString, _IndexingHolder> _map =
-      <SharedString, _IndexingHolder>{};
   final Map<String, SharedString> _mapString = <String, SharedString>{};
   final List<SharedString> _list = <SharedString>[];
   int _index = 0;
@@ -14,27 +12,24 @@ class _SharedStringsMaintainer {
   }
 
   SharedString addFromString(String val) {
-    final newSharedString = SharedString(
-        node: XmlElement(XmlName('si'), [], [
-      XmlElement(XmlName('t'),
-          [XmlAttribute(XmlName('xml:space'), 'preserve')], [XmlText(val)]),
-    ]));
-
+    final newSharedString = SharedString.fromPlainString(val);
     add(newSharedString, val);
     return newSharedString;
   }
 
   void add(SharedString val, String key) {
-    _map[val]?.increaseCount();
-    _map.putIfAbsent(val, () {
+    if (val.index != -1) {
+      val.count++;
+    } else {
+      val.index = _index++;
+      val.count = 1;
       _mapString[key] = val;
       _list.add(val);
-      return _IndexingHolder(_index++);
-    });
+    }
   }
 
   int indexOf(SharedString val) {
-    return _map[val] != null ? _map[val]!.index : -1;
+    return val.index;
   }
 
   SharedString? value(int i) {
@@ -48,27 +43,53 @@ class _SharedStringsMaintainer {
   void clear() {
     _index = 0;
     _list.clear();
-    _map.clear();
     _mapString.clear();
   }
 }
 
-class _IndexingHolder {
-  final int index;
-  int count;
-
-  _IndexingHolder(this.index, [int _count = 1]) : count = _count;
-
-  void increaseCount() {
-    this.count += 1;
-  }
-}
-
 class SharedString {
-  final XmlElement node;
+  final XmlElement? _node;
+  final String _xmlString;
+  final String _stringValue;
   final int _hashCode;
+  TextSpan? _textSpan;
+  int index = -1;
+  int count = 1;
 
-  SharedString({required this.node}) : _hashCode = node.toString().hashCode;
+  SharedString({required XmlElement node, String? stringValue})
+      : this._internal(
+          node: node,
+          xmlString: node.toXmlString(),
+          stringValue: stringValue ?? _getRawStringValue(node),
+        );
+
+  SharedString.fromPlainString(String val)
+      : _node = null,
+        _xmlString = '<si><t xml:space="preserve">${_escapeXml(val)}</t></si>',
+        _stringValue = val,
+        _textSpan = null,
+        _hashCode = val.hashCode;
+
+  SharedString._internal({
+    required XmlElement node,
+    required String xmlString,
+    required String stringValue,
+  })  : _node = node,
+        _xmlString = xmlString,
+        _stringValue = stringValue,
+        _hashCode = xmlString.hashCode,
+        _textSpan = null;
+
+  static String _getRawStringValue(XmlElement node) {
+    var buffer = StringBuffer();
+    node.findAllElements('t').forEach((child) {
+      if (child.parentElement == null ||
+          child.parentElement!.name.local != 'rPh') {
+        buffer.write(_parseXmlValue(child));
+      }
+    });
+    return buffer.toString();
+  }
 
   @override
   String toString() {
@@ -78,6 +99,13 @@ class SharedString {
   }
 
   TextSpan get textSpan {
+    if (_textSpan != null) {
+      return _textSpan!;
+    }
+    if (_node == null) {
+      _textSpan = TextSpan(text: _stringValue);
+      return _textSpan!;
+    }
     // Parse an OOXML boolean attribute per ECMA-376 §18.8.2 — the `val` on
     // <b/>, <i/>, etc. is a W3C XSD boolean (lexical space: true|false|1|0).
     // When `val` is omitted the element's presence means on (spec default).
@@ -101,9 +129,9 @@ class SharedString {
 
     /// SharedStringItem
     /// https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sharedstringitem?view=openxml-3.0.1
-    assert(node.name.local == 'si'); //18.4.8 si (String Item)
+    assert(_node!.name.local == 'si'); //18.4.8 si (String Item)
 
-    for (final child in node.children.whereType<XmlElement>()) {
+    for (final child in _node!.children.whereType<XmlElement>()) {
       switch (child.name.local) {
         /// Text
         /// https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.text?view=openxml-3.0.1
@@ -176,29 +204,20 @@ class SharedString {
     return TextSpan(text: text, children: children);
   }
 
-  String get stringValue {
-    var buffer = StringBuffer();
-    node.findAllElements('t').forEach((child) {
-      if (child.parentElement == null ||
-          child.parentElement!.name.local != 'rPh') {
-        buffer.write(_parseXmlValue(child));
-      }
-    });
-    return buffer.toString();
-  }
+  String get stringValue => _stringValue;
 
   @override
   int get hashCode => _hashCode;
 
   @override
-  operator ==(Object other) {
+  bool operator ==(Object other) {
     return other is SharedString &&
         other.hashCode == _hashCode &&
-        other.stringValue == stringValue;
+        other._xmlString == _xmlString;
   }
 
   bool matches(String value) {
-    return value.isNotEmpty && value == stringValue;
+    return value.isNotEmpty && value == _stringValue;
   }
 }
 

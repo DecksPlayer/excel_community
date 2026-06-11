@@ -42,34 +42,23 @@ class _WorkbookManager {
     return expectedSheet == sheetName;
   }
 
-  void setSharedStrings() {
+  String generateSharedStringsXml() {
     var uniqueCount = 0;
     var count = 0;
 
-    XmlElement shareString = _excel
-        ._xmlFiles['xl/${_excel._sharedStringsTarget}']!
-        .findAllElements('sst')
-        .first;
-
-    shareString.children.clear();
-
-    _excel._sharedStrings._map.forEach((string, ss) {
+    for (final string in _excel._sharedStrings._list) {
       uniqueCount += 1;
-      count += ss.count;
+      count += string.count;
+    }
 
-      shareString.children.add(string.node);
-    });
-
-    [
-      ['count', '$count'],
-      ['uniqueCount', '$uniqueCount']
-    ].forEach((value) {
-      if (shareString.getAttributeNode(value[0]) == null) {
-        shareString.attributes.add(XmlAttribute(XmlName(value[0]), value[1]));
-      } else {
-        shareString.getAttributeNode(value[0])!.value = value[1];
-      }
-    });
+    final buffer = StringBuffer();
+    buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
+    buffer.write('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="$count" uniqueCount="$uniqueCount">');
+    for (final string in _excel._sharedStrings._list) {
+      buffer.write(string._xmlString);
+    }
+    buffer.write('</sst>');
+    return buffer.toString();
   }
 
   void setMerge() {

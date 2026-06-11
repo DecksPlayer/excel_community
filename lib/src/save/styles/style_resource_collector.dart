@@ -16,14 +16,26 @@ class _StyleResourceCollector {
   _StyleResources collect() {
     final resources = _StyleResources();
 
+    final uniqueStyles = <CellStyle>{};
+    final lastStyles = List<CellStyle?>.filled(8, null);
+    int lastIdx = 0;
+
     // 1. Gather all unique CellStyle objects from all sheets
     _excel._sheetMap.forEach((sheetName, sheet) {
       sheet._sheetData.forEach((_, columnMap) {
         columnMap.forEach((_, dataObject) {
-          if (dataObject.cellStyle != null) {
-            int pos = _checkPosition(resources.innerCellStyle, dataObject.cellStyle!);
-            if (pos == -1) {
-              resources.innerCellStyle.add(dataObject.cellStyle!);
+          final style = dataObject._cellStyle;
+          if (style != null) {
+            for (int i = 0; i < 8; i++) {
+              if (identical(lastStyles[i], style)) {
+                return;
+              }
+            }
+            lastStyles[lastIdx] = style;
+            lastIdx = (lastIdx + 1) & 7;
+
+            if (uniqueStyles.add(style)) {
+              resources.innerCellStyle.add(style);
             }
           }
         });
