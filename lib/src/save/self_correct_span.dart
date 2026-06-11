@@ -1,7 +1,7 @@
 part of '../../excel_community.dart';
 
 ///Self correct the spanning of rows and columns by checking their cross-sectional relationship between if exists.
-_selfCorrectSpanMap(Excel _excel) {
+void _selfCorrectSpanMap(Excel _excel) {
   _excel._mergeChangeLook.forEach((String key) {
     if (_excel._sheetMap[key] != null &&
         _excel._sheetMap[key]!._spanList.isNotEmpty) {

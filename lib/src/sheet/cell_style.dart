@@ -241,8 +241,8 @@ class CellStyle extends Equatable {
 
   ///set `Underline`
   ///
-  set underline(Underline _) {
-    _underline = _;
+  set underline(Underline value) {
+    _underline = value;
   }
 
   ///Get `Bold`
