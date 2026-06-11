@@ -58,7 +58,7 @@ class _WorksheetManager {
           if (event.isSelfClosing) {
             final xmlString = event.toString();
             if (!replacedTags.contains(currentTagName)) {
-              originalElements.putIfAbsent(currentTagName!, () => []).add(xmlString);
+              originalElements.putIfAbsent(currentTagName, () => []).add(xmlString);
             }
             currentCapturedEvents = null;
             currentTagName = null;
@@ -256,7 +256,6 @@ class _WorksheetManager {
     buffer.write('<sheetData>');
 
     final sheetStyleReferenced = _excel._cellStyleReferenced[sheetName];
-    final maxCols = sheetObject.maxColumns;
 
     for (var rowIndex = 0; rowIndex < sheetObject._maxRows; rowIndex++) {
       final rowData = sheetObject._sheetData[rowIndex];

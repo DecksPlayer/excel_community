@@ -129,9 +129,9 @@ class SharedString {
 
     /// SharedStringItem
     /// https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.sharedstringitem?view=openxml-3.0.1
-    assert(_node!.name.local == 'si'); //18.4.8 si (String Item)
+    assert(_node.name.local == 'si'); //18.4.8 si (String Item)
 
-    for (final child in _node!.children.whereType<XmlElement>()) {
+    for (final child in _node.children.whereType<XmlElement>()) {
       switch (child.name.local) {
         /// Text
         /// https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.text?view=openxml-3.0.1

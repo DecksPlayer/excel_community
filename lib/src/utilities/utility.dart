@@ -55,13 +55,6 @@ int lettersToNumeric(String letters) {
   return sum;
 }
 
-Iterable<XmlElement> _findRows(XmlElement table) {
-  return table.findElements('row');
-}
-
-Iterable<XmlElement> _findCells(XmlElement row) {
-  return row.findElements('c');
-}
 
 int? _getCellNumber(XmlElement cell) {
   var r = cell.getAttribute('r');
@@ -71,22 +64,8 @@ int? _getCellNumber(XmlElement cell) {
   return _cellCoordsFromCellId(r).$2;
 }
 
-int? _getRowNumber(XmlElement row) {
-  return int.tryParse(row.getAttribute('r').toString());
-}
 
-int _checkPosition(List<CellStyle> list, CellStyle cellStyle) {
-  return list.indexOf(cellStyle);
-}
 
-int _letterOnly(int rune) {
-  if (65 <= rune && rune <= 90) {
-    return rune;
-  } else if (97 <= rune && rune <= 122) {
-    return rune - 32;
-  }
-  return 0;
-}
 
 String _twoDigits(int n) {
   if (n > 9) {

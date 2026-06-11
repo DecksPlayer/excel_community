@@ -24,8 +24,6 @@ Excel _newExcel(Archive archive) {
 /// Main entry point for interacting with Excel files in XLSX format.
 class Excel {
   bool _styleChanges = false;
-  bool _mergeChanges = false;
-  bool _rtlChanges = false;
   bool _isRenamingDefaultSheet = false;
 
   Archive _archive;
@@ -618,7 +616,6 @@ class Excel {
   set _rtlChangeLookup(String value) {
     if (!_rtlChangeLook.contains(value)) {
       _rtlChangeLook.add(value);
-      _rtlChanges = true;
     }
   }
 }

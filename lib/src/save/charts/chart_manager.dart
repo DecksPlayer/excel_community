@@ -110,13 +110,13 @@ class _ChartManager {
         final rId = 'rId$nextRId';
         nextRId++;
 
-        relsRoot.children.add(XmlElement(XmlName('Relationship'), [
-          XmlAttribute(XmlName('Id'), rId),
+        relsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
+          XmlAttribute(XmlName.parts('Id'), rId),
           XmlAttribute(
-            XmlName('Type'),
+            XmlName.parts('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
           ),
-          XmlAttribute(XmlName('Target'), '../charts/chart$chartCount.xml'),
+          XmlAttribute(XmlName.parts('Target'), '../charts/chart$chartCount.xml'),
         ]));
 
         // Add to Drawing XML using the actual relationship ID
@@ -155,13 +155,13 @@ class _ChartManager {
         final drawingRId = 'rId$drawingRIdIndex';
         final drawingFileName = drawingPath.split('/').last;
 
-        sheetRelsRoot.children.add(XmlElement(XmlName('Relationship'), [
-          XmlAttribute(XmlName('Id'), drawingRId),
+        sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
+          XmlAttribute(XmlName.parts('Id'), drawingRId),
           XmlAttribute(
-            XmlName('Type'),
+            XmlName.parts('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
           ),
-          XmlAttribute(XmlName('Target'), '../drawings/$drawingFileName'),
+          XmlAttribute(XmlName.parts('Target'), '../drawings/$drawingFileName'),
         ]));
 
         sheet._drawingRId = drawingRId;
@@ -199,11 +199,11 @@ class _ChartManager {
   XmlDocument _buildEmptyDrawing() {
     final b = XmlBuilder();
     b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('xdr:wsDr', namespaces: {
-      'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing': 'xdr',
-      'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
-      'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
-      'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
+    b.element('xdr:wsDr', namespaceUris: {
+      'xdr': 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+      'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+      'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+      'c': 'http://schemas.openxmlformats.org/drawingml/2006/chart',
     }, nest: () {});
     return b.buildDocument();
   }
