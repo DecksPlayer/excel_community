@@ -68,12 +68,16 @@ class _WorksheetParser {
             sheetObject._defaultRowHeight = rowH;
           }
         } else if (tagName == 'col' || tagName.endsWith(':col')) {
-          final col = int.tryParse(_getAttr(event, 'min') ?? '');
+          final min = int.tryParse(_getAttr(event, 'min') ?? '');
+          final maxVal = int.tryParse(_getAttr(event, 'max') ?? '');
           final width = double.tryParse(_getAttr(event, 'width') ?? '');
-          if (col != null && width != null) {
-            final zeroBasedCol = col - 1;
-            if (zeroBasedCol >= 0) {
-              sheetObject._columnWidths[zeroBasedCol] = width;
+          if (min != null && width != null) {
+            final end = maxVal ?? min;
+            for (int col = min; col <= end; col++) {
+              final zeroBasedCol = col - 1;
+              if (zeroBasedCol >= 0) {
+                sheetObject._columnWidths[zeroBasedCol] = width;
+              }
             }
           }
         } else if (tagName == 'row' || tagName.endsWith(':row')) {
