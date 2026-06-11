@@ -83,9 +83,7 @@ class Save {
         diagonalBorderDown: cellStyle.diagonalBorderDown,
       );
 
-  void _setHeaderFooter(String sheetName) {
-    _workbookManager.setHeaderFooter(sheetName);
-  }
+
 
   void _addContentType(String contentType, String partName) {
     final contentTypes = _excel._xmlFiles['[Content_Types].xml'];
@@ -98,9 +96,9 @@ class Save {
         node is XmlElement && node.getAttribute('PartName') == partName);
 
     if (!exists) {
-      typesElement.children.add(XmlElement(XmlName('Override'), [
-        XmlAttribute(XmlName('PartName'), partName),
-        XmlAttribute(XmlName('ContentType'), contentType),
+      typesElement.children.add(XmlElement(XmlName.parts('Override'), [
+        XmlAttribute(XmlName.parts('PartName'), partName),
+        XmlAttribute(XmlName.parts('ContentType'), contentType),
       ]));
     }
   }
@@ -119,9 +117,9 @@ class Save {
         node.getAttribute('Extension') == extension);
 
     if (!exists) {
-      typesElement.children.add(XmlElement(XmlName('Default'), [
-        XmlAttribute(XmlName('Extension'), extension),
-        XmlAttribute(XmlName('ContentType'), contentType),
+      typesElement.children.add(XmlElement(XmlName.parts('Default'), [
+        XmlAttribute(XmlName.parts('Extension'), extension),
+        XmlAttribute(XmlName.parts('ContentType'), contentType),
       ]));
     }
   }

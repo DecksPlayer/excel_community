@@ -1,0 +1,23 @@
+# Exclude benchmarks and scratch directories
+benchmark/
+scratch/
+excel_flutter_example/
+xl/
+
+# Exclude test files/output templates from root
+*.xlsx
+*.txt
+debug_underline.xlsx
+test_all_output.txt
+test_con_grafico.xlsx
+test_expanded.txt
+test_final.txt
+test_final_refactor.txt
+test_output.txt
+test_reorganized.txt
+test_run.txt
+test_run_2.txt
+test_run_3.txt
+test_run_4.txt
+test_sin_grafico.xlsx
+test_style_refactor.txt

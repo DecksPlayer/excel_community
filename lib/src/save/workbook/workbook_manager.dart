@@ -11,7 +11,7 @@ class _WorkbookManager {
     }
     List<XmlElement> sheetList =
         _excel._xmlFiles['xl/workbook.xml']!.findAllElements('sheet').toList();
-    XmlElement elementFound = XmlElement(XmlName(''));
+    XmlElement elementFound = XmlElement(XmlName.parts(''));
 
     int position = -1;
     for (int i = 0; i < sheetList.length; i++) {
@@ -96,8 +96,8 @@ class _WorkbookManager {
                 .children
                 .insert(
                     index + 1,
-                    XmlElement(XmlName('mergeCells'),
-                        [XmlAttribute(XmlName('count'), '0')]));
+                    XmlElement(XmlName.parts('mergeCells'),
+                        [XmlAttribute(XmlName.parts('count'), '0')]));
 
             mergeElement = _excel._xmlFiles[_excel._xmlSheetId[s]]!
                 .findAllElements('mergeCells')
@@ -115,7 +115,7 @@ class _WorkbookManager {
         ].forEach((value) {
           if (mergeElement.getAttributeNode(value[0]) == null) {
             mergeElement.attributes
-                .add(XmlAttribute(XmlName(value[0]), value[1]));
+                .add(XmlAttribute(XmlName.parts(value[0]), value[1]));
           } else {
             mergeElement.getAttributeNode(value[0])!.value = value[1];
           }
@@ -124,8 +124,8 @@ class _WorkbookManager {
         mergeElement.children.clear();
 
         _spannedItems.forEach((value) {
-          mergeElement.children.add(XmlElement(XmlName('mergeCell'),
-              [XmlAttribute(XmlName('ref'), '$value')], []));
+          mergeElement.children.add(XmlElement(XmlName.parts('mergeCell'),
+              [XmlAttribute(XmlName.parts('ref'), '$value')], []));
         });
       }
     });
@@ -157,11 +157,11 @@ class _WorkbookManager {
               .first
               .children
               .add(XmlElement(
-                XmlName('sheetView'),
+                XmlName.parts('sheetView'),
                 [
                   if (sheetObject.isRTL)
-                    XmlAttribute(XmlName('rightToLeft'), '1'),
-                  XmlAttribute(XmlName('workbookViewId'), '0'),
+                    XmlAttribute(XmlName.parts('rightToLeft'), '1'),
+                  XmlAttribute(XmlName.parts('workbookViewId'), '0'),
                 ],
               ));
         } else {
@@ -169,13 +169,13 @@ class _WorkbookManager {
               ?.findAllElements('worksheet')
               .first
               .children
-              .add(XmlElement(XmlName('sheetViews'), [], [
+              .add(XmlElement(XmlName.parts('sheetViews'), [], [
                 XmlElement(
-                  XmlName('sheetView'),
+                  XmlName.parts('sheetView'),
                   [
                     if (sheetObject.isRTL)
-                      XmlAttribute(XmlName('rightToLeft'), '1'),
-                    XmlAttribute(XmlName('workbookViewId'), '0'),
+                      XmlAttribute(XmlName.parts('rightToLeft'), '1'),
+                    XmlAttribute(XmlName.parts('workbookViewId'), '0'),
                   ],
                 )
               ]));

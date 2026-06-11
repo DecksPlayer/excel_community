@@ -20,7 +20,7 @@ class ChartXmlWriter {
     final builder = XmlBuilder();
     builder.processing(
         'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    builder.element('xdr:wsDr', namespaces: _buildDrawingNamespaces(),
+    builder.element('xdr:wsDr', namespaceUris: _buildDrawingNamespaces(),
         nest: () {
       for (int i = 0; i < charts.length; i++) {
         _buildChartAnchor(builder, charts[i], i, drawingCount, 'rId${i + 1}');
@@ -33,7 +33,7 @@ class ChartXmlWriter {
   XmlElement buildChartAnchorElement(
       Chart chart, int index, int drawingCount, String rId) {
     final builder = XmlBuilder();
-    builder.element('xdr:twoCellAnchor', namespaces: _buildDrawingNamespaces(),
+    builder.element('xdr:twoCellAnchor', namespaceUris: _buildDrawingNamespaces(),
         nest: () {
       _buildAnchorPosition(
           builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
@@ -50,7 +50,7 @@ class ChartXmlWriter {
     final builder = XmlBuilder();
     builder.processing(
         'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    builder.element('c:chartSpace', namespaces: _buildChartNamespaces(),
+    builder.element('c:chartSpace', namespaceUris: _buildChartNamespaces(),
         nest: () {
       // c:lang is required by Excel as first child of chartSpace
       builder.element('c:lang', attributes: {'val': 'en-US'});
@@ -75,12 +75,12 @@ class ChartXmlWriter {
 
   Map<String, String> _buildDrawingNamespaces() {
     return {
-      'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing':
-          'xdr',
-      'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
-      'http://schemas.openxmlformats.org/officeDocument/2006/relationships':
-          'r',
-      'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
+      'xdr':
+          'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+      'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+      'r':
+          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+      'c': 'http://schemas.openxmlformats.org/drawingml/2006/chart',
     };
   }
 
@@ -136,10 +136,10 @@ class ChartXmlWriter {
 
   Map<String, String> _buildChartNamespaces() {
     return {
-      'http://schemas.openxmlformats.org/drawingml/2006/chart': 'c',
-      'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
-      'http://schemas.openxmlformats.org/officeDocument/2006/relationships':
-          'r',
+      'c': 'http://schemas.openxmlformats.org/drawingml/2006/chart',
+      'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+      'r':
+          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
     };
   }
 

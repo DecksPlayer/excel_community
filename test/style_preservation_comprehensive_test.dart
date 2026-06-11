@@ -150,42 +150,42 @@ void main() {
 
       // Borders
       print(
-          'Left Border Style: ${completeStyle.leftBorder?.borderStyle} -> ${style2?.leftBorder?.borderStyle}');
+          'Left Border Style: ${completeStyle.leftBorder.borderStyle} -> ${style2?.leftBorder.borderStyle}');
       expect(
-        style2?.leftBorder?.borderStyle,
-        equals(completeStyle.leftBorder?.borderStyle),
+        style2?.leftBorder.borderStyle,
+        equals(completeStyle.leftBorder.borderStyle),
         reason: 'Left border style should be preserved',
       );
 
       print(
-          'Left Border Color: ${completeStyle.leftBorder?.borderColorHex} -> ${style2?.leftBorder?.borderColorHex}');
+          'Left Border Color: ${completeStyle.leftBorder.borderColorHex} -> ${style2?.leftBorder.borderColorHex}');
       expect(
-        style2?.leftBorder?.borderColorHex,
-        equals(completeStyle.leftBorder?.borderColorHex),
+        style2?.leftBorder.borderColorHex,
+        equals(completeStyle.leftBorder.borderColorHex),
         reason: 'Left border color should be preserved',
       );
 
       print(
-          'Right Border Style: ${completeStyle.rightBorder?.borderStyle} -> ${style2?.rightBorder?.borderStyle}');
+          'Right Border Style: ${completeStyle.rightBorder.borderStyle} -> ${style2?.rightBorder.borderStyle}');
       expect(
-        style2?.rightBorder?.borderStyle,
-        equals(completeStyle.rightBorder?.borderStyle),
+        style2?.rightBorder.borderStyle,
+        equals(completeStyle.rightBorder.borderStyle),
         reason: 'Right border style should be preserved',
       );
 
       print(
-          'Top Border Style: ${completeStyle.topBorder?.borderStyle} -> ${style2?.topBorder?.borderStyle}');
+          'Top Border Style: ${completeStyle.topBorder.borderStyle} -> ${style2?.topBorder.borderStyle}');
       expect(
-        style2?.topBorder?.borderStyle,
-        equals(completeStyle.topBorder?.borderStyle),
+        style2?.topBorder.borderStyle,
+        equals(completeStyle.topBorder.borderStyle),
         reason: 'Top border style should be preserved',
       );
 
       print(
-          'Bottom Border Style: ${completeStyle.bottomBorder?.borderStyle} -> ${style2?.bottomBorder?.borderStyle}');
+          'Bottom Border Style: ${completeStyle.bottomBorder.borderStyle} -> ${style2?.bottomBorder.borderStyle}');
       expect(
-        style2?.bottomBorder?.borderStyle,
-        equals(completeStyle.bottomBorder?.borderStyle),
+        style2?.bottomBorder.borderStyle,
+        equals(completeStyle.bottomBorder.borderStyle),
         reason: 'Bottom border style should be preserved',
       );
 

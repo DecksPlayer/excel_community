@@ -53,7 +53,7 @@ extension SheetSpans on Sheet {
 
     List<int> gotPosition = _getSpanPosition(start, end);
 
-    _excel._mergeChanges = true;
+
 
     startColumn = gotPosition[0];
     startRow = gotPosition[1];

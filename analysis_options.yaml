@@ -1,0 +1,11 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude:
+    - scratch/**
+
+linter:
+  rules:
+    # These enum/constant names are part of the public API and cannot be
+    # renamed without a breaking change (FontFamily, Underline, etc.)
+    constant_identifier_names: false
