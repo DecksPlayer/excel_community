@@ -12,45 +12,45 @@ class _StyleXmlBuilders {
       fontAttribute.value =
           '${_excel._fontStyleList.length + innerFontStyle.length}';
     } else {
-      fonts.attributes.add(XmlAttribute(XmlName('count'),
+      fonts.attributes.add(XmlAttribute(XmlName.parts('count'),
           '${_excel._fontStyleList.length + innerFontStyle.length}'));
     }
 
     for (var fontStyleElement in innerFontStyle) {
-      fonts.children.add(XmlElement(XmlName('font'), [], [
+      fonts.children.add(XmlElement(XmlName.parts('font'), [], [
         if (fontStyleElement._fontColorHex != null &&
             fontStyleElement._fontColorHex!.colorHex != "FF000000")
-          XmlElement(XmlName('color'), [
+          XmlElement(XmlName.parts('color'), [
             XmlAttribute(
-                XmlName('rgb'), fontStyleElement._fontColorHex!.colorHex)
+                XmlName.parts('rgb'), fontStyleElement._fontColorHex!.colorHex)
           ], []),
 
-        if (fontStyleElement.isBold) XmlElement(XmlName('b'), [], []),
-        if (fontStyleElement.isItalic) XmlElement(XmlName('i'), [], []),
-        if (fontStyleElement.isStrikethrough) XmlElement(XmlName('strike'), [], []),
+        if (fontStyleElement.isBold) XmlElement(XmlName.parts('b'), [], []),
+        if (fontStyleElement.isItalic) XmlElement(XmlName.parts('i'), [], []),
+        if (fontStyleElement.isStrikethrough) XmlElement(XmlName.parts('strike'), [], []),
 
         if (fontStyleElement.underline != Underline.None &&
             fontStyleElement.underline == Underline.Single)
-          XmlElement(XmlName('u'), [], []),
+          XmlElement(XmlName.parts('u'), [], []),
 
         if (fontStyleElement.underline != Underline.None &&
             fontStyleElement.underline != Underline.Single &&
             fontStyleElement.underline == Underline.Double)
           XmlElement(
-              XmlName('u'), [XmlAttribute(XmlName('val'), 'double')], []),
+              XmlName.parts('u'), [XmlAttribute(XmlName.parts('val'), 'double')], []),
 
         if (fontStyleElement.fontFamily != null &&
             fontStyleElement.fontFamily!.toLowerCase().toString() != 'null' &&
             fontStyleElement.fontFamily != '' &&
             fontStyleElement.fontFamily!.isNotEmpty)
-          XmlElement(XmlName('name'), [
-            XmlAttribute(XmlName('val'), fontStyleElement.fontFamily.toString())
+          XmlElement(XmlName.parts('name'), [
+            XmlAttribute(XmlName.parts('val'), fontStyleElement.fontFamily.toString())
           ], []),
 
         if (fontStyleElement.fontScheme != FontScheme.Unset)
-          XmlElement(XmlName('scheme'), [
+          XmlElement(XmlName.parts('scheme'), [
             XmlAttribute(
-                XmlName('val'),
+                XmlName.parts('val'),
                 switch (fontStyleElement.fontScheme) {
                   FontScheme.Major => "major",
                   _ => "minor"
@@ -59,8 +59,8 @@ class _StyleXmlBuilders {
 
         if (fontStyleElement.fontSize != null &&
             fontStyleElement.fontSize.toString().isNotEmpty)
-          XmlElement(XmlName('sz'), [
-            XmlAttribute(XmlName('val'), fontStyleElement.fontSize.toString())
+          XmlElement(XmlName.parts('sz'), [
+            XmlAttribute(XmlName.parts('val'), fontStyleElement.fontSize.toString())
           ], []),
       ]));
     }
@@ -73,29 +73,29 @@ class _StyleXmlBuilders {
       fillAttribute.value =
           '${_excel._patternFill.length + innerPatternFill.length}';
     } else {
-      fills.attributes.add(XmlAttribute(XmlName('count'),
+      fills.attributes.add(XmlAttribute(XmlName.parts('count'),
           '${_excel._patternFill.length + innerPatternFill.length}'));
     }
 
     for (var color in innerPatternFill) {
       if (color.length >= 2) {
         if (color.substring(0, 2).toUpperCase() == 'FF') {
-          fills.children.add(XmlElement(XmlName('fill'), [], [
-            XmlElement(XmlName('patternFill'), [
-              XmlAttribute(XmlName('patternType'), 'solid')
+          fills.children.add(XmlElement(XmlName.parts('fill'), [], [
+            XmlElement(XmlName.parts('patternFill'), [
+              XmlAttribute(XmlName.parts('patternType'), 'solid')
             ], [
-              XmlElement(XmlName('fgColor'),
-                  [XmlAttribute(XmlName('rgb'), color)], []),
+              XmlElement(XmlName.parts('fgColor'),
+                  [XmlAttribute(XmlName.parts('rgb'), color)], []),
               XmlElement(
-                  XmlName('bgColor'), [XmlAttribute(XmlName('rgb'), color)], [])
+                  XmlName.parts('bgColor'), [XmlAttribute(XmlName.parts('rgb'), color)], [])
             ])
           ]));
         } else if (color == "none" ||
             color == "gray125" ||
             color == "lightGray") {
-          fills.children.add(XmlElement(XmlName('fill'), [], [
-            XmlElement(XmlName('patternFill'),
-                [XmlAttribute(XmlName('patternType'), color)], [])
+          fills.children.add(XmlElement(XmlName.parts('fill'), [], [
+            XmlElement(XmlName.parts('patternFill'),
+                [XmlAttribute(XmlName.parts('patternType'), color)], [])
           ]));
         }
       } else {
@@ -113,18 +113,18 @@ class _StyleXmlBuilders {
       borderAttribute.value =
           '${_excel._borderSetList.length + innerBorderSet.length}';
     } else {
-      borders.attributes.add(XmlAttribute(XmlName('count'),
+      borders.attributes.add(XmlAttribute(XmlName.parts('count'),
           '${_excel._borderSetList.length + innerBorderSet.length}'));
     }
 
     for (var border in innerBorderSet) {
-      var borderElement = XmlElement(XmlName('border'));
+      var borderElement = XmlElement(XmlName.parts('border'));
       if (border.diagonalBorderDown) {
         borderElement.attributes
-            .add(XmlAttribute(XmlName('diagonalDown'), '1'));
+            .add(XmlAttribute(XmlName.parts('diagonalDown'), '1'));
       }
       if (border.diagonalBorderUp) {
-        borderElement.attributes.add(XmlAttribute(XmlName('diagonalUp'), '1'));
+        borderElement.attributes.add(XmlAttribute(XmlName.parts('diagonalUp'), '1'));
       }
       final Map<String, Border> borderMap = {
         'left': border.leftBorder,
@@ -136,15 +136,15 @@ class _StyleXmlBuilders {
       for (var key in borderMap.keys) {
         final borderValue = borderMap[key]!;
 
-        final element = XmlElement(XmlName(key));
+        final element = XmlElement(XmlName.parts(key));
         final style = borderValue.borderStyle;
         if (style != null) {
-          element.attributes.add(XmlAttribute(XmlName('style'), style.style));
+          element.attributes.add(XmlAttribute(XmlName.parts('style'), style.style));
         }
         final color = borderValue.borderColorHex;
         if (color != null) {
           element.children.add(XmlElement(
-              XmlName('color'), [XmlAttribute(XmlName('rgb'), color)]));
+              XmlName.parts('color'), [XmlAttribute(XmlName.parts('rgb'), color)]));
         }
         borderElement.children.add(element);
       }
@@ -166,7 +166,7 @@ class _StyleXmlBuilders {
       cellAttribute.value =
           '${_excel._cellStyleList.length + innerCellStyle.length}';
     } else {
-      celx.attributes.add(XmlAttribute(XmlName('count'),
+      celx.attributes.add(XmlAttribute(XmlName.parts('count'),
           '${_excel._cellStyleList.length + innerCellStyle.length}'));
     }
 
@@ -220,25 +220,26 @@ class _StyleXmlBuilders {
         CustomNumFormat() => _excel._numFormats.findOrAdd(numberFormat),
       };
 
-      celx.children.add(XmlElement(XmlName('xf'), [
-        XmlAttribute(XmlName('applyFont'), '1'),
-        XmlAttribute(XmlName('applyFill'), '1'),
-        XmlAttribute(XmlName('applyBorder'), '1'),
-        XmlAttribute(XmlName('applyAlignment'), '1'),
-        XmlAttribute(XmlName('borderId'), '$borderId'),
-        XmlAttribute(XmlName('fillId'), '$fillId'),
-        XmlAttribute(XmlName('fontId'), '$fontId'),
-        XmlAttribute(XmlName('numFmtId'), numFmtId.toString()),
+       celx.children.add(XmlElement(XmlName.parts('xf'), [
+        XmlAttribute(XmlName.parts('applyFont'), '1'),
+        XmlAttribute(XmlName.parts('applyFill'), '1'),
+        XmlAttribute(XmlName.parts('applyBorder'), '1'),
+        XmlAttribute(XmlName.parts('applyAlignment'), '1'),
+        XmlAttribute(XmlName.parts('borderId'), '$borderId'),
+        XmlAttribute(XmlName.parts('fillId'), '$fillId'),
+        XmlAttribute(XmlName.parts('fontId'), '$fontId'),
+        XmlAttribute(XmlName.parts('numFmtId'), numFmtId.toString()),
+        XmlAttribute(XmlName.parts('xfId'), '0'),
       ], [
-        XmlElement(XmlName('alignment'), [
-          XmlAttribute(XmlName('horizontal'),
+        XmlElement(XmlName.parts('alignment'), [
+          XmlAttribute(XmlName.parts('horizontal'),
               cellStyle.horizontalAlignment.toString().split('.').last.toLowerCase()),
-          XmlAttribute(XmlName('vertical'),
+          XmlAttribute(XmlName.parts('vertical'),
               cellStyle.verticalAlignment.toString().split('.').last.toLowerCase()),
-          XmlAttribute(XmlName('textRotation'), cellStyle.rotation.toString()),
-          XmlAttribute(XmlName('wrapText'),
+          XmlAttribute(XmlName.parts('textRotation'), cellStyle.rotation.toString()),
+          XmlAttribute(XmlName.parts('wrapText'),
               cellStyle.wrap == TextWrapping.WrapText ? '1' : '0'),
-          XmlAttribute(XmlName('shrinkToFit'),
+          XmlAttribute(XmlName.parts('shrinkToFit'),
               cellStyle.wrap == TextWrapping.Clip ? '1' : '0'),
         ], []),
       ]));
@@ -264,7 +265,7 @@ class _StyleXmlBuilders {
           .firstOrNull;
       int count;
       if (numFmtsElement == null) {
-        numFmtsElement = XmlElement(XmlName('numFmts'));
+        numFmtsElement = XmlElement(XmlName.parts('numFmts'));
 
         styleSheet
             .findElements('styleSheet')
@@ -284,10 +285,10 @@ class _StyleXmlBuilders {
                 node.getAttribute('numFmtId') == numFmtIdString);
         if (numFmtElement == null) {
           numFmtElement = XmlElement(
-              XmlName('numFmt'),
+              XmlName.parts('numFmt'),
               [
-                XmlAttribute(XmlName('numFmtId'), numFmtIdString),
-                XmlAttribute(XmlName('formatCode'), formatCode),
+                XmlAttribute(XmlName.parts('numFmtId'), numFmtIdString),
+                XmlAttribute(XmlName.parts('formatCode'), formatCode),
               ],
               [],
               true);

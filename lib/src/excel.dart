@@ -24,14 +24,13 @@ Excel _newExcel(Archive archive) {
 /// Main entry point for interacting with Excel files in XLSX format.
 class Excel {
   bool _styleChanges = false;
-  bool _mergeChanges = false;
-  bool _rtlChanges = false;
   bool _isRenamingDefaultSheet = false;
 
   Archive _archive;
 
   final Map<String, XmlNode> _sheets = {};
   final Map<String, XmlDocument> _xmlFiles = {};
+  final Map<String, String> _sheetXmls = {};
   final Map<String, String> _xmlSheetId = {};
   final Map<String, Map<String, int>> _cellStyleReferenced = {};
   final Map<String, Sheet> _sheetMap = {};
@@ -58,6 +57,19 @@ class Excel {
 
   String? _defaultSheet;
   late Parser parser;
+
+  final Map<NumFormat, CellStyle> _defaultStyleCache = {};
+
+  CellStyle _getDefaultStyle(NumFormat format) {
+    return _defaultStyleCache.putIfAbsent(format, () => CellStyle(numberFormat: format));
+  }
+
+  bool _isDefaultStyle(CellStyle style) {
+    for (final s in _defaultStyleCache.values) {
+      if (identical(s, style)) return true;
+    }
+    return false;
+  }
 
   Excel._(this._archive) {
     parser = Parser._(this);
@@ -258,9 +270,12 @@ class Excel {
       });
 
       ///
-      /// Also remove from the _xmlFiles list as we might want to create this sheet again from new starting.
+      /// Also remove from the _xmlFiles and _sheetXmls lists as we might want to create this sheet again from new starting.
       if (_xmlFiles[_xmlSheetId[sheet]] != null) {
         _xmlFiles.remove(_xmlSheetId[sheet]);
+      }
+      if (_sheetXmls[_xmlSheetId[sheet]] != null) {
+        _sheetXmls.remove(_xmlSheetId[sheet]);
       }
 
       ///
@@ -601,7 +616,6 @@ class Excel {
   set _rtlChangeLookup(String value) {
     if (!_rtlChangeLook.contains(value)) {
       _rtlChangeLook.add(value);
-      _rtlChanges = true;
     }
   }
 }

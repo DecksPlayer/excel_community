@@ -22,9 +22,18 @@ class Save {
   }
 
   List<int>? _save() {
+    _excel._sheetMap.forEach((sheetName, sheetObject) {
+      if (!_excel._xmlSheetId.containsKey(sheetName)) {
+        parser._createSheet(sheetName);
+      }
+    });
+
     if (_excel._styleChanges) {
       _styleManager.processStylesFile();
     }
+    
+    _chartManager.processCharts();
+    _imageManager.processImages();
     
     _worksheetManager.setSheetElements();
 
@@ -32,26 +41,30 @@ class Save {
       _workbookManager.setDefaultSheet(_excel._defaultSheet);
     }
 
-    _workbookManager.setSharedStrings();
-
-    if (_excel._mergeChanges) {
-      _workbookManager.setMerge();
-    }
-
-    if (_excel._rtlChanges) {
-      _workbookManager.setRTL();
-    }
-
-    _chartManager.processCharts();
-    _imageManager.processImages();
+    final sstXml = _workbookManager.generateSharedStringsXml();
+    final sstBytes = utf8.encode(sstXml);
+    _archiveFiles[_excel._absSharedStringsTarget] = ArchiveFile(
+      _excel._absSharedStringsTarget,
+      sstBytes.length,
+      sstBytes,
+    );
 
     for (var xmlFile in _excel._xmlFiles.keys) {
+      if (xmlFile == 'xl/${_excel._sharedStringsTarget}' ||
+          xmlFile == _excel._absSharedStringsTarget) {
+        continue;
+      }
       var xml = _excel._xmlFiles[xmlFile].toString();
       var content = utf8.encode(xml);
       _archiveFiles[xmlFile] = ArchiveFile(xmlFile, content.length, content);
     }
 
-    // Add binary media files (images, etc.) to the archive
+    for (var sheetPath in _excel._sheetXmls.keys) {
+      var xml = _excel._sheetXmls[sheetPath]!;
+      var content = utf8.encode(xml);
+      _archiveFiles[sheetPath] = ArchiveFile(sheetPath, content.length, content);
+    }
+
     for (final entry in _binaryFiles.entries) {
       _archiveFiles[entry.key] =
           ArchiveFile(entry.key, entry.value.length, entry.value);
@@ -70,9 +83,7 @@ class Save {
         diagonalBorderDown: cellStyle.diagonalBorderDown,
       );
 
-  void _setHeaderFooter(String sheetName) {
-    _workbookManager.setHeaderFooter(sheetName);
-  }
+
 
   void _addContentType(String contentType, String partName) {
     final contentTypes = _excel._xmlFiles['[Content_Types].xml'];
@@ -85,9 +96,9 @@ class Save {
         node is XmlElement && node.getAttribute('PartName') == partName);
 
     if (!exists) {
-      typesElement.children.add(XmlElement(XmlName('Override'), [
-        XmlAttribute(XmlName('PartName'), partName),
-        XmlAttribute(XmlName('ContentType'), contentType),
+      typesElement.children.add(XmlElement(XmlName.parts('Override'), [
+        XmlAttribute(XmlName.parts('PartName'), partName),
+        XmlAttribute(XmlName.parts('ContentType'), contentType),
       ]));
     }
   }
@@ -106,9 +117,9 @@ class Save {
         node.getAttribute('Extension') == extension);
 
     if (!exists) {
-      typesElement.children.add(XmlElement(XmlName('Default'), [
-        XmlAttribute(XmlName('Extension'), extension),
-        XmlAttribute(XmlName('ContentType'), contentType),
+      typesElement.children.add(XmlElement(XmlName.parts('Default'), [
+        XmlAttribute(XmlName.parts('Extension'), extension),
+        XmlAttribute(XmlName.parts('ContentType'), contentType),
       ]));
     }
   }

@@ -145,7 +145,7 @@ extension SheetDataExt on Sheet {
   ///
   /// updates count of rows and columns
   ///
-  _countRowsAndColumns() {
+  void _countRowsAndColumns() {
     int maximumColumnIndex = -1, maximumRowIndex = -1;
     List<int> sortedKeys = _sheetData.keys.toList()..sort();
     sortedKeys.forEach((rowKey) {

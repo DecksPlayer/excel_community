@@ -84,5 +84,5 @@ List<int> _injectExtraFontEntry(List<int> bytes) {
     updatedArchive.addFile(ArchiveFile(file.name, content.length, content));
   }
 
-  return ZipEncoder().encode(updatedArchive)!;
+  return ZipEncoder().encode(updatedArchive);
 }

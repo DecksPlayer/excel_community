@@ -17,6 +17,7 @@ class Sheet {
   HeaderFooter? _headerFooter;
   final List<Chart> _charts = [];
   final List<ExcelImage> _images = [];
+  String? _drawingRId;
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -167,7 +168,7 @@ class Sheet {
     final defaultFormat = NumFormat.defaultFor(value);
 
     if (currentStyle == null) {
-      cell._cellStyle = CellStyle(numberFormat: defaultFormat);
+      cell._cellStyle = _excel._getDefaultStyle(defaultFormat);
       if (defaultFormat != NumFormat.standard_0) {
         _excel._styleChanges = true;
       }

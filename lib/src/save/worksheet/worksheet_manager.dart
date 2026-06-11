@@ -3,96 +3,234 @@ part of '../../../excel_community.dart';
 class _WorksheetManager {
   final Excel _excel;
   final Save _save;
+  final Map<CellStyle, int> _styleIndexCache = {};
 
   _WorksheetManager(this._excel, this._save);
 
   void setSheetElements() {
     _excel._sharedStrings.clear();
+    _styleIndexCache.clear();
 
     _excel._sheetMap.forEach((sheetName, sheetObject) {
-      if (_excel._sheets[sheetName] == null) {
+      if (!_excel._xmlSheetId.containsKey(sheetName)) {
         _save.parser._createSheet(sheetName);
       }
 
-      if (_excel._sheets[sheetName]?.children.isNotEmpty ?? false) {
-        _excel._sheets[sheetName]!.children.clear();
-      }
+      final sheetId = _excel._xmlSheetId[sheetName]!;
+      final originalXmlString = _excel._sheetXmls[sheetId]!;
 
-      XmlDocument? xmlFile = _excel._xmlFiles[_excel._xmlSheetId[sheetName]];
-      if (xmlFile == null) return;
-
-      double? defaultRowHeight = sheetObject.defaultRowHeight;
-      double? defaultColumnWidth = sheetObject.defaultColumnWidth;
-
-      XmlElement worksheetElement = xmlFile.findAllElements('worksheet').first;
-
-      XmlElement? sheetFormatPrElement =
-          worksheetElement.findElements('sheetFormatPr').isNotEmpty
-              ? worksheetElement.findElements('sheetFormatPr').first
-              : null;
-
-      if (sheetFormatPrElement != null) {
-        sheetFormatPrElement.attributes.clear();
-
-        if (defaultRowHeight == null && defaultColumnWidth == null) {
-          worksheetElement.children.remove(sheetFormatPrElement);
-        }
-      } else if (defaultRowHeight != null || defaultColumnWidth != null) {
-        sheetFormatPrElement = XmlElement(XmlName('sheetFormatPr'), [], []);
-        worksheetElement.children.insert(0, sheetFormatPrElement);
-      }
-
-      if (defaultRowHeight != null) {
-        sheetFormatPrElement!.attributes.add(XmlAttribute(
-            XmlName('defaultRowHeight'), defaultRowHeight.toStringAsFixed(2)));
-      }
-      if (defaultColumnWidth != null) {
-        sheetFormatPrElement!.attributes.add(XmlAttribute(
-            XmlName('defaultColWidth'), defaultColumnWidth.toStringAsFixed(2)));
-      }
-
-      _setColumns(sheetObject, xmlFile);
-      _setRows(sheetName, sheetObject);
-      _save._setHeaderFooter(sheetName);
+      final transformedXml = _transformWorksheetXml(sheetName, sheetObject, originalXmlString);
+      _excel._sheetXmls[sheetId] = transformedXml;
     });
   }
 
-  void _setColumns(Sheet sheetObject, XmlDocument xmlFile) {
-    final columnElements = xmlFile.findAllElements('cols');
+  String _transformWorksheetXml(String sheetName, Sheet sheetObject, String originalXml) {
+    final events = xml_events.parseEvents(originalXml);
+    
+    final worksheetAttributes = <xml_events.XmlEventAttribute>[];
+    final originalElements = <String, List<String>>{};
+    
+    List<xml_events.XmlEvent>? currentCapturedEvents;
+    String? currentTagName;
+    int depth = 0;
+    
+    const replacedTags = {
+      'sheetViews',
+      'sheetFormatPr',
+      'cols',
+      'sheetData',
+      'mergeCells',
+      'headerFooter',
+      'drawing',
+    };
 
-    if (sheetObject.getColumnWidths.isEmpty &&
-        sheetObject.getColumnAutoFits.isEmpty) {
-      if (columnElements.isEmpty) {
-        return;
+    for (final event in events) {
+      if (event is xml_events.XmlStartElementEvent) {
+        final tagName = event.name;
+        if (tagName == 'worksheet') {
+          worksheetAttributes.addAll(event.attributes);
+          continue;
+        }
+        
+        if (depth == 0) {
+          currentTagName = tagName;
+          currentCapturedEvents = [event];
+          if (event.isSelfClosing) {
+            final xmlString = event.toString();
+            if (!replacedTags.contains(currentTagName)) {
+              originalElements.putIfAbsent(currentTagName, () => []).add(xmlString);
+            }
+            currentCapturedEvents = null;
+            currentTagName = null;
+          } else {
+            depth = 1;
+          }
+        } else {
+          currentCapturedEvents?.add(event);
+          if (!event.isSelfClosing) {
+            depth++;
+          }
+        }
+      } else if (event is xml_events.XmlEndElementEvent) {
+        final tagName = event.name;
+        if (tagName == 'worksheet') {
+          continue;
+        }
+        
+        if (currentCapturedEvents != null) {
+          currentCapturedEvents.add(event);
+          depth--;
+          if (depth == 0) {
+            final xmlString = currentCapturedEvents.map((e) => e.toString()).join();
+            if (!replacedTags.contains(currentTagName)) {
+              originalElements.putIfAbsent(currentTagName!, () => []).add(xmlString);
+            }
+            currentCapturedEvents = null;
+            currentTagName = null;
+          }
+        }
+      } else {
+        if (currentCapturedEvents != null) {
+          currentCapturedEvents.add(event);
+        }
       }
-
-      final columns = columnElements.first;
-      final worksheet = xmlFile.findAllElements('worksheet').first;
-      worksheet.children.remove(columns);
-      return;
     }
 
-    if (columnElements.isEmpty) {
-      final worksheet = xmlFile.findAllElements('worksheet').first;
-      final sheetData = xmlFile.findAllElements('sheetData').first;
-      final index = worksheet.children.indexOf(sheetData);
-
-      worksheet.children.insert(index, XmlElement(XmlName('cols'), [], []));
+    final out = StringBuffer();
+    out.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
+    out.write('<worksheet');
+    for (final attr in worksheetAttributes) {
+      out.write(' ${attr.name}="${attr.value}"');
     }
-
-    var columns = columnElements.first;
-
-    if (columns.children.isNotEmpty) {
-      columns.children.clear();
+    out.write('>');
+    
+    final printedTags = <String>{};
+    
+    void writeOriginal(String tag) {
+      printedTags.add(tag);
+      final list = originalElements[tag];
+      if (list != null) {
+        for (final item in list) {
+          out.write(item);
+        }
+      }
     }
+    
+    // Write in schema-compliant order:
+    // 1. sheetPr
+    writeOriginal('sheetPr');
+    // 2. dimension
+    writeOriginal('dimension');
+    // 3. sheetViews
+    out.write(_buildSheetViewsXml(sheetObject));
+    printedTags.add('sheetViews');
+    // 4. sheetFormatPr
+    out.write(_buildSheetFormatPrXml(sheetObject));
+    printedTags.add('sheetFormatPr');
+    // 5. cols
+    out.write(_buildColsXml(sheetObject));
+    printedTags.add('cols');
+    // 6. sheetData
+    out.write(_buildSheetDataXml(sheetName, sheetObject));
+    printedTags.add('sheetData');
+    
+    // Write common other elements
+    writeOriginal('sheetProtection');
+    writeOriginal('autoFilter');
+    writeOriginal('sortState');
+    writeOriginal('dataConsolidate');
+    writeOriginal('customSheetViews');
+    writeOriginal('customProperties');
+    writeOriginal('cellWatches');
+    writeOriginal('webPublishItems');
+    writeOriginal('conditionalFormatting');
+    writeOriginal('dataValidations');
+    writeOriginal('hyperlinks');
+    writeOriginal('printOptions');
+    writeOriginal('pageMargins');
+    writeOriginal('pageSetup');
+    
+    // 7. mergeCells
+    out.write(_buildMergeCellsXml(sheetObject));
+    printedTags.add('mergeCells');
+    
+    // 8. drawing / legacyDrawing / picture / oleObjects
+    if (sheetObject._drawingRId != null) {
+      out.write('<drawing r:id="${sheetObject._drawingRId}"/>');
+    }
+    printedTags.add('drawing');
+    
+    writeOriginal('legacyDrawing');
+    writeOriginal('legacyDrawingHF');
+    writeOriginal('picture');
+    writeOriginal('oleObjects');
+    writeOriginal('drawingHF');
+    
+    // 9. headerFooter
+    out.write(_buildHeaderFooterXml(sheetObject));
+    printedTags.add('headerFooter');
+    
+    // 10. extLst
+    writeOriginal('extLst');
+    
+    // Catch-all: Write any other original elements we missed, just in case
+    originalElements.forEach((tag, list) {
+      if (!printedTags.contains(tag)) {
+        for (final item in list) {
+          out.write(item);
+        }
+      }
+    });
+    
+    out.write('</worksheet>');
+    return out.toString();
+  }
 
+  String _buildSheetViewsXml(Sheet sheetObject) {
+    final buffer = StringBuffer();
+    buffer.write('<sheetViews>');
+    buffer.write('<sheetView workbookViewId="0"');
+    if (sheetObject.isRTL) {
+      buffer.write(' rightToLeft="1"');
+    }
+    buffer.write('/></sheetViews>');
+    return buffer.toString();
+  }
+
+  String _buildSheetFormatPrXml(Sheet sheetObject) {
+    final defaultRowHeight = sheetObject.defaultRowHeight;
+    final defaultColumnWidth = sheetObject.defaultColumnWidth;
+
+    if (defaultRowHeight == null && defaultColumnWidth == null) {
+      return '';
+    }
+    final buffer = StringBuffer();
+    buffer.write('<sheetFormatPr');
+    if (defaultRowHeight != null) {
+      buffer.write(' defaultRowHeight="${defaultRowHeight.toStringAsFixed(2)}"');
+    }
+    if (defaultColumnWidth != null) {
+      buffer.write(' defaultColWidth="${defaultColumnWidth.toStringAsFixed(2)}"');
+    }
+    buffer.write('/>');
+    return buffer.toString();
+  }
+
+  String _buildColsXml(Sheet sheetObject) {
     final autoFits = sheetObject.getColumnAutoFits;
     final customWidths = sheetObject.getColumnWidths;
+
+    if (customWidths.isEmpty && autoFits.isEmpty) {
+      return '';
+    }
 
     final columnCount = max(
         autoFits.isEmpty ? 0 : autoFits.keys.reduce(max) + 1,
         customWidths.isEmpty ? 0 : customWidths.keys.reduce(max) + 1);
 
+    final buffer = StringBuffer();
+    buffer.write('<cols>');
+    
     double defaultColumnWidth =
         sheetObject.defaultColumnWidth ?? _excelDefaultColumnWidth;
 
@@ -106,47 +244,193 @@ class _WorksheetManager {
           width = customWidths[index]!;
         }
       }
-
-      _addNewColumn(columns, index, index, width);
+      buffer.write('<col min="${index + 1}" max="${index + 1}" width="${width.toStringAsFixed(2)}" bestFit="1" customWidth="1"/>');
     }
+    buffer.write('</cols>');
+    return buffer.toString();
   }
 
-  void _setRows(String sheetName, Sheet sheetObject) {
+  String _buildSheetDataXml(String sheetName, Sheet sheetObject) {
     final customHeights = sheetObject.getRowHeights;
+    final buffer = StringBuffer();
+    buffer.write('<sheetData>');
+
+    final sheetStyleReferenced = _excel._cellStyleReferenced[sheetName];
 
     for (var rowIndex = 0; rowIndex < sheetObject._maxRows; rowIndex++) {
-      double? height;
-
-      if (customHeights.containsKey(rowIndex)) {
-        height = customHeights[rowIndex];
-      }
-
-      if (sheetObject._sheetData[rowIndex] == null) {
+      final rowData = sheetObject._sheetData[rowIndex];
+      if (rowData == null || rowData.isEmpty) {
         continue;
       }
-      var foundRow = _createNewRow(
-          _excel._sheets[sheetName]! as XmlElement, rowIndex, height);
-      for (var columnIndex = 0;
-          columnIndex < sheetObject._maxColumns;
-          columnIndex++) {
-        var data = sheetObject._sheetData[rowIndex]![columnIndex];
-        if (data == null) {
-          continue;
-        }
-        _updateCell(sheetName, foundRow, columnIndex, rowIndex, data.value,
-            data.cellStyle?.numberFormat);
+
+      double? height = customHeights[rowIndex];
+      buffer.write('<row r="${rowIndex + 1}"');
+      if (height != null) {
+        buffer.write(' ht="${height.toStringAsFixed(2)}" customHeight="1"');
       }
+      buffer.write('>');
+
+      bool isSorted = true;
+      int lastCol = -1;
+      for (final colIndex in rowData.keys) {
+        if (colIndex < lastCol) {
+          isSorted = false;
+          break;
+        }
+        lastCol = colIndex;
+      }
+
+      if (isSorted) {
+        rowData.forEach((columnIndex, data) {
+          _buildCellXml(
+            buffer,
+            sheetName,
+            columnIndex,
+            rowIndex,
+            data.value,
+            data._cellStyle,
+            sheetStyleReferenced,
+          );
+        });
+      } else {
+        final sortedCols = rowData.keys.toList()..sort();
+        for (final columnIndex in sortedCols) {
+          final data = rowData[columnIndex]!;
+          _buildCellXml(
+            buffer,
+            sheetName,
+            columnIndex,
+            rowIndex,
+            data.value,
+            data._cellStyle,
+            sheetStyleReferenced,
+          );
+        }
+      }
+      buffer.write('</row>');
     }
+    buffer.write('</sheetData>');
+    return buffer.toString();
   }
 
-  void _addNewColumn(XmlElement columns, int min, int max, double width) {
-    columns.children.add(XmlElement(XmlName('col'), [
-      XmlAttribute(XmlName('min'), (min + 1).toString()),
-      XmlAttribute(XmlName('max'), (max + 1).toString()),
-      XmlAttribute(XmlName('width'), width.toStringAsFixed(2)),
-      XmlAttribute(XmlName('bestFit'), "1"),
-      XmlAttribute(XmlName('customWidth'), "1"),
-    ], []));
+  void _buildCellXml(
+      StringBuffer buffer,
+      String sheet,
+      int columnIndex,
+      int rowIndex,
+      CellValue? value,
+      CellStyle? cellStyle,
+      Map<String, int>? sheetStyleReferenced) {
+    SharedString? sharedString;
+    if (value is TextCellValue) {
+      final String strVal = (value.value.children == null || value.value.children!.isEmpty)
+          ? (value.value.text ?? '')
+          : value.toString();
+      sharedString = _excel._sharedStrings.tryFind(strVal);
+      if (sharedString != null) {
+        _excel._sharedStrings.add(sharedString, strVal);
+      } else {
+        sharedString = _excel._sharedStrings.addFromString(strVal);
+      }
+    }
+
+    String sAttr = '';
+    if (_excel._styleChanges && cellStyle != null) {
+      var upperLevelPos = _styleIndexCache[cellStyle];
+      if (upperLevelPos == null) {
+        upperLevelPos = _checkPosition(_excel._cellStyleList, cellStyle);
+        if (upperLevelPos == -1) {
+          int lowerLevelPos = _checkPosition(_save._innerCellStyle, cellStyle);
+          if (lowerLevelPos != -1) {
+            upperLevelPos = lowerLevelPos + _excel._cellStyleList.length;
+          } else {
+            upperLevelPos = 0;
+          }
+        }
+        _styleIndexCache[cellStyle] = upperLevelPos;
+      }
+      sAttr = ' s="$upperLevelPos"';
+    } else if (sheetStyleReferenced != null) {
+      final rC = getCellId(columnIndex, rowIndex);
+      if (sheetStyleReferenced.containsKey(rC)) {
+        sAttr = ' s="${sheetStyleReferenced[rC]}"';
+      }
+    }
+
+    String tAttr = '';
+    if (value is TextCellValue) {
+      tAttr = ' t="s"';
+    } else if (value is BoolCellValue) {
+      tAttr = ' t="b"';
+    }
+
+    buffer.write('<c r="');
+    if (columnIndex < 16384) {
+      buffer.write(_columnLetterList[columnIndex]);
+    } else {
+      buffer.write(_numericToLetters(columnIndex + 1));
+    }
+    buffer.write(rowIndex + 1);
+    buffer.write('"');
+    
+    if (sAttr.isNotEmpty) {
+      buffer.write(sAttr);
+    }
+    if (tAttr.isNotEmpty) {
+      buffer.write(tAttr);
+    }
+    buffer.write('>');
+    
+    if (value != null) {
+      final numFormat = cellStyle?.numberFormat;
+      switch (value) {
+        case TextCellValue():
+          buffer.write('<v>');
+          buffer.write(_excel._sharedStrings.indexOf(sharedString!));
+          buffer.write('</v>');
+          break;
+        case FormulaCellValue():
+          buffer.write('<f>');
+          buffer.write(_escapeXml(value.formula));
+          buffer.write('</f><v>');
+          buffer.write(_escapeXml(value.write(numFormat)));
+          buffer.write('</v>');
+          break;
+        case IntCellValue() ||
+              DoubleCellValue() ||
+              BoolCellValue():
+          buffer.write('<v>');
+          buffer.write(value.write(numFormat));
+          buffer.write('</v>');
+          break;
+        case DateCellValue() ||
+              TimeCellValue() ||
+              DateTimeCellValue():
+          buffer.write('<v>');
+          buffer.write(value.write(numFormat));
+          buffer.write('</v>');
+          break;
+      }
+    }
+    buffer.write('</c>');
+  }
+
+  String _buildMergeCellsXml(Sheet sheetObject) {
+    final spannedItems = sheetObject.spannedItems;
+    if (spannedItems.isEmpty) return '';
+
+    final buffer = StringBuffer();
+    buffer.write('<mergeCells count="${spannedItems.length}">');
+    for (final ref in spannedItems) {
+      buffer.write('<mergeCell ref="$ref"/>');
+    }
+    buffer.write('</mergeCells>');
+    return buffer.toString();
+  }
+
+  String _buildHeaderFooterXml(Sheet sheetObject) {
+    if (sheetObject.headerFooter == null) return '';
+    return sheetObject.headerFooter!.toXmlElement().toXmlString();
   }
 
   double _calcAutoFitColumnWidth(Sheet sheet, int column) {
@@ -162,97 +446,7 @@ class _WorksheetManager {
     return ((maxNumOfCharacters * 7.0 + 9.0) / 7.0 * 256).truncate() / 256;
   }
 
-  XmlElement _createNewRow(XmlElement table, int rowIndex, double? height) {
-    var row = XmlElement(XmlName('row'), [
-      XmlAttribute(XmlName('r'), (rowIndex + 1).toString()),
-      if (height != null)
-        XmlAttribute(XmlName('ht'), height.toStringAsFixed(2)),
-      if (height != null) XmlAttribute(XmlName('customHeight'), '1'),
-    ], []);
-    table.children.add(row);
-    return row;
-  }
-
-  XmlElement _updateCell(String sheet, XmlElement row, int columnIndex,
-      int rowIndex, CellValue? value, NumFormat? numberFormat) {
-    var cell = _createCell(sheet, columnIndex, rowIndex, value, numberFormat);
-    row.children.add(cell);
-    return cell;
-  }
-
-  XmlElement _createCell(String sheet, int columnIndex, int rowIndex,
-      CellValue? value, NumFormat? numberFormat) {
-    SharedString? sharedString;
-    if (value is TextCellValue) {
-      sharedString = _excel._sharedStrings.tryFind(value.toString());
-      if (sharedString != null) {
-        _excel._sharedStrings.add(sharedString, value.toString());
-      } else {
-        sharedString = _excel._sharedStrings.addFromString(value.toString());
-      }
-    }
-
-    String rC = getCellId(columnIndex, rowIndex);
-
-    var attributes = <XmlAttribute>[
-      XmlAttribute(XmlName('r'), rC),
-      if (value is TextCellValue) XmlAttribute(XmlName('t'), 's'),
-      if (value is BoolCellValue) XmlAttribute(XmlName('t'), 'b'),
-    ];
-
-    final cellStyle =
-        _excel._sheetMap[sheet]?._sheetData[rowIndex]?[columnIndex]?.cellStyle;
-
-    if (_excel._styleChanges && cellStyle != null) {
-      int upperLevelPos = _checkPosition(_excel._cellStyleList, cellStyle);
-      if (upperLevelPos == -1) {
-        int lowerLevelPos = _checkPosition(_save._innerCellStyle, cellStyle);
-        if (lowerLevelPos != -1) {
-          upperLevelPos = lowerLevelPos + _excel._cellStyleList.length;
-        } else {
-          upperLevelPos = 0;
-        }
-      }
-      attributes.insert(
-        1,
-        XmlAttribute(XmlName('s'), '$upperLevelPos'),
-      );
-    } else if (_excel._cellStyleReferenced.containsKey(sheet) &&
-        _excel._cellStyleReferenced[sheet]!.containsKey(rC)) {
-      attributes.insert(
-        1,
-        XmlAttribute(
-            XmlName('s'), '${_excel._cellStyleReferenced[sheet]![rC]}'),
-      );
-    }
-
-
-    final List<XmlElement> children;
-    switch (value) {
-      case null:
-        children = [];
-      case TextCellValue():
-        children = [
-          XmlElement(XmlName('v'), [], [
-            XmlText(_excel._sharedStrings.indexOf(sharedString!).toString())
-          ]),
-        ];
-      case FormulaCellValue():
-        children = [
-          XmlElement(XmlName('f'), [], [XmlText(value.formula)]),
-          XmlElement(XmlName('v'), [], [XmlText(value.write(numberFormat))]),
-        ];
-      case IntCellValue() ||
-            DoubleCellValue() ||
-            DateCellValue() ||
-            TimeCellValue() ||
-            DateTimeCellValue() ||
-            BoolCellValue():
-        children = [
-          XmlElement(XmlName('v'), [], [XmlText(value.write(numberFormat))]),
-        ];
-    }
-
-    return XmlElement(XmlName('c'), attributes, children);
+  int _checkPosition(List<dynamic> list, dynamic element) {
+    return list.indexOf(element);
   }
 }

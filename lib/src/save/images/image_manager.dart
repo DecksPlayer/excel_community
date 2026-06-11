@@ -75,14 +75,14 @@ class _ImageManager {
         _save._addMediaFile(mediaPath, List<int>.from(image.imageBytes));
 
         // Add image relationship in the drawing rels
-        relsRoot.children.add(XmlElement(XmlName('Relationship'), [
-          XmlAttribute(XmlName('Id'), rId),
+        relsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
+          XmlAttribute(XmlName.parts('Id'), rId),
           XmlAttribute(
-            XmlName('Type'),
+            XmlName.parts('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
           ),
           XmlAttribute(
-            XmlName('Target'),
+            XmlName.parts('Target'),
             '../media/image$imageCount.${image._extension}',
           ),
         ]));
@@ -115,30 +115,16 @@ class _ImageManager {
         final drawingRId = 'rId$drawingRIdIndex';
         final drawingFileName = drawingPath.split('/').last;
 
-        sheetRelsRoot.children.add(XmlElement(XmlName('Relationship'), [
-          XmlAttribute(XmlName('Id'), drawingRId),
+        sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
+          XmlAttribute(XmlName.parts('Id'), drawingRId),
           XmlAttribute(
-            XmlName('Type'),
+            XmlName.parts('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
           ),
-          XmlAttribute(XmlName('Target'), '../drawings/$drawingFileName'),
+          XmlAttribute(XmlName.parts('Target'), '../drawings/$drawingFileName'),
         ]));
 
-        // Add <drawing r:id="…"> to the worksheet XML
-        final worksheetDoc = _excel._xmlFiles[sheetId];
-        if (worksheetDoc != null) {
-          final worksheet =
-              worksheetDoc.findAllElements('worksheet').first;
-          final existingDrawing =
-              worksheet.findAllElements('drawing').toList();
-          if (existingDrawing.isEmpty) {
-            final drawingEl = XmlElement(
-              XmlName('drawing'),
-              [XmlAttribute(XmlName('id', 'r'), drawingRId)],
-            );
-            _insertBeforeTrailingTags(worksheet, drawingEl);
-          }
-        }
+        sheet._drawingRId = drawingRId;
       }
     });
   }
@@ -190,12 +176,12 @@ class _ImageManager {
   XmlDocument _buildEmptyDrawing() {
     final b = XmlBuilder();
     b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('xdr:wsDr', namespaces: {
-      'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing':
-          'xdr',
-      'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
-      'http://schemas.openxmlformats.org/officeDocument/2006/relationships':
-          'r',
+    b.element('xdr:wsDr', namespaceUris: {
+      'xdr':
+          'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+      'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+      'r':
+          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
     }, nest: () {});
     return b.buildDocument();
   }
@@ -206,10 +192,10 @@ class _ImageManager {
       ExcelImage image, String rId, int imageIndex) {
     final a = image.anchor;
     final b = XmlBuilder();
-    b.element('xdr:oneCellAnchor', namespaces: {
-      'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing': 'xdr',
-      'http://schemas.openxmlformats.org/drawingml/2006/main': 'a',
-      'http://schemas.openxmlformats.org/officeDocument/2006/relationships': 'r',
+    b.element('xdr:oneCellAnchor', namespaceUris: {
+      'xdr': 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+      'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+      'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
     }, nest: () {
       b.element('xdr:from', nest: () {
         b.element('xdr:col', nest: () => b.text(a.fromColumn.toString()));
@@ -255,24 +241,5 @@ class _ImageManager {
     return b.buildDocument().rootElement.copy();
   }
 
-  /// Inserts [element] before OOXML tags that must appear after `<drawing>`.
-  void _insertBeforeTrailingTags(XmlElement parent, XmlElement element) {
-    const trailingTags = [
-      'legacyDrawing',
-      'legacyDrawingHF',
-      'picture',
-      'oleObjects',
-      'drawingHF',
-      'extLst',
-    ];
 
-    for (int i = 0; i < parent.children.length; i++) {
-      final child = parent.children[i];
-      if (child is XmlElement && trailingTags.contains(child.name.local)) {
-        parent.children.insert(i, element);
-        return;
-      }
-    }
-    parent.children.add(element);
-  }
 }

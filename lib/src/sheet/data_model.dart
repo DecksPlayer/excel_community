@@ -88,13 +88,19 @@ class Data extends Equatable {
   ///
   /// if `no` cellStyle is set then it returns `null`
   CellStyle? get cellStyle {
-    return _cellStyle;
+    final style = _cellStyle;
+    if (style != null && _sheet._excel._isDefaultStyle(style)) {
+      final clone = style.copyWith();
+      _cellStyle = clone;
+      return clone;
+    }
+    return style;
   }
 
   /// sets the user defined CellStyle in this current cell
-  set cellStyle(CellStyle? _) {
+  set cellStyle(CellStyle? style) {
     _sheet._excel._styleChanges = true;
-    _cellStyle = _;
+    _cellStyle = style;
   }
 
   @override
