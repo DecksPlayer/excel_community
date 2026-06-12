@@ -33,9 +33,11 @@ void main() {
 
     // Verify ZIP integrity
     var archive = ZipDecoder().decodeBytes(bytes!);
-    bool foundDrawing = archive.files.any((f) => f.name == 'xl/drawings/drawing1.xml');
-    bool foundChart = archive.files.any((f) => f.name == 'xl/charts/chart1.xml');
-    
+    bool foundDrawing =
+        archive.files.any((f) => f.name == 'xl/drawings/drawing1.xml');
+    bool foundChart =
+        archive.files.any((f) => f.name == 'xl/charts/chart1.xml');
+
     expect(foundDrawing, isTrue, reason: 'drawing1.xml must be present');
     expect(foundChart, isTrue, reason: 'chart1.xml must be present');
 
@@ -46,13 +48,18 @@ void main() {
 
   test('Verify multi-sheet drawing integrity', () {
     var excel = Excel.createExcel();
-    
+
     // Sheet 1 with chart
     var sheet1 = excel['Sheet1'];
     sheet1.updateCell(CellIndex.indexByString("A1"), IntCellValue(10));
     sheet1.addChart(ColumnChart(
       title: "C1",
-      series: [ChartSeries(name: "S1", categoriesRange: r'Sheet1!$A$1:$A$1', valuesRange: r'Sheet1!$A$1:$A$1')],
+      series: [
+        ChartSeries(
+            name: "S1",
+            categoriesRange: r'Sheet1!$A$1:$A$1',
+            valuesRange: r'Sheet1!$A$1:$A$1')
+      ],
       anchor: ChartAnchor.at(column: 2, row: 2),
     ));
 
@@ -61,19 +68,26 @@ void main() {
     sheet2.updateCell(CellIndex.indexByString("A1"), IntCellValue(20));
     sheet2.addChart(ColumnChart(
       title: "C2",
-      series: [ChartSeries(name: "S2", categoriesRange: r'Sheet2!$A$1:$A$1', valuesRange: r'Sheet2!$A$1:$A$1')],
+      series: [
+        ChartSeries(
+            name: "S2",
+            categoriesRange: r'Sheet2!$A$1:$A$1',
+            valuesRange: r'Sheet2!$A$1:$A$1')
+      ],
       anchor: ChartAnchor.at(column: 2, row: 2),
     ));
 
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
-    
-    expect(archive.files.any((f) => f.name == 'xl/drawings/drawing1.xml'), isTrue);
-    expect(archive.files.any((f) => f.name == 'xl/drawings/drawing2.xml'), isTrue);
+
+    expect(
+        archive.files.any((f) => f.name == 'xl/drawings/drawing1.xml'), isTrue);
+    expect(
+        archive.files.any((f) => f.name == 'xl/drawings/drawing2.xml'), isTrue);
     expect(archive.files.any((f) => f.name == 'xl/charts/chart1.xml'), isTrue);
     expect(archive.files.any((f) => f.name == 'xl/charts/chart2.xml'), isTrue);
   });
-  
+
   test('Create Excel with RadarChart and verify integrity', () {
     var excel = Excel.createExcel();
     var sheet = excel['Sheet1'];
@@ -102,7 +116,8 @@ void main() {
     expect(bytes, isNotNull);
 
     var archive = ZipDecoder().decodeBytes(bytes!);
-    bool foundChart = archive.files.any((f) => f.name == 'xl/charts/chart1.xml');
+    bool foundChart =
+        archive.files.any((f) => f.name == 'xl/charts/chart1.xml');
     expect(foundChart, isTrue);
 
     // Verify it can be decoded back

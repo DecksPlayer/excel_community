@@ -108,8 +108,7 @@ class _ImageManager {
           sheetRels = _buildEmptyRelationships();
           _excel._xmlFiles[sheetRelsPath] = sheetRels;
         }
-        final sheetRelsRoot =
-            sheetRels.findAllElements('Relationships').first;
+        final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
         final drawingRIdIndex =
             sheetRelsRoot.children.whereType<XmlElement>().length + 1;
         final drawingRId = 'rId$drawingRIdIndex';
@@ -167,22 +166,27 @@ class _ImageManager {
   XmlDocument _buildEmptyRelationships() {
     final b = XmlBuilder();
     b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('Relationships', attributes: {
-      'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
-    }, nest: () {});
+    b.element('Relationships',
+        attributes: {
+          'xmlns':
+              'http://schemas.openxmlformats.org/package/2006/relationships',
+        },
+        nest: () {});
     return b.buildDocument();
   }
 
   XmlDocument _buildEmptyDrawing() {
     final b = XmlBuilder();
     b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('xdr:wsDr', namespaceUris: {
-      'xdr':
-          'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
-      'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-      'r':
-          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-    }, nest: () {});
+    b.element('xdr:wsDr',
+        namespaceUris: {
+          'xdr':
+              'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+          'r':
+              'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+        },
+        nest: () {});
     return b.buildDocument();
   }
 
@@ -193,9 +197,11 @@ class _ImageManager {
     final a = image.anchor;
     final b = XmlBuilder();
     b.element('xdr:oneCellAnchor', namespaceUris: {
-      'xdr': 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+      'xdr':
+          'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
       'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-      'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+      'r':
+          'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
     }, nest: () {
       b.element('xdr:from', nest: () {
         b.element('xdr:col', nest: () => b.text(a.fromColumn.toString()));
@@ -240,6 +246,4 @@ class _ImageManager {
     });
     return b.buildDocument().rootElement.copy();
   }
-
-
 }

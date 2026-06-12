@@ -76,7 +76,7 @@ class Data extends Equatable {
   }
 
   set value(CellValue? val) {
-    _sheet.updateCell(cellIndex, val);
+    _sheet._updateCellDirect(this, val);
   }
 
   /// returns the value stored in this cell;

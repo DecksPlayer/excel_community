@@ -4,8 +4,10 @@ part of '../../../excel_community.dart';
 class DateCellValue extends CellValue {
   /// Year component.
   final int year;
+
   /// Month component (1-12).
   final int month;
+
   /// Day component (1-31).
   final int day;
 

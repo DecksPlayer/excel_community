@@ -53,7 +53,8 @@ class _WorkbookManager {
 
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="$count" uniqueCount="$uniqueCount">');
+    buffer.write(
+        '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="$count" uniqueCount="$uniqueCount">');
     for (final string in _excel._sharedStrings._list) {
       buffer.write(string._xmlString);
     }
@@ -76,10 +77,10 @@ class _WorkbookManager {
           mergeElement = iterMergeElement!.first;
         } else {
           if ((_excel._xmlFiles[_excel._xmlSheetId[s]]
-                       ?.findAllElements('worksheet')
-                       .length ??
-                   0) >
-               0) {
+                      ?.findAllElements('worksheet')
+                      .length ??
+                  0) >
+              0) {
             int index = _excel._xmlFiles[_excel._xmlSheetId[s]]!
                 .findAllElements('worksheet')
                 .first

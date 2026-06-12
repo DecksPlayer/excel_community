@@ -19,7 +19,8 @@ void main() {
   final events = xml_events.parseEvents(xml);
   for (final event in events) {
     if (event is xml_events.XmlStartElementEvent) {
-      final attrs = event.attributes.map((a) => '${a.name}=${a.value}').toList();
+      final attrs =
+          event.attributes.map((a) => '${a.name}=${a.value}').toList();
       print('Start Element: ${event.name} with attributes $attrs');
     } else if (event is xml_events.XmlEndElementEvent) {
       print('End Element: ${event.name}');

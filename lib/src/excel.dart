@@ -61,7 +61,8 @@ class Excel {
   final Map<NumFormat, CellStyle> _defaultStyleCache = {};
 
   CellStyle _getDefaultStyle(NumFormat format) {
-    return _defaultStyleCache.putIfAbsent(format, () => CellStyle(numberFormat: format));
+    return _defaultStyleCache.putIfAbsent(
+        format, () => CellStyle(numberFormat: format));
   }
 
   bool _isDefaultStyle(CellStyle style) {

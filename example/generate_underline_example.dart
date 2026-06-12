@@ -25,7 +25,7 @@ void main() {
 
   // === EJEMPLOS DE UNDERLINE ===
   int row = 3;
-  
+
   // Header
   sheet.updateCell(
     CellIndex.indexByString('A$row'),
@@ -36,7 +36,8 @@ void main() {
       backgroundColorHex: ExcelColor.grey200,
     ),
   );
-  sheet.merge(CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
+  sheet.merge(
+      CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
   row += 2;
 
   // Sin subrayado
@@ -96,7 +97,8 @@ void main() {
       backgroundColorHex: ExcelColor.grey200,
     ),
   );
-  sheet.merge(CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
+  sheet.merge(
+      CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
   row += 2;
 
   // Bold + Underline
@@ -160,7 +162,8 @@ void main() {
       backgroundColorHex: ExcelColor.grey200,
     ),
   );
-  sheet.merge(CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
+  sheet.merge(
+      CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
   row += 2;
 
   // Diferentes tamaños
@@ -236,7 +239,8 @@ void main() {
       backgroundColorHex: ExcelColor.grey200,
     ),
   );
-  sheet.merge(CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
+  sheet.merge(
+      CellIndex.indexByString('A$row'), CellIndex.indexByString('D$row'));
   row += 2;
 
   // Encabezados de tabla

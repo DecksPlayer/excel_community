@@ -115,7 +115,8 @@ class _StylesParser {
         final formatCode = node.getAttribute('formatCode')!;
         // Register all explicitly declared formats. Excel can include
         // built-in IDs (0–163) in numFmts to override them for this file.
-        _excel._numFormats.add(numFmtId, NumFormat.custom(formatCode: formatCode));
+        _excel._numFormats
+            .add(numFmtId, NumFormat.custom(formatCode: formatCode));
       });
     });
   }
@@ -212,9 +213,10 @@ class _StylesParser {
           italic: isItalic,
           strikethrough: isStrikethrough,
           underline: underline,
-          backgroundColorHex: backgroundColor == 'none' || backgroundColor.isEmpty
-              ? ExcelColor.none
-              : backgroundColor.excelColor,
+          backgroundColorHex:
+              backgroundColor == 'none' || backgroundColor.isEmpty
+                  ? ExcelColor.none
+                  : backgroundColor.excelColor,
           horizontalAlign: horizontalAlign,
           verticalAlign: verticalAlign,
           textWrapping: textWrapping,

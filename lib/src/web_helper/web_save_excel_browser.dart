@@ -13,15 +13,16 @@ class SavingHelper {
     try {
       // Convert List<int> to Uint8List
       final bytes = Uint8List.fromList(val);
-      
+
       // Create blob with proper MIME type for Excel files
       final blob = Blob(
         [bytes.toJS].toJS,
         BlobPropertyBag(
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          type:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ),
       );
-      
+
       final url = URL.createObjectURL(blob);
       final anchor = HTMLAnchorElement()
         ..href = url
@@ -35,7 +36,7 @@ class SavingHelper {
       // Cleanup
       anchor.remove();
       URL.revokeObjectURL(url);
-      
+
       return val;
     } catch (e) {
       // In case of error, print to console and return null

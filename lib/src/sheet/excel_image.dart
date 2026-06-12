@@ -43,11 +43,7 @@ enum ExcelImageType {
   ///
   /// Throws [ArgumentError] if the extension is not recognised.
   factory ExcelImageType.fromExtension(String pathOrExtension) {
-    final ext = pathOrExtension
-        .split('.')
-        .last
-        .toLowerCase()
-        .trim();
+    final ext = pathOrExtension.split('.').last.toLowerCase().trim();
     return switch (ext) {
       'png' => ExcelImageType.png,
       'jpg' || 'jpeg' || 'jfif' => ExcelImageType.jpeg,

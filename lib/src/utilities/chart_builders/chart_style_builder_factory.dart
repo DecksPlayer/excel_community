@@ -1,7 +1,7 @@
 part of '../../../excel_community.dart';
 
 /// Factory to get the appropriate style builder for a chart type
-/// 
+///
 /// Implements the Factory pattern to create the right builder
 /// based on the chart type, following SOLID principles.
 class ChartStyleBuilderFactory {
@@ -20,7 +20,7 @@ class ChartStyleBuilderFactory {
     } else if (chart is RadarChart) {
       return RadarChartBuilder();
     }
-    
+
     // Default fallback
     return ColumnBarChartBuilder();
   }

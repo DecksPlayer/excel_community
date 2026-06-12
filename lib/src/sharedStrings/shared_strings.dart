@@ -148,7 +148,8 @@ class SharedString {
               /// RunProperties
               /// https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.runproperties?view=openxml-3.0.1
               case 'rPr':
-                for (final runProperty in runChild.children.whereType<XmlElement>()) {
+                for (final runProperty
+                    in runChild.children.whereType<XmlElement>()) {
                   switch (runProperty.name.local) {
                     case 'b': //18.8.2 b (Bold)
                       style = style.copyWith(boldVal: getBool(runProperty));

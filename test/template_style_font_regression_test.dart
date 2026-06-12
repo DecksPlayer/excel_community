@@ -6,7 +6,9 @@ import 'package:test/test.dart';
 import 'package:xml/xml.dart';
 
 void main() {
-  test('Template style edits preserve font color when styles.xml has extra font entries', () {
+  test(
+      'Template style edits preserve font color when styles.xml has extra font entries',
+      () {
     final excel = Excel.createExcel();
     final sheet = excel['Sheet1'];
     final cellIndex = CellIndex.indexByString('B2');
@@ -42,14 +44,17 @@ void main() {
       reason: 'Template-derived styles should keep the original font color.',
     );
 
-    final stylesArchive = ZipDecoder().decodeBytes(updatedBytes).findFile('xl/styles.xml')!;
-    final stylesDocument = XmlDocument.parse(utf8.decode(stylesArchive.content));
+    final stylesArchive =
+        ZipDecoder().decodeBytes(updatedBytes).findFile('xl/styles.xml')!;
+    final stylesDocument =
+        XmlDocument.parse(utf8.decode(stylesArchive.content));
     final fonts = stylesDocument.findAllElements('fonts').first;
 
     expect(
       fonts.getAttribute('count'),
       fonts.findElements('font').length.toString(),
-      reason: 'styles.xml font count should match the actual number of font nodes.',
+      reason:
+          'styles.xml font count should match the actual number of font nodes.',
     );
   });
 }
@@ -63,13 +68,13 @@ List<int> _injectExtraFontEntry(List<int> bytes) {
 
   expect(fontNodes.length, greaterThanOrEqualTo(2));
 
-  final duplicateDefaultFont = XmlDocument.parse(fontNodes.first.toXmlString())
-      .rootElement
-      .copy();
+  final duplicateDefaultFont =
+      XmlDocument.parse(fontNodes.first.toXmlString()).rootElement.copy();
   fonts.children.insert(1, duplicateDefaultFont);
   fonts.setAttribute('count', fonts.findElements('font').length.toString());
 
-  for (final xf in stylesDocument.findAllElements('cellXfs').first.findElements('xf')) {
+  for (final xf
+      in stylesDocument.findAllElements('cellXfs').first.findElements('xf')) {
     final fontId = int.tryParse(xf.getAttribute('fontId') ?? '0') ?? 0;
     if (fontId >= 1) {
       xf.setAttribute('fontId', (fontId + 1).toString());

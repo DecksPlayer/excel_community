@@ -43,10 +43,14 @@ class _ChartManager {
       var drawingRels = _excel._xmlFiles[drawingRelsPath];
       if (drawingRels == null) {
         final relsBuilder = XmlBuilder();
-        relsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-        relsBuilder.element('Relationships', attributes: {
-          'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
-        }, nest: () {});
+        relsBuilder.processing(
+            'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+        relsBuilder.element('Relationships',
+            attributes: {
+              'xmlns':
+                  'http://schemas.openxmlformats.org/package/2006/relationships',
+            },
+            nest: () {});
         drawingRels = relsBuilder.buildDocument();
         _excel._xmlFiles[drawingRelsPath] = drawingRels;
       }
@@ -65,12 +69,12 @@ class _ChartManager {
       for (int i = 0; i < sheet.charts.length; i++) {
         chartCount++;
         final chart = sheet.charts[i];
-        
+
         // Resolve ranges for each series
         for (var series in chart.series) {
           final catData = _resolveChartRange(series.categoriesRange);
           final valData = _resolveChartRange(series.valuesRange);
-          
+
           series.categories = catData.map((e) => e?.toString() ?? "").toList();
           series.values = valData.map((e) {
             if (e is IntCellValue) return e.value;
@@ -91,7 +95,7 @@ class _ChartManager {
             }).toList();
           }
         }
-        
+
         final chartPath = 'xl/charts/chart$chartCount.xml';
 
         // Generate Chart XML
@@ -100,10 +104,14 @@ class _ChartManager {
         // Generate Chart .rels file (required by Excel for each chart part)
         final chartRelsPath = 'xl/charts/_rels/chart$chartCount.xml.rels';
         final chartRelsBuilder = XmlBuilder();
-        chartRelsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-        chartRelsBuilder.element('Relationships', attributes: {
-          'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
-        }, nest: () {});
+        chartRelsBuilder.processing(
+            'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+        chartRelsBuilder.element('Relationships',
+            attributes: {
+              'xmlns':
+                  'http://schemas.openxmlformats.org/package/2006/relationships',
+            },
+            nest: () {});
         _excel._xmlFiles[chartRelsPath] = chartRelsBuilder.buildDocument();
 
         // Add to Drawing Relationships
@@ -116,7 +124,8 @@ class _ChartManager {
             XmlName.parts('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
           ),
-          XmlAttribute(XmlName.parts('Target'), '../charts/chart$chartCount.xml'),
+          XmlAttribute(
+              XmlName.parts('Target'), '../charts/chart$chartCount.xml'),
         ]));
 
         // Add to Drawing XML using the actual relationship ID
@@ -142,16 +151,21 @@ class _ChartManager {
         var sheetRels = _excel._xmlFiles[sheetRelsPath];
         if (sheetRels == null) {
           final relsBuilder = XmlBuilder();
-          relsBuilder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-          relsBuilder.element('Relationships', attributes: {
-            'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
-          }, nest: () {});
+          relsBuilder.processing(
+              'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+          relsBuilder.element('Relationships',
+              attributes: {
+                'xmlns':
+                    'http://schemas.openxmlformats.org/package/2006/relationships',
+              },
+              nest: () {});
           sheetRels = relsBuilder.buildDocument();
           _excel._xmlFiles[sheetRelsPath] = sheetRels;
         }
 
         final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
-        final drawingRIdIndex = sheetRelsRoot.children.whereType<XmlElement>().length + 1;
+        final drawingRIdIndex =
+            sheetRelsRoot.children.whereType<XmlElement>().length + 1;
         final drawingRId = 'rId$drawingRIdIndex';
         final drawingFileName = drawingPath.split('/').last;
 
@@ -199,12 +213,16 @@ class _ChartManager {
   XmlDocument _buildEmptyDrawing() {
     final b = XmlBuilder();
     b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('xdr:wsDr', namespaceUris: {
-      'xdr': 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
-      'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-      'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-      'c': 'http://schemas.openxmlformats.org/drawingml/2006/chart',
-    }, nest: () {});
+    b.element('xdr:wsDr',
+        namespaceUris: {
+          'xdr':
+              'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+          'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+          'r':
+              'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+          'c': 'http://schemas.openxmlformats.org/drawingml/2006/chart',
+        },
+        nest: () {});
     return b.buildDocument();
   }
 
