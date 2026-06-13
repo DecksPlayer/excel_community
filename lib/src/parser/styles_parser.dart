@@ -285,14 +285,14 @@ class _StylesParser {
       fontStyle.isStrikethrough = true;
     }
 
-    final underlineValue = _nodeChildren(font, 'u', attribute: 'val');
-    if (underlineValue != null && underlineValue != true) {
-      if ((underlineValue as String).toLowerCase() == 'double') {
+    final underlineElement = font.findElements('u').firstOrNull;
+    if (underlineElement != null) {
+      final uVal = underlineElement.getAttribute('val')?.toLowerCase();
+      if (uVal == 'none') {
+        fontStyle.underline = Underline.None;
+      } else if (uVal == 'double') {
         fontStyle.underline = Underline.Double;
-      }
-    } else {
-      final underlineElement = _nodeChildren(font, 'u');
-      if (underlineElement != null && underlineElement == true) {
+      } else {
         fontStyle.underline = Underline.Single;
       }
     }

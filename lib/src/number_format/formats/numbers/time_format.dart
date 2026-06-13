@@ -16,7 +16,10 @@ sealed class TimeNumFormat extends NumFormat {
         microsecond: 0,
       );
     }
-    var value = num.parse(v);
+    var value = num.tryParse(v);
+    if (value == null) {
+      return TextCellValue(v);
+    }
     if (value < 1) {
       var delta = value * 24 * 3600 * 1000;
       final time = Duration(milliseconds: delta.round());

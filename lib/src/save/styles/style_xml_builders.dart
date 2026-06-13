@@ -18,24 +18,6 @@ class _StyleXmlBuilders {
 
     for (var fontStyleElement in innerFontStyle) {
       fonts.children.add(XmlElement(XmlName.parts('font'), [], [
-        if (fontStyleElement._fontColorHex != null &&
-            fontStyleElement._fontColorHex!.colorHex != "FF000000")
-          XmlElement(XmlName.parts('color'), [
-            XmlAttribute(
-                XmlName.parts('rgb'), fontStyleElement._fontColorHex!.colorHex)
-          ], []),
-        if (fontStyleElement.isBold) XmlElement(XmlName.parts('b'), [], []),
-        if (fontStyleElement.isItalic) XmlElement(XmlName.parts('i'), [], []),
-        if (fontStyleElement.isStrikethrough)
-          XmlElement(XmlName.parts('strike'), [], []),
-        if (fontStyleElement.underline != Underline.None &&
-            fontStyleElement.underline == Underline.Single)
-          XmlElement(XmlName.parts('u'), [], []),
-        if (fontStyleElement.underline != Underline.None &&
-            fontStyleElement.underline != Underline.Single &&
-            fontStyleElement.underline == Underline.Double)
-          XmlElement(XmlName.parts('u'),
-              [XmlAttribute(XmlName.parts('val'), 'double')], []),
         if (fontStyleElement.fontFamily != null &&
             fontStyleElement.fontFamily!.toLowerCase().toString() != 'null' &&
             fontStyleElement.fontFamily != '' &&
@@ -44,6 +26,30 @@ class _StyleXmlBuilders {
             XmlAttribute(
                 XmlName.parts('val'), fontStyleElement.fontFamily.toString())
           ], []),
+        if (fontStyleElement.isBold) XmlElement(XmlName.parts('b'), [], []),
+        if (fontStyleElement.isItalic) XmlElement(XmlName.parts('i'), [], []),
+        if (fontStyleElement.isStrikethrough)
+          XmlElement(XmlName.parts('strike'), [], []),
+        if (fontStyleElement._fontColorHex != null &&
+            fontStyleElement._fontColorHex!.colorHex != "FF000000")
+          XmlElement(XmlName.parts('color'), [
+            XmlAttribute(
+                XmlName.parts('rgb'), fontStyleElement._fontColorHex!.colorHex)
+          ], []),
+        if (fontStyleElement.fontSize != null &&
+            fontStyleElement.fontSize.toString().isNotEmpty)
+          XmlElement(XmlName.parts('sz'), [
+            XmlAttribute(
+                XmlName.parts('val'), fontStyleElement.fontSize.toString())
+          ], []),
+        if (fontStyleElement.underline != Underline.None &&
+            fontStyleElement.underline == Underline.Single)
+          XmlElement(XmlName.parts('u'), [], []),
+        if (fontStyleElement.underline != Underline.None &&
+            fontStyleElement.underline != Underline.Single &&
+            fontStyleElement.underline == Underline.Double)
+          XmlElement(XmlName.parts('u'),
+              [XmlAttribute(XmlName.parts('val'), 'double')], []),
         if (fontStyleElement.fontScheme != FontScheme.Unset)
           XmlElement(XmlName.parts('scheme'), [
             XmlAttribute(
@@ -52,12 +58,6 @@ class _StyleXmlBuilders {
                   FontScheme.Major => "major",
                   _ => "minor"
                 })
-          ], []),
-        if (fontStyleElement.fontSize != null &&
-            fontStyleElement.fontSize.toString().isNotEmpty)
-          XmlElement(XmlName.parts('sz'), [
-            XmlAttribute(
-                XmlName.parts('val'), fontStyleElement.fontSize.toString())
           ], []),
       ]));
     }

@@ -141,15 +141,18 @@ class _WorksheetManager {
     out.write(_buildSheetDataXml(sheetName, sheetObject));
     printedTags.add('sheetData');
 
-    // Write common other elements
+    // Write common other elements in order
     writeOriginal('sheetProtection');
     writeOriginal('autoFilter');
     writeOriginal('sortState');
     writeOriginal('dataConsolidate');
     writeOriginal('customSheetViews');
-    writeOriginal('customProperties');
-    writeOriginal('cellWatches');
-    writeOriginal('webPublishItems');
+
+    // 7. mergeCells
+    out.write(_buildMergeCellsXml(sheetObject));
+    printedTags.add('mergeCells');
+
+    // Write subsequent common elements
     writeOriginal('conditionalFormatting');
     writeOriginal('dataValidations');
     writeOriginal('hyperlinks');
@@ -157,9 +160,12 @@ class _WorksheetManager {
     writeOriginal('pageMargins');
     writeOriginal('pageSetup');
 
-    // 7. mergeCells
-    out.write(_buildMergeCellsXml(sheetObject));
-    printedTags.add('mergeCells');
+    // 9. headerFooter
+    out.write(_buildHeaderFooterXml(sheetObject));
+    printedTags.add('headerFooter');
+
+    writeOriginal('customProperties');
+    writeOriginal('cellWatches');
 
     // 8. drawing / legacyDrawing / picture / oleObjects
     if (sheetObject._drawingRId != null) {
@@ -172,10 +178,7 @@ class _WorksheetManager {
     writeOriginal('picture');
     writeOriginal('oleObjects');
     writeOriginal('drawingHF');
-
-    // 9. headerFooter
-    out.write(_buildHeaderFooterXml(sheetObject));
-    printedTags.add('headerFooter');
+    writeOriginal('webPublishItems');
 
     // 10. extLst
     writeOriginal('extLst');
@@ -333,15 +336,14 @@ class _WorksheetManager {
       Map<String, int>? sheetStyleReferenced) {
     SharedString? sharedString;
     if (value is TextCellValue) {
-      final String strVal =
-          (value.value.children == null || value.value.children!.isEmpty)
-              ? (value.value.text ?? '')
-              : value.toString();
-      sharedString = _excel._sharedStrings.tryFind(strVal);
+      final tempSharedString = SharedString.fromTextSpan(value.value);
+      final xmlKey = tempSharedString._xmlString;
+      sharedString = _excel._sharedStrings.tryFind(xmlKey);
       if (sharedString != null) {
-        _excel._sharedStrings.add(sharedString, strVal);
+        _excel._sharedStrings.add(sharedString, xmlKey);
       } else {
-        sharedString = _excel._sharedStrings.addFromString(strVal);
+        _excel._sharedStrings.add(tempSharedString, xmlKey);
+        sharedString = tempSharedString;
       }
     }
 

@@ -7,13 +7,13 @@ class _SharedStringsMaintainer {
 
   _SharedStringsMaintainer._();
 
-  SharedString? tryFind(String val) {
-    return _mapString[val];
+  SharedString? tryFind(String xmlKey) {
+    return _mapString[xmlKey];
   }
 
   SharedString addFromString(String val) {
     final newSharedString = SharedString.fromPlainString(val);
-    add(newSharedString, val);
+    add(newSharedString, newSharedString._xmlString);
     return newSharedString;
   }
 
@@ -69,6 +69,13 @@ class SharedString {
         _stringValue = val,
         _textSpan = null,
         _hashCode = val.hashCode;
+
+  SharedString.fromTextSpan(TextSpan span)
+      : _node = null,
+        _stringValue = span.toString(),
+        _textSpan = span,
+        _hashCode = span.hashCode,
+        _xmlString = _textSpanToXml(span);
 
   SharedString._internal({
     required XmlElement node,
@@ -250,4 +257,88 @@ class TextSpan {
   @override
   int get hashCode =>
       Object.hash(text, style, Object.hashAll(children ?? const []));
+}
+
+String _textSpanToXml(TextSpan span) {
+  final hasStyle = span.style != null && _hasAnyStyle(span.style!);
+  final hasChildren = span.children != null && span.children!.isNotEmpty;
+  if (!hasStyle && !hasChildren) {
+    return '<si><t xml:space="preserve">${_escapeXml(span.text ?? "")}</t></si>';
+  }
+  final sb = StringBuffer();
+  sb.write('<si>');
+  _spanToXmlHelper(span, sb);
+  sb.write('</si>');
+  return sb.toString();
+}
+
+void _spanToXmlHelper(TextSpan span, StringBuffer sb) {
+  final textVal = span.text ?? '';
+  final hasStyle = span.style != null && _hasAnyStyle(span.style!);
+
+  if (textVal.isNotEmpty) {
+    if (hasStyle) {
+      sb.write('<r>');
+      sb.write('<rPr>');
+      sb.write(_styleToRPr(span.style));
+      sb.write('</rPr>');
+      sb.write('<t xml:space="preserve">${_escapeXml(textVal)}</t>');
+      sb.write('</r>');
+    } else {
+      sb.write('<r><t xml:space="preserve">${_escapeXml(textVal)}</t></r>');
+    }
+  }
+
+  if (span.children != null) {
+    for (final child in span.children!) {
+      _spanToXmlHelper(child, sb);
+    }
+  }
+}
+
+String _styleToRPr(CellStyle? style) {
+  if (style == null) return '';
+  final sb = StringBuffer();
+  if (style.fontFamily != null &&
+      style.fontFamily!.isNotEmpty &&
+      style.fontFamily!.toLowerCase() != 'null') {
+    sb.write('<rFont val="${_escapeXml(style.fontFamily!)}"/>');
+  }
+  if (style.isBold) {
+    sb.write('<b/>');
+  }
+  if (style.isItalic) {
+    sb.write('<i/>');
+  }
+  if (style.isStrikethrough) {
+    sb.write('<strike/>');
+  }
+  if (style.fontColor != ExcelColor.none &&
+      style.fontColor.colorHex != 'FF000000') {
+    sb.write('<color rgb="${style.fontColor.colorHex}"/>');
+  }
+  if (style.fontSize != null && style.fontSize! > 0) {
+    sb.write('<sz val="${style.fontSize}"/>');
+  }
+  if (style.underline != Underline.None) {
+    if (style.underline == Underline.Single) {
+      sb.write('<u/>');
+    } else if (style.underline == Underline.Double) {
+      sb.write('<u val="double"/>');
+    }
+  }
+  return sb.toString();
+}
+
+bool _hasAnyStyle(CellStyle style) {
+  return style.isBold ||
+      style.isItalic ||
+      style.isStrikethrough ||
+      style.underline != Underline.None ||
+      (style.fontSize != null && style.fontSize! > 0) ||
+      (style.fontFamily != null &&
+          style.fontFamily!.isNotEmpty &&
+          style.fontFamily!.toLowerCase() != 'null') ||
+      (style.fontColor != ExcelColor.none &&
+          style.fontColor.colorHex != 'FF000000');
 }

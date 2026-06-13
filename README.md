@@ -66,17 +66,17 @@
 
 | Workload | Library | Build | Encode | Total | File Size | Speedup vs Original | Speedup vs Plus | Speedup vs Community |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **3.1 s** | **14.2 s** | **17.3 s** | 33.1 MB | **5.48x** | **1.83x** | **1.00x** |
-| | excel_plus | 9.6 s | 22.0 s | 31.6 s | 33.1 MB | 3.00x | 1.00x | 0.55x |
-| | excel_original | 10.5 s | 84.3 s | 94.8 s | 33.9 MB | 1.00x | 0.33x | 0.18x |
+| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **5.57 s** | **26.45 s** | **32.02 s** | 34.7 MB | **>3.75x** | **1.71x** | **1.00x** |
+| | excel_plus | 15.86 s | 39.02 s | 54.88 s | 34.7 MB | >2.19x | 1.00x | 0.58x |
+| | excel_original | Timeout | Timeout | Timeout (>2m) | — | 1.00x | — | — |
 | | | | | | | | | |
-| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **197 ms** | **346 ms** | **543 ms** | 646 KB | **3.39x** | **2.77x** | **1.00x** |
-| | excel_plus | 664 ms | 841 ms | 1,505 ms | 645 KB | 1.22x | 1.00x | 0.36x |
-| | excel_original | 272 ms | 1,568 ms | 1,840 ms | 678.9 KB | 1.00x | 0.82x | 0.30x |
+| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **392 ms** | **699 ms** | **1,091 ms** | 661.6 KB | **2.88x** | **1.36x** | **1.00x** |
+| | excel_plus | 570 ms | 918 ms | 1,488 ms | 661.4 KB | 2.11x | 1.00x | 0.73x |
+| | excel_original | 548 ms | 2,589 ms | 3,137 ms | 695.2 KB | 1.00x | 0.47x | 0.35x |
 | | | | | | | | | |
-| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 185 ms | **123 ms** | 308 ms | 61.0 KB | **1.55x** | 0.95x | **1.00x** |
-| | excel_plus | **168 ms** | 126 ms | **294 ms** | 60.8 KB | **1.62x** | 1.00x | 1.05x |
-| | excel_original | 162 ms | 315 ms | 477 ms | 68.9 KB | 1.00x | 0.62x | 0.65x |
+| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 364 ms | **236 ms** | **600 ms** | 62.5 KB | **1.55x** | **1.05x** | **1.00x** |
+| | excel_plus | **344 ms** | 288 ms | 632 ms | 62.3 KB | 1.47x | 1.00x | 0.95x |
+| | excel_original | 291 ms | 636 ms | 927 ms | 70.5 KB | 1.00x | 0.68x | 0.65x |
 
 ### 2. Isolated Benchmark (1,000,000 Cells)
 *20,000 rows × 50 columns workload in an active process (measuring all phases and Peak RSS memory):*
