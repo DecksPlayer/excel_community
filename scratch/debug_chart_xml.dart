@@ -37,16 +37,20 @@ void main() {
   }
 
   var archive = ZipDecoder().decodeBytes(bytes);
-  
+
   print("=== ZIP FILES ===");
   for (var file in archive.files) {
-    if (file.name.contains('drawing') || file.name.contains('chart') || file.name.contains('sheet1') || file.name.contains('[Content_Types]')) {
+    if (file.name.contains('drawing') ||
+        file.name.contains('chart') ||
+        file.name.contains('sheet1') ||
+        file.name.contains('[Content_Types]')) {
       print("- ${file.name} (${file.content.length} bytes)");
     }
   }
 
   void printXmlFile(String name) {
-    var file = archive.files.firstWhere((f) => f.name == name, orElse: () => throw "File $name not found");
+    var file = archive.files.firstWhere((f) => f.name == name,
+        orElse: () => throw "File $name not found");
     var xmlStr = utf8.decode(file.content);
     print("\n=== XML: $name ===");
     try {

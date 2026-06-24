@@ -14,7 +14,7 @@ class _StyleManager {
   void processStylesFile() {
     // 1. Collect resources
     final resources = _collector.collect();
-    
+
     // Update _save._innerCellStyle for other parts of the system that might rely on it
     _save._innerCellStyle.clear();
     _save._innerCellStyle.addAll(resources.innerCellStyle);

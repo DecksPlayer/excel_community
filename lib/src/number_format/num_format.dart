@@ -33,6 +33,7 @@ class NumFormatMaintainer {
     fmtId = _nextFmtId;
     _nextFmtId++;
     _map[fmtId] = format;
+    _inverseMap[format] = fmtId;
     return fmtId;
   }
 

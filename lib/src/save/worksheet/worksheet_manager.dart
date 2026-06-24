@@ -19,21 +19,23 @@ class _WorksheetManager {
       final sheetId = _excel._xmlSheetId[sheetName]!;
       final originalXmlString = _excel._sheetXmls[sheetId]!;
 
-      final transformedXml = _transformWorksheetXml(sheetName, sheetObject, originalXmlString);
+      final transformedXml =
+          _transformWorksheetXml(sheetName, sheetObject, originalXmlString);
       _excel._sheetXmls[sheetId] = transformedXml;
     });
   }
 
-  String _transformWorksheetXml(String sheetName, Sheet sheetObject, String originalXml) {
+  String _transformWorksheetXml(
+      String sheetName, Sheet sheetObject, String originalXml) {
     final events = xml_events.parseEvents(originalXml);
-    
+
     final worksheetAttributes = <xml_events.XmlEventAttribute>[];
     final originalElements = <String, List<String>>{};
-    
+
     List<xml_events.XmlEvent>? currentCapturedEvents;
     String? currentTagName;
     int depth = 0;
-    
+
     const replacedTags = {
       'sheetViews',
       'sheetFormatPr',
@@ -51,14 +53,16 @@ class _WorksheetManager {
           worksheetAttributes.addAll(event.attributes);
           continue;
         }
-        
+
         if (depth == 0) {
           currentTagName = tagName;
           currentCapturedEvents = [event];
           if (event.isSelfClosing) {
             final xmlString = event.toString();
             if (!replacedTags.contains(currentTagName)) {
-              originalElements.putIfAbsent(currentTagName, () => []).add(xmlString);
+              originalElements
+                  .putIfAbsent(currentTagName, () => [])
+                  .add(xmlString);
             }
             currentCapturedEvents = null;
             currentTagName = null;
@@ -76,14 +80,17 @@ class _WorksheetManager {
         if (tagName == 'worksheet') {
           continue;
         }
-        
+
         if (currentCapturedEvents != null) {
           currentCapturedEvents.add(event);
           depth--;
           if (depth == 0) {
-            final xmlString = currentCapturedEvents.map((e) => e.toString()).join();
+            final xmlString =
+                currentCapturedEvents.map((e) => e.toString()).join();
             if (!replacedTags.contains(currentTagName)) {
-              originalElements.putIfAbsent(currentTagName!, () => []).add(xmlString);
+              originalElements
+                  .putIfAbsent(currentTagName!, () => [])
+                  .add(xmlString);
             }
             currentCapturedEvents = null;
             currentTagName = null;
@@ -103,9 +110,9 @@ class _WorksheetManager {
       out.write(' ${attr.name}="${attr.value}"');
     }
     out.write('>');
-    
+
     final printedTags = <String>{};
-    
+
     void writeOriginal(String tag) {
       printedTags.add(tag);
       final list = originalElements[tag];
@@ -115,7 +122,7 @@ class _WorksheetManager {
         }
       }
     }
-    
+
     // Write in schema-compliant order:
     // 1. sheetPr
     writeOriginal('sheetPr');
@@ -133,46 +140,49 @@ class _WorksheetManager {
     // 6. sheetData
     out.write(_buildSheetDataXml(sheetName, sheetObject));
     printedTags.add('sheetData');
-    
-    // Write common other elements
+
+    // Write common other elements in order
     writeOriginal('sheetProtection');
     writeOriginal('autoFilter');
     writeOriginal('sortState');
     writeOriginal('dataConsolidate');
     writeOriginal('customSheetViews');
-    writeOriginal('customProperties');
-    writeOriginal('cellWatches');
-    writeOriginal('webPublishItems');
+
+    // 7. mergeCells
+    out.write(_buildMergeCellsXml(sheetObject));
+    printedTags.add('mergeCells');
+
+    // Write subsequent common elements
     writeOriginal('conditionalFormatting');
     writeOriginal('dataValidations');
     writeOriginal('hyperlinks');
     writeOriginal('printOptions');
     writeOriginal('pageMargins');
     writeOriginal('pageSetup');
-    
-    // 7. mergeCells
-    out.write(_buildMergeCellsXml(sheetObject));
-    printedTags.add('mergeCells');
-    
+
+    // 9. headerFooter
+    out.write(_buildHeaderFooterXml(sheetObject));
+    printedTags.add('headerFooter');
+
+    writeOriginal('customProperties');
+    writeOriginal('cellWatches');
+
     // 8. drawing / legacyDrawing / picture / oleObjects
     if (sheetObject._drawingRId != null) {
       out.write('<drawing r:id="${sheetObject._drawingRId}"/>');
     }
     printedTags.add('drawing');
-    
+
     writeOriginal('legacyDrawing');
     writeOriginal('legacyDrawingHF');
     writeOriginal('picture');
     writeOriginal('oleObjects');
     writeOriginal('drawingHF');
-    
-    // 9. headerFooter
-    out.write(_buildHeaderFooterXml(sheetObject));
-    printedTags.add('headerFooter');
-    
+    writeOriginal('webPublishItems');
+
     // 10. extLst
     writeOriginal('extLst');
-    
+
     // Catch-all: Write any other original elements we missed, just in case
     originalElements.forEach((tag, list) {
       if (!printedTags.contains(tag)) {
@@ -181,7 +191,7 @@ class _WorksheetManager {
         }
       }
     });
-    
+
     out.write('</worksheet>');
     return out.toString();
   }
@@ -207,10 +217,12 @@ class _WorksheetManager {
     final buffer = StringBuffer();
     buffer.write('<sheetFormatPr');
     if (defaultRowHeight != null) {
-      buffer.write(' defaultRowHeight="${defaultRowHeight.toStringAsFixed(2)}"');
+      buffer
+          .write(' defaultRowHeight="${defaultRowHeight.toStringAsFixed(2)}"');
     }
     if (defaultColumnWidth != null) {
-      buffer.write(' defaultColWidth="${defaultColumnWidth.toStringAsFixed(2)}"');
+      buffer
+          .write(' defaultColWidth="${defaultColumnWidth.toStringAsFixed(2)}"');
     }
     buffer.write('/>');
     return buffer.toString();
@@ -230,7 +242,7 @@ class _WorksheetManager {
 
     final buffer = StringBuffer();
     buffer.write('<cols>');
-    
+
     double defaultColumnWidth =
         sheetObject.defaultColumnWidth ?? _excelDefaultColumnWidth;
 
@@ -244,7 +256,8 @@ class _WorksheetManager {
           width = customWidths[index]!;
         }
       }
-      buffer.write('<col min="${index + 1}" max="${index + 1}" width="${width.toStringAsFixed(2)}" bestFit="1" customWidth="1"/>');
+      buffer.write(
+          '<col min="${index + 1}" max="${index + 1}" width="${width.toStringAsFixed(2)}" bestFit="1" customWidth="1"/>');
     }
     buffer.write('</cols>');
     return buffer.toString();
@@ -323,14 +336,14 @@ class _WorksheetManager {
       Map<String, int>? sheetStyleReferenced) {
     SharedString? sharedString;
     if (value is TextCellValue) {
-      final String strVal = (value.value.children == null || value.value.children!.isEmpty)
-          ? (value.value.text ?? '')
-          : value.toString();
-      sharedString = _excel._sharedStrings.tryFind(strVal);
+      final tempSharedString = SharedString.fromTextSpan(value.value);
+      final xmlKey = tempSharedString._xmlString;
+      sharedString = _excel._sharedStrings.tryFind(xmlKey);
       if (sharedString != null) {
-        _excel._sharedStrings.add(sharedString, strVal);
+        _excel._sharedStrings.add(sharedString, xmlKey);
       } else {
-        sharedString = _excel._sharedStrings.addFromString(strVal);
+        _excel._sharedStrings.add(tempSharedString, xmlKey);
+        sharedString = tempSharedString;
       }
     }
 
@@ -372,7 +385,7 @@ class _WorksheetManager {
     }
     buffer.write(rowIndex + 1);
     buffer.write('"');
-    
+
     if (sAttr.isNotEmpty) {
       buffer.write(sAttr);
     }
@@ -380,7 +393,7 @@ class _WorksheetManager {
       buffer.write(tAttr);
     }
     buffer.write('>');
-    
+
     if (value != null) {
       final numFormat = cellStyle?.numberFormat;
       switch (value) {
@@ -396,16 +409,12 @@ class _WorksheetManager {
           buffer.write(_escapeXml(value.write(numFormat)));
           buffer.write('</v>');
           break;
-        case IntCellValue() ||
-              DoubleCellValue() ||
-              BoolCellValue():
+        case IntCellValue() || DoubleCellValue() || BoolCellValue():
           buffer.write('<v>');
           buffer.write(value.write(numFormat));
           buffer.write('</v>');
           break;
-        case DateCellValue() ||
-              TimeCellValue() ||
-              DateTimeCellValue():
+        case DateCellValue() || TimeCellValue() || DateTimeCellValue():
           buffer.write('<v>');
           buffer.write(value.write(numFormat));
           buffer.write('</v>');

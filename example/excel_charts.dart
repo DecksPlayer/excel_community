@@ -28,12 +28,12 @@ void main() {
   // Save the file
   print('\nSaving Excel file...');
   var fileBytes = excel.save();
-  
+
   if (fileBytes != null) {
     File('charts_demo.xlsx')
       ..createSync(recursive: true)
       ..writeAsBytesSync(fileBytes);
-    
+
     print('✅ File saved successfully as charts_demo.xlsx');
     print('\nThe file contains:');
     print('  • Sample data in columns A-D');
@@ -139,7 +139,7 @@ void _addPieChart(Sheet sheet) {
       ChartSeries(
         name: "Products",
         categoriesRange: r"ChartsDemo!$B$1:$D$1", // Product names
-        valuesRange: r"ChartsDemo!$B$7:$D$7",     // Last month values
+        valuesRange: r"ChartsDemo!$B$7:$D$7", // Last month values
       ),
     ],
     anchor: ChartAnchor.at(column: 5, row: 18, width: 10, height: 15),

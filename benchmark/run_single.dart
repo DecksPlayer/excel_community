@@ -36,14 +36,16 @@ void main(List<String> arguments) {
       }
     }
     final buildTime = stopwatch.elapsedMilliseconds;
-    
+
     stopwatch.reset();
     stopwatch.start();
     final bytes = excel.encode()!;
     final encodeTime = stopwatch.elapsedMilliseconds;
     final totalTime = buildTime + encodeTime;
 
-    print('RESULT:build:$buildTime|encode:$encodeTime|total:$totalTime|size:${bytes.length}');
+    print(
+      'RESULT:build:$buildTime|encode:$encodeTime|total:$totalTime|size:${bytes.length}',
+    );
   } else if (library == 'plus') {
     final excel = ep.Excel.createExcel();
     final sheet = excel['Sheet1'];
@@ -65,14 +67,16 @@ void main(List<String> arguments) {
       }
     }
     final buildTime = stopwatch.elapsedMilliseconds;
-    
+
     stopwatch.reset();
     stopwatch.start();
     final bytes = excel.encode()!;
     final encodeTime = stopwatch.elapsedMilliseconds;
     final totalTime = buildTime + encodeTime;
 
-    print('RESULT:build:$buildTime|encode:$encodeTime|total:$totalTime|size:${bytes.length}');
+    print(
+      'RESULT:build:$buildTime|encode:$encodeTime|total:$totalTime|size:${bytes.length}',
+    );
   } else {
     print('Unknown library: $library');
     exit(1);

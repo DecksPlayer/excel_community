@@ -3,6 +3,7 @@ part of '../../excel_community.dart';
 class Save {
   final Excel _excel;
   final Map<String, ArchiveFile> _archiveFiles = {};
+
   /// Binary (non-XML) files to include in the archive, e.g. images.
   final Map<String, List<int>> _binaryFiles = {};
   final List<CellStyle> _innerCellStyle = [];
@@ -31,10 +32,10 @@ class Save {
     if (_excel._styleChanges) {
       _styleManager.processStylesFile();
     }
-    
+
     _chartManager.processCharts();
     _imageManager.processImages();
-    
+
     _worksheetManager.setSheetElements();
 
     if (_excel._defaultSheet != null) {
@@ -62,7 +63,8 @@ class Save {
     for (var sheetPath in _excel._sheetXmls.keys) {
       var xml = _excel._sheetXmls[sheetPath]!;
       var content = utf8.encode(xml);
-      _archiveFiles[sheetPath] = ArchiveFile(sheetPath, content.length, content);
+      _archiveFiles[sheetPath] =
+          ArchiveFile(sheetPath, content.length, content);
     }
 
     for (final entry in _binaryFiles.entries) {
@@ -82,8 +84,6 @@ class Save {
         diagonalBorderUp: cellStyle.diagonalBorderUp,
         diagonalBorderDown: cellStyle.diagonalBorderDown,
       );
-
-
 
   void _addContentType(String contentType, String partName) {
     final contentTypes = _excel._xmlFiles['[Content_Types].xml'];

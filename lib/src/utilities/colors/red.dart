@@ -14,14 +14,22 @@ class RedColors {
 
   static const pink = ExcelColor._('FFE91E63', 'pink', ColorType.material);
   static const pink50 = ExcelColor._('FFFCE4EC', 'pink50', ColorType.material);
-  static const pink100 = ExcelColor._('FFF8BBD0', 'pink100', ColorType.material);
-  static const pink200 = ExcelColor._('FFF48FB1', 'pink200', ColorType.material);
-  static const pink300 = ExcelColor._('FFF06292', 'pink300', ColorType.material);
-  static const pink400 = ExcelColor._('FFEC407A', 'pink400', ColorType.material);
-  static const pink600 = ExcelColor._('FFD81B60', 'pink600', ColorType.material);
-  static const pink700 = ExcelColor._('FFC2185B', 'pink700', ColorType.material);
-  static const pink800 = ExcelColor._('FFAD1457', 'pink800', ColorType.material);
-  static const pink900 = ExcelColor._('FF880E4F', 'pink900', ColorType.material);
+  static const pink100 =
+      ExcelColor._('FFF8BBD0', 'pink100', ColorType.material);
+  static const pink200 =
+      ExcelColor._('FFF48FB1', 'pink200', ColorType.material);
+  static const pink300 =
+      ExcelColor._('FFF06292', 'pink300', ColorType.material);
+  static const pink400 =
+      ExcelColor._('FFEC407A', 'pink400', ColorType.material);
+  static const pink600 =
+      ExcelColor._('FFD81B60', 'pink600', ColorType.material);
+  static const pink700 =
+      ExcelColor._('FFC2185B', 'pink700', ColorType.material);
+  static const pink800 =
+      ExcelColor._('FFAD1457', 'pink800', ColorType.material);
+  static const pink900 =
+      ExcelColor._('FF880E4F', 'pink900', ColorType.material);
 
   static List<ExcelColor> get values => [
         red,

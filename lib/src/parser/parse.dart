@@ -136,7 +136,8 @@ class Parser {
               .add(XmlElement(
                 XmlName.parts('Override'),
                 <XmlAttribute>[
-                  XmlAttribute(XmlName.parts('PartName'), '/xl/sharedStrings.xml'),
+                  XmlAttribute(
+                      XmlName.parts('PartName'), '/xl/sharedStrings.xml'),
                   XmlAttribute(XmlName.parts('ContentType'), contentType),
                 ],
               ));
@@ -145,8 +146,8 @@ class Parser {
 
       final emptyXml = utf8.encode(
           '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="0" uniqueCount="0"/>');
-      _excel._archive
-          .addFile(ArchiveFile('xl/sharedStrings.xml', emptyXml.length, emptyXml));
+      _excel._archive.addFile(
+          ArchiveFile('xl/sharedStrings.xml', emptyXml.length, emptyXml));
       sharedStrings = _excel._archive.findFile('xl/sharedStrings.xml');
     }
 
@@ -179,7 +180,7 @@ class Parser {
 
   void _parseSharedString(XmlElement node) {
     final sharedString = SharedString(node: node);
-    _excel._sharedStrings.add(sharedString, sharedString.stringValue);
+    _excel._sharedStrings.add(sharedString, sharedString._xmlString);
   }
 
   // ---------------------------------------------------------------------------
@@ -211,8 +212,6 @@ class Parser {
       }
     });
   }
-
-
 
   // ---------------------------------------------------------------------------
   // Sheet creation
@@ -320,15 +319,13 @@ class Parser {
         .add(XmlElement(XmlName.parts('Override'), <XmlAttribute>[
           XmlAttribute(XmlName.parts('ContentType'),
               'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'),
-          XmlAttribute(
-              XmlName.parts('PartName'), '/xl/worksheets/sheet$sheetNumber.xml'),
+          XmlAttribute(XmlName.parts('PartName'),
+              '/xl/worksheets/sheet$sheetNumber.xml'),
         ]));
 
     if (_excel._xmlFiles['xl/workbook.xml'] != null) {
       _WorksheetParser(_excel, _worksheetTargets).parseTable(
-          _excel._xmlFiles['xl/workbook.xml']!
-              .findAllElements('sheet')
-              .last);
+          _excel._xmlFiles['xl/workbook.xml']!.findAllElements('sheet').last);
     }
   }
 }

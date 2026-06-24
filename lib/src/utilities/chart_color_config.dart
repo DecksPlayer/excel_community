@@ -1,7 +1,7 @@
 part of '../../excel_community.dart';
 
 /// Configuration for chart colors and palettes.
-/// 
+///
 /// Provides centralized color management for all chart types with
 /// distinct palettes optimized for different chart categories.
 class ChartColorConfig {

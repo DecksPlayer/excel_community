@@ -18,35 +18,38 @@ class _StyleXmlBuilders {
 
     for (var fontStyleElement in innerFontStyle) {
       fonts.children.add(XmlElement(XmlName.parts('font'), [], [
+        if (fontStyleElement.fontFamily != null &&
+            fontStyleElement.fontFamily!.toLowerCase().toString() != 'null' &&
+            fontStyleElement.fontFamily != '' &&
+            fontStyleElement.fontFamily!.isNotEmpty)
+          XmlElement(XmlName.parts('name'), [
+            XmlAttribute(
+                XmlName.parts('val'), fontStyleElement.fontFamily.toString())
+          ], []),
+        if (fontStyleElement.isBold) XmlElement(XmlName.parts('b'), [], []),
+        if (fontStyleElement.isItalic) XmlElement(XmlName.parts('i'), [], []),
+        if (fontStyleElement.isStrikethrough)
+          XmlElement(XmlName.parts('strike'), [], []),
         if (fontStyleElement._fontColorHex != null &&
             fontStyleElement._fontColorHex!.colorHex != "FF000000")
           XmlElement(XmlName.parts('color'), [
             XmlAttribute(
                 XmlName.parts('rgb'), fontStyleElement._fontColorHex!.colorHex)
           ], []),
-
-        if (fontStyleElement.isBold) XmlElement(XmlName.parts('b'), [], []),
-        if (fontStyleElement.isItalic) XmlElement(XmlName.parts('i'), [], []),
-        if (fontStyleElement.isStrikethrough) XmlElement(XmlName.parts('strike'), [], []),
-
+        if (fontStyleElement.fontSize != null &&
+            fontStyleElement.fontSize.toString().isNotEmpty)
+          XmlElement(XmlName.parts('sz'), [
+            XmlAttribute(
+                XmlName.parts('val'), fontStyleElement.fontSize.toString())
+          ], []),
         if (fontStyleElement.underline != Underline.None &&
             fontStyleElement.underline == Underline.Single)
           XmlElement(XmlName.parts('u'), [], []),
-
         if (fontStyleElement.underline != Underline.None &&
             fontStyleElement.underline != Underline.Single &&
             fontStyleElement.underline == Underline.Double)
-          XmlElement(
-              XmlName.parts('u'), [XmlAttribute(XmlName.parts('val'), 'double')], []),
-
-        if (fontStyleElement.fontFamily != null &&
-            fontStyleElement.fontFamily!.toLowerCase().toString() != 'null' &&
-            fontStyleElement.fontFamily != '' &&
-            fontStyleElement.fontFamily!.isNotEmpty)
-          XmlElement(XmlName.parts('name'), [
-            XmlAttribute(XmlName.parts('val'), fontStyleElement.fontFamily.toString())
-          ], []),
-
+          XmlElement(XmlName.parts('u'),
+              [XmlAttribute(XmlName.parts('val'), 'double')], []),
         if (fontStyleElement.fontScheme != FontScheme.Unset)
           XmlElement(XmlName.parts('scheme'), [
             XmlAttribute(
@@ -55,12 +58,6 @@ class _StyleXmlBuilders {
                   FontScheme.Major => "major",
                   _ => "minor"
                 })
-          ], []),
-
-        if (fontStyleElement.fontSize != null &&
-            fontStyleElement.fontSize.toString().isNotEmpty)
-          XmlElement(XmlName.parts('sz'), [
-            XmlAttribute(XmlName.parts('val'), fontStyleElement.fontSize.toString())
           ], []),
       ]));
     }
@@ -86,8 +83,8 @@ class _StyleXmlBuilders {
             ], [
               XmlElement(XmlName.parts('fgColor'),
                   [XmlAttribute(XmlName.parts('rgb'), color)], []),
-              XmlElement(
-                  XmlName.parts('bgColor'), [XmlAttribute(XmlName.parts('rgb'), color)], [])
+              XmlElement(XmlName.parts('bgColor'),
+                  [XmlAttribute(XmlName.parts('rgb'), color)], [])
             ])
           ]));
         } else if (color == "none" ||
@@ -124,7 +121,8 @@ class _StyleXmlBuilders {
             .add(XmlAttribute(XmlName.parts('diagonalDown'), '1'));
       }
       if (border.diagonalBorderUp) {
-        borderElement.attributes.add(XmlAttribute(XmlName.parts('diagonalUp'), '1'));
+        borderElement.attributes
+            .add(XmlAttribute(XmlName.parts('diagonalUp'), '1'));
       }
       final Map<String, Border> borderMap = {
         'left': border.leftBorder,
@@ -139,12 +137,13 @@ class _StyleXmlBuilders {
         final element = XmlElement(XmlName.parts(key));
         final style = borderValue.borderStyle;
         if (style != null) {
-          element.attributes.add(XmlAttribute(XmlName.parts('style'), style.style));
+          element.attributes
+              .add(XmlAttribute(XmlName.parts('style'), style.style));
         }
         final color = borderValue.borderColorHex;
         if (color != null) {
-          element.children.add(XmlElement(
-              XmlName.parts('color'), [XmlAttribute(XmlName.parts('rgb'), color)]));
+          element.children.add(XmlElement(XmlName.parts('color'),
+              [XmlAttribute(XmlName.parts('rgb'), color)]));
         }
         borderElement.children.add(element);
       }
@@ -220,7 +219,7 @@ class _StyleXmlBuilders {
         CustomNumFormat() => _excel._numFormats.findOrAdd(numberFormat),
       };
 
-       celx.children.add(XmlElement(XmlName.parts('xf'), [
+      celx.children.add(XmlElement(XmlName.parts('xf'), [
         XmlAttribute(XmlName.parts('applyFont'), '1'),
         XmlAttribute(XmlName.parts('applyFill'), '1'),
         XmlAttribute(XmlName.parts('applyBorder'), '1'),
@@ -232,11 +231,22 @@ class _StyleXmlBuilders {
         XmlAttribute(XmlName.parts('xfId'), '0'),
       ], [
         XmlElement(XmlName.parts('alignment'), [
-          XmlAttribute(XmlName.parts('horizontal'),
-              cellStyle.horizontalAlignment.toString().split('.').last.toLowerCase()),
-          XmlAttribute(XmlName.parts('vertical'),
-              cellStyle.verticalAlignment.toString().split('.').last.toLowerCase()),
-          XmlAttribute(XmlName.parts('textRotation'), cellStyle.rotation.toString()),
+          XmlAttribute(
+              XmlName.parts('horizontal'),
+              cellStyle.horizontalAlignment
+                  .toString()
+                  .split('.')
+                  .last
+                  .toLowerCase()),
+          XmlAttribute(
+              XmlName.parts('vertical'),
+              cellStyle.verticalAlignment
+                  .toString()
+                  .split('.')
+                  .last
+                  .toLowerCase()),
+          XmlAttribute(
+              XmlName.parts('textRotation'), cellStyle.rotation.toString()),
           XmlAttribute(XmlName.parts('wrapText'),
               cellStyle.wrap == TextWrapping.WrapText ? '1' : '0'),
           XmlAttribute(XmlName.parts('shrinkToFit'),

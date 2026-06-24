@@ -53,8 +53,6 @@ extension SheetSpans on Sheet {
 
     List<int> gotPosition = _getSpanPosition(start, end);
 
-
-
     startColumn = gotPosition[0];
     startRow = gotPosition[1];
     endColumn = gotPosition[2];

@@ -12,7 +12,9 @@ sealed class NumericNumFormat extends NumFormat {
     final decimalSeparatorIdx = v.indexOf('.');
 
     if (decimalSeparatorIdx == -1 && eIdx == -1) {
-      return IntCellValue(int.parse(v));
+      final parsed = int.tryParse(v);
+      if (parsed == null) return TextCellValue(v);
+      return IntCellValue(parsed);
     }
 
     // also read .0 (or even .00) as an int
@@ -23,11 +25,15 @@ sealed class NumericNumFormat extends NumFormat {
         break;
       }
     }
-    if (noActualDecimalPlaces) {
-      return IntCellValue(int.parse(v.substring(0, decimalSeparatorIdx)));
+    if (noActualDecimalPlaces && decimalSeparatorIdx != -1) {
+      final parsed = int.tryParse(v.substring(0, decimalSeparatorIdx));
+      if (parsed == null) return TextCellValue(v);
+      return IntCellValue(parsed);
     }
 
-    return DoubleCellValue(double.parse(v));
+    final parsed = double.tryParse(v);
+    if (parsed == null) return TextCellValue(v);
+    return DoubleCellValue(parsed);
   }
 
   String writeDouble(DoubleCellValue value) {

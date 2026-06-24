@@ -77,8 +77,8 @@ class StandardFormats {
       StandardNumericNumFormat._(numFmtId: 4, formatCode: '#,##0.00');
 
   // --- Currency (5–8) ---
-  static const standard_5 = StandardNumericNumFormat._(
-      numFmtId: 5, formatCode: r'$#,##0_);($#,##0)');
+  static const standard_5 =
+      StandardNumericNumFormat._(numFmtId: 5, formatCode: r'$#,##0_);($#,##0)');
   static const standard_6 = StandardNumericNumFormat._(
       numFmtId: 6, formatCode: r'$#,##0_);[Red]($#,##0)');
   static const standard_7 = StandardNumericNumFormat._(
@@ -113,8 +113,8 @@ class StandardFormats {
       StandardTimeNumFormat._(numFmtId: 19, formatCode: 'h:mm:ss AM/PM');
   static const standard_20 =
       StandardTimeNumFormat._(numFmtId: 20, formatCode: 'h:mm');
-  static const standard_21 =
-      StandardTimeNumFormat._(numFmtId: 21, formatCode: 'h:mm:ss'); // fixed: was 'h:mm:dd'
+  static const standard_21 = StandardTimeNumFormat._(
+      numFmtId: 21, formatCode: 'h:mm:ss'); // fixed: was 'h:mm:dd'
   static const standard_22 =
       StandardDateTimeNumFormat._(numFmtId: 22, formatCode: 'm/d/yy h:mm');
 
@@ -131,16 +131,24 @@ class StandardFormats {
   // --- CJK locale Date/Time (27–36) ---
   // Note: some share identical formatCodes but must be separate const instances
   // so the inverse map (NumFormat→ID) remains injective.
-  static const standard_27 = StandardDateTimeNumFormat._(  // Chinese Traditional e/m/d
-      numFmtId: 27, formatCode: r'[$-404]e/m/d');
-  static const standard_28 = StandardDateTimeNumFormat._(  // Chinese Traditional am/pm
-      numFmtId: 28, formatCode: r'[$-404]e/m/d h:mm AM/PM');
-  static const standard_29 = StandardDateTimeNumFormat._(  // Chinese Traditional e/m/d (2)
-      numFmtId: 29, formatCode: r'[$-404]e"年"m"月"d"日"');
+  static const standard_27 = StandardDateTimeNumFormat._(
+      // Chinese Traditional e/m/d
+      numFmtId: 27,
+      formatCode: r'[$-404]e/m/d');
+  static const standard_28 = StandardDateTimeNumFormat._(
+      // Chinese Traditional am/pm
+      numFmtId: 28,
+      formatCode: r'[$-404]e/m/d h:mm AM/PM');
+  static const standard_29 = StandardDateTimeNumFormat._(
+      // Chinese Traditional e/m/d (2)
+      numFmtId: 29,
+      formatCode: r'[$-404]e"年"m"月"d"日"');
   static const standard_30 =
       StandardDateTimeNumFormat._(numFmtId: 30, formatCode: 'm/d/yy');
-  static const standard_31 = StandardDateTimeNumFormat._(  // Chinese Simplified
-      numFmtId: 31, formatCode: 'yyyy"年"m"月"d"日"');
+  static const standard_31 = StandardDateTimeNumFormat._(
+      // Chinese Simplified
+      numFmtId: 31,
+      formatCode: 'yyyy"年"m"月"d"日"');
   static const standard_32 =
       StandardTimeNumFormat._(numFmtId: 32, formatCode: 'h"時"mm"分"');
   static const standard_33 =
@@ -149,8 +157,10 @@ class StandardFormats {
       StandardTimeNumFormat._(numFmtId: 34, formatCode: '上午/下午h"時"mm"分"');
   static const standard_35 =
       StandardTimeNumFormat._(numFmtId: 35, formatCode: '上午/下午h"時"mm"分"ss"秒"');
-  static const standard_36 = StandardDateTimeNumFormat._(  // Chinese Traditional e/m/d (3)
-      numFmtId: 36, formatCode: r'[$-404]e"月"m"日"d"日"');
+  static const standard_36 = StandardDateTimeNumFormat._(
+      // Chinese Traditional e/m/d (3)
+      numFmtId: 36,
+      formatCode: r'[$-404]e"月"m"日"d"日"');
 
   // --- Accounting without fill character (37–40) ---
   static const standard_37 =
@@ -161,15 +171,14 @@ class StandardFormats {
       numFmtId: 39, formatCode: '#,##0.00;(#,##0.00)');
   static const standard_40 = StandardNumericNumFormat._(
       numFmtId: 40,
-      formatCode: '#,##0.00;[Red](#,##0.00)'); // fixed: was '#,##0.00;[Red](#,#)'
+      formatCode:
+          '#,##0.00;[Red](#,##0.00)'); // fixed: was '#,##0.00;[Red](#,#)'
 
   // --- Accounting with fill character (41–44) ---
   static const standard_41 = StandardNumericNumFormat._(
-      numFmtId: 41,
-      formatCode: r'_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)');
+      numFmtId: 41, formatCode: r'_(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)');
   static const standard_42 = StandardNumericNumFormat._(
-      numFmtId: 42,
-      formatCode: r'_($* #,##0_);_($* (#,##0);_($* "-"_);_(@_)');
+      numFmtId: 42, formatCode: r'_($* #,##0_);_($* (#,##0);_($* "-"_);_(@_)');
   static const standard_43 = StandardNumericNumFormat._(
       numFmtId: 43,
       formatCode: r'_(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)');
@@ -186,8 +195,8 @@ class StandardFormats {
       StandardTimeNumFormat._(numFmtId: 47, formatCode: 'mmss.0');
 
   // --- Numeric / Text (48–49) ---
-  static const standard_48 =
-      StandardNumericNumFormat._(numFmtId: 48, formatCode: '##0.0E+0'); // fixed: was '##0.0'
+  static const standard_48 = StandardNumericNumFormat._(
+      numFmtId: 48, formatCode: '##0.0E+0'); // fixed: was '##0.0'
   static const standard_49 =
       StandardNumericNumFormat._(numFmtId: 49, formatCode: '@');
 }

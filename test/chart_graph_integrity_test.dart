@@ -51,7 +51,8 @@ void main() {
   // ---------------------------------------------------------------------------
   // 2. ColumnChart generates all required parts
   // ---------------------------------------------------------------------------
-  test('ColumnChart generates drawing, chart, rels, and content type entries', () {
+  test('ColumnChart generates drawing, chart, rels, and content type entries',
+      () {
     var excel = _createExcelWithData();
     excel['Sheet1'].addChart(ColumnChart(
       title: "Column",
@@ -68,8 +69,9 @@ void main() {
     expect(names, contains('xl/drawings/_rels/drawing1.xml.rels'));
     expect(names, contains('[Content_Types].xml'));
 
-    var ct = String.fromCharCodes(
-        archive.files.firstWhere((f) => f.name == '[Content_Types].xml').content);
+    var ct = String.fromCharCodes(archive.files
+        .firstWhere((f) => f.name == '[Content_Types].xml')
+        .content);
     expect(ct, contains('/xl/charts/chart1.xml'));
     expect(ct, contains('/xl/drawings/drawing1.xml'));
   });
@@ -88,13 +90,16 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
     var chartSpace = xml.findAllElements('c:chartSpace');
-    expect(chartSpace.isNotEmpty, isTrue, reason: 'chartSpace root element must exist');
+    expect(chartSpace.isNotEmpty, isTrue,
+        reason: 'chartSpace root element must exist');
 
     var lineChart = xml.findAllElements('c:lineChart');
-    expect(lineChart.isNotEmpty, isTrue, reason: 'lineChart element must exist');
+    expect(lineChart.isNotEmpty, isTrue,
+        reason: 'lineChart element must exist');
   });
 
   // ---------------------------------------------------------------------------
@@ -111,7 +116,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     expect(xml.findAllElements('c:pieChart').isNotEmpty, isTrue);
@@ -135,7 +141,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
     expect(xml.findAllElements('c:barChart').isNotEmpty, isTrue);
   });
@@ -154,7 +161,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
     expect(xml.findAllElements('c:areaChart').isNotEmpty, isTrue);
   });
@@ -173,7 +181,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     expect(xml.findAllElements('c:scatterChart').isNotEmpty, isTrue);
@@ -195,7 +204,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     expect(xml.findAllElements('c:doughnutChart').isNotEmpty, isTrue);
@@ -218,7 +228,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
     expect(xml.findAllElements('c:radarChart').isNotEmpty, isTrue);
   });
@@ -237,12 +248,19 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var drawingFile = archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
+    var drawingFile =
+        archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
     var content = String.fromCharCodes(drawingFile.content);
 
-    expect(content, contains('schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing'));
+    expect(
+        content,
+        contains(
+            'schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing'));
     expect(content, contains('schemas.openxmlformats.org/drawingml/2006/main'));
-    expect(content, contains('schemas.openxmlformats.org/officeDocument/2006/relationships'));
+    expect(
+        content,
+        contains(
+            'schemas.openxmlformats.org/officeDocument/2006/relationships'));
   });
 
   // ---------------------------------------------------------------------------
@@ -259,12 +277,17 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var content = String.fromCharCodes(chartFile.content);
 
-    expect(content, contains('schemas.openxmlformats.org/drawingml/2006/chart'));
+    expect(
+        content, contains('schemas.openxmlformats.org/drawingml/2006/chart'));
     expect(content, contains('schemas.openxmlformats.org/drawingml/2006/main'));
-    expect(content, contains('schemas.openxmlformats.org/officeDocument/2006/relationships'));
+    expect(
+        content,
+        contains(
+            'schemas.openxmlformats.org/officeDocument/2006/relationships'));
   });
 
   // ---------------------------------------------------------------------------
@@ -290,8 +313,7 @@ void main() {
 
     var rel = rels.first;
     expect(rel.getAttribute('Target'), contains('chart1.xml'));
-    expect(rel.getAttribute('Type'),
-        contains('relationships/chart'));
+    expect(rel.getAttribute('Type'), contains('relationships/chart'));
     expect(rel.getAttribute('Id'), equals('rId1'));
   });
 
@@ -309,8 +331,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var sheetRels = archive.files.where(
-        (f) => f.name.startsWith('xl/worksheets/_rels/') && f.name.endsWith('.rels'));
+    var sheetRels = archive.files.where((f) =>
+        f.name.startsWith('xl/worksheets/_rels/') && f.name.endsWith('.rels'));
     expect(sheetRels.isNotEmpty, isTrue);
 
     var content = String.fromCharCodes(sheetRels.first.content);
@@ -332,8 +354,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var sheetFile = archive.files.firstWhere(
-        (f) => f.name.startsWith('xl/worksheets/sheet') && !f.name.contains('_rels'));
+    var sheetFile = archive.files.firstWhere((f) =>
+        f.name.startsWith('xl/worksheets/sheet') && !f.name.contains('_rels'));
     var content = String.fromCharCodes(sheetFile.content);
     expect(content, contains('<drawing'));
     expect(content, contains('r:id'));
@@ -384,7 +406,12 @@ void main() {
     sheet2.updateCell(CellIndex.indexByString("A1"), IntCellValue(5));
     sheet2.addChart(ColumnChart(
       title: "S2 Chart",
-      series: [ChartSeries(name: "X", categoriesRange: r"Sheet2!$A$1:$A$1", valuesRange: r"Sheet2!$A$1:$A$1")],
+      series: [
+        ChartSeries(
+            name: "X",
+            categoriesRange: r"Sheet2!$A$1:$A$1",
+            valuesRange: r"Sheet2!$A$1:$A$1")
+      ],
       anchor: ChartAnchor.at(column: 2, row: 1),
     ));
 
@@ -403,14 +430,38 @@ void main() {
   // ---------------------------------------------------------------------------
   test('Round-trip decode succeeds for all chart types', () {
     final chartFactories = <Chart Function()>[
-      () => ColumnChart(title: "Col", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
-      () => LineChart(title: "Lin", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
-      () => PieChart(title: "Pie", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
-      () => BarChart(title: "Bar", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
-      () => AreaChart(title: "Area", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
-      () => ScatterChart(title: "Scat", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
-      () => DoughnutChart(title: "Dnut", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
-      () => RadarChart(title: "Radar", series: [_defaultSeries()], anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => ColumnChart(
+          title: "Col",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => LineChart(
+          title: "Lin",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => PieChart(
+          title: "Pie",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => BarChart(
+          title: "Bar",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => AreaChart(
+          title: "Area",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => ScatterChart(
+          title: "Scat",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => DoughnutChart(
+          title: "Dnut",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
+      () => RadarChart(
+          title: "Radar",
+          series: [_defaultSeries()],
+          anchor: ChartAnchor.at(column: 4, row: 1)),
     ];
 
     for (var factory in chartFactories) {
@@ -421,7 +472,8 @@ void main() {
       expect(
         () => Excel.decodeBytes(bytes!),
         returnsNormally,
-        reason: 'Round-trip decode should not crash for ${factory().runtimeType}',
+        reason:
+            'Round-trip decode should not crash for ${factory().runtimeType}',
       );
     }
   });
@@ -440,7 +492,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var drawingFile = archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
+    var drawingFile =
+        archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
     expect(
       () => XmlDocument.parse(String.fromCharCodes(drawingFile.content)),
       returnsNormally,
@@ -462,7 +515,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     expect(
       () => XmlDocument.parse(String.fromCharCodes(chartFile.content)),
       returnsNormally,
@@ -507,7 +561,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var ctFile = archive.files.firstWhere((f) => f.name == '[Content_Types].xml');
+    var ctFile =
+        archive.files.firstWhere((f) => f.name == '[Content_Types].xml');
     expect(
       () => XmlDocument.parse(String.fromCharCodes(ctFile.content)),
       returnsNormally,
@@ -528,7 +583,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var drawingFile = archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
+    var drawingFile =
+        archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(drawingFile.content));
 
     expect(xml.findAllElements('xdr:twoCellAnchor').isNotEmpty, isTrue);
@@ -550,7 +606,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var content = String.fromCharCodes(chartFile.content);
     expect(content, contains('My Custom Title'));
   });
@@ -588,7 +645,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var content = String.fromCharCodes(chartFile.content);
 
     expect(content, contains(r'Sheet1!$A$2:$A$4'));
@@ -604,8 +662,14 @@ void main() {
     excel['Sheet1'].addChart(ColumnChart(
       title: "Multi Series",
       series: [
-        ChartSeries(name: "S1", categoriesRange: r"Sheet1!$A$2:$A$4", valuesRange: r"Sheet1!$B$2:$B$4"),
-        ChartSeries(name: "S2", categoriesRange: r"Sheet1!$A$2:$A$4", valuesRange: r"Sheet1!$B$2:$B$4"),
+        ChartSeries(
+            name: "S1",
+            categoriesRange: r"Sheet1!$A$2:$A$4",
+            valuesRange: r"Sheet1!$B$2:$B$4"),
+        ChartSeries(
+            name: "S2",
+            categoriesRange: r"Sheet1!$A$2:$A$4",
+            valuesRange: r"Sheet1!$B$2:$B$4"),
       ],
       anchor: ChartAnchor.at(column: 4, row: 1),
     ));
@@ -613,7 +677,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     var serElements = xml.findAllElements('c:ser').toList();
@@ -635,7 +700,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     expect(xml.findAllElements('c:legend').isEmpty, isTrue,
@@ -656,7 +722,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     expect(xml.findAllElements('c:catAx').isNotEmpty, isTrue);
@@ -677,7 +744,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     expect(xml.findAllElements('c:valAx').length, equals(2));
@@ -698,7 +766,8 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var drawingFile = archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
+    var drawingFile =
+        archive.files.firstWhere((f) => f.name == 'xl/drawings/drawing1.xml');
     var xml = XmlDocument.parse(String.fromCharCodes(drawingFile.content));
 
     var from = xml.findAllElements('xdr:from').first;
@@ -741,11 +810,13 @@ void main() {
     expect(names, contains('xl/drawings/drawing1.xml'));
     expect(names, contains('xl/drawings/_rels/drawing1.xml.rels'));
 
-    var chartFile = archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
+    var chartFile =
+        archive.files.firstWhere((f) => f.name == 'xl/charts/chart1.xml');
     var chartXml = XmlDocument.parse(String.fromCharCodes(chartFile.content));
 
     var barChart = chartXml.findAllElements('c:barChart');
-    expect(barChart.isNotEmpty, isTrue, reason: 'ColumnChart should produce a barChart element');
+    expect(barChart.isNotEmpty, isTrue,
+        reason: 'ColumnChart should produce a barChart element');
 
     var serElements = chartXml.findAllElements('c:ser').toList();
     expect(serElements.length, equals(1));
@@ -758,24 +829,34 @@ void main() {
     var titleText = title.findAllElements('a:t').first.innerText;
     expect(titleText, equals('Sales Overview'));
 
-    var catRef = chartXml.findAllElements('c:cat').first
-        .findAllElements('c:f').first.innerText;
+    var catRef = chartXml
+        .findAllElements('c:cat')
+        .first
+        .findAllElements('c:f')
+        .first
+        .innerText;
     expect(catRef, equals(r'Sheet1!$A$2:$A$4'));
 
-    var valRef = chartXml.findAllElements('c:val').first
-        .findAllElements('c:f').first.innerText;
+    var valRef = chartXml
+        .findAllElements('c:val')
+        .first
+        .findAllElements('c:f')
+        .first
+        .innerText;
     expect(valRef, equals(r'Sheet1!$B$2:$B$4'));
 
     var strCache = chartXml.findAllElements('c:strCache');
-    expect(strCache.isNotEmpty, isTrue, reason: 'Category string cache should be present');
-    var cachedCategories = strCache.first
-        .findAllElements('c:v').map((e) => e.innerText).toList();
+    expect(strCache.isNotEmpty, isTrue,
+        reason: 'Category string cache should be present');
+    var cachedCategories =
+        strCache.first.findAllElements('c:v').map((e) => e.innerText).toList();
     expect(cachedCategories, equals(['Alpha', 'Beta', 'Gamma']));
 
     var numCache = chartXml.findAllElements('c:numCache');
-    expect(numCache.isNotEmpty, isTrue, reason: 'Value number cache should be present');
-    var cachedValues = numCache.first
-        .findAllElements('c:v').map((e) => e.innerText).toList();
+    expect(numCache.isNotEmpty, isTrue,
+        reason: 'Value number cache should be present');
+    var cachedValues =
+        numCache.first.findAllElements('c:v').map((e) => e.innerText).toList();
     expect(cachedValues, equals(['10', '20', '30']));
   });
 
@@ -786,7 +867,9 @@ void main() {
   // ---------------------------------------------------------------------------
   // 32. Sheet rels XML must use xmlns= (not xmlns:=) for default namespace
   // ---------------------------------------------------------------------------
-  test('Sheet rels uses xmlns= without colon for default namespace (MSXML strict)', () {
+  test(
+      'Sheet rels uses xmlns= without colon for default namespace (MSXML strict)',
+      () {
     var excel = _createExcelWithData();
     excel['Sheet1'].addChart(ColumnChart(
       title: "NS Compat",
@@ -797,12 +880,13 @@ void main() {
     var bytes = excel.save();
     var archive = ZipDecoder().decodeBytes(bytes!);
 
-    var sheetRels = archive.files.firstWhere(
-        (f) => f.name.startsWith('xl/worksheets/_rels/') && f.name.endsWith('.rels'));
+    var sheetRels = archive.files.firstWhere((f) =>
+        f.name.startsWith('xl/worksheets/_rels/') && f.name.endsWith('.rels'));
     var content = String.fromCharCodes(sheetRels.content);
 
     expect(content, isNot(contains('xmlns:=')),
-        reason: 'xmlns:= is malformed; Excel rejects it. Must be xmlns= for the default namespace');
+        reason:
+            'xmlns:= is malformed; Excel rejects it. Must be xmlns= for the default namespace');
     expect(content, contains('xmlns='),
         reason: 'Sheet rels must declare the default namespace with xmlns=');
   });
@@ -810,7 +894,9 @@ void main() {
   // ---------------------------------------------------------------------------
   // 33. Drawing rels XML must use xmlns= (not xmlns:=) for default namespace
   // ---------------------------------------------------------------------------
-  test('Drawing rels uses xmlns= without colon for default namespace (MSXML strict)', () {
+  test(
+      'Drawing rels uses xmlns= without colon for default namespace (MSXML strict)',
+      () {
     var excel = _createExcelWithData();
     excel['Sheet1'].addChart(ColumnChart(
       title: "NS Compat",
@@ -826,7 +912,8 @@ void main() {
     var content = String.fromCharCodes(drawingRels.content);
 
     expect(content, isNot(contains('xmlns:=')),
-        reason: 'xmlns:= is malformed; Excel rejects it. Must be xmlns= for the default namespace');
+        reason:
+            'xmlns:= is malformed; Excel rejects it. Must be xmlns= for the default namespace');
     expect(content, contains('xmlns='),
         reason: 'Drawing rels must declare the default namespace with xmlns=');
   });
@@ -834,7 +921,9 @@ void main() {
   // ---------------------------------------------------------------------------
   // 34. All .rels files in archive must not contain xmlns:= anywhere
   // ---------------------------------------------------------------------------
-  test('No .rels file in the archive contains the malformed xmlns:= declaration', () {
+  test(
+      'No .rels file in the archive contains the malformed xmlns:= declaration',
+      () {
     var excel = _createExcelWithData();
     excel['Sheet1'].addChart(ColumnChart(
       title: "Global NS",
@@ -914,7 +1003,12 @@ void main() {
     sheet2.updateCell(CellIndex.indexByString("A1"), IntCellValue(5));
     sheet2.addChart(ColumnChart(
       title: "S2C",
-      series: [ChartSeries(name: "X", categoriesRange: r"Sheet2!$A$1:$A$1", valuesRange: r"Sheet2!$A$1:$A$1")],
+      series: [
+        ChartSeries(
+            name: "X",
+            categoriesRange: r"Sheet2!$A$1:$A$1",
+            valuesRange: r"Sheet2!$A$1:$A$1")
+      ],
       anchor: ChartAnchor.at(column: 2, row: 1),
     ));
 

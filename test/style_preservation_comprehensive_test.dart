@@ -72,7 +72,8 @@ void main() {
         reason: 'Font color should be preserved',
       );
 
-      print('Font Family: ${completeStyle.fontFamily} -> ${style2?.fontFamily}');
+      print(
+          'Font Family: ${completeStyle.fontFamily} -> ${style2?.fontFamily}');
       expect(
         style2?.fontFamily,
         equals(completeStyle.fontFamily),
@@ -140,8 +141,7 @@ void main() {
         reason: 'Rotation should be preserved',
       );
 
-      print(
-          'Text Wrapping: ${completeStyle.wrap} -> ${style2?.wrap}');
+      print('Text Wrapping: ${completeStyle.wrap} -> ${style2?.wrap}');
       expect(
         style2?.wrap,
         equals(completeStyle.wrap),

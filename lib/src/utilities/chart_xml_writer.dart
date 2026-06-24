@@ -33,8 +33,8 @@ class ChartXmlWriter {
   XmlElement buildChartAnchorElement(
       Chart chart, int index, int drawingCount, String rId) {
     final builder = XmlBuilder();
-    builder.element('xdr:twoCellAnchor', namespaceUris: _buildDrawingNamespaces(),
-        nest: () {
+    builder.element('xdr:twoCellAnchor',
+        namespaceUris: _buildDrawingNamespaces(), nest: () {
       _buildAnchorPosition(
           builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
       _buildAnchorPosition(

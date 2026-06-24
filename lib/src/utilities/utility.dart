@@ -140,23 +140,25 @@ String _escapeXml(String input) {
 ///It is useful to convert CellId to Indexing.
 ///
 (int x, int y) _cellCoordsFromCellId(String cellId) {
-  int i = 0;
-  while (i < cellId.length) {
-    int code = cellId.codeUnitAt(i);
-    // If it's a digit (48-57), stop.
+  int colSum = 0;
+  int rowSum = 0;
+  
+  for (int i = 0; i < cellId.length; i++) {
+    final code = cellId.codeUnitAt(i);
     if (code >= 48 && code <= 57) {
-      break;
+      rowSum = rowSum * 10 + (code - 48);
+    } else {
+      int n = 1;
+      if (code >= 65 && code <= 90) {
+        n += code - 65;
+      } else if (code >= 97 && code <= 122) {
+        n += code - 97;
+      }
+      colSum = colSum * 26 + n;
     }
-    i++;
   }
-
-  final lettersPart = cellId.substring(0, i);
-  final numericsPart = cellId.substring(i);
-
-  return (
-    int.parse(numericsPart) - 1,
-    lettersToNumeric(lettersPart) - 1
-  ); // [x , y]
+  
+  return (rowSum - 1, colSum - 1);
 }
 
 ///

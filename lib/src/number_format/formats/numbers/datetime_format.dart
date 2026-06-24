@@ -16,7 +16,10 @@ sealed class DateTimeNumFormat extends NumFormat {
         microsecond: 0,
       );
     }
-    final value = num.parse(v);
+    final value = num.tryParse(v);
+    if (value == null) {
+      return TextCellValue(v);
+    }
     if (value < 1) {
       return TimeCellValue.fromFractionOfDay(value);
     }

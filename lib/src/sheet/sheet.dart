@@ -179,8 +179,9 @@ class Sheet {
         case null:
           needsFormatUpdate = currentStyle.numberFormat != NumFormat.standard_0;
         case FormulaCellValue() || TextCellValue():
-          needsFormatUpdate = currentStyle.numberFormat == NumFormat.standard_0 &&
-              defaultFormat != NumFormat.standard_0;
+          needsFormatUpdate =
+              currentStyle.numberFormat == NumFormat.standard_0 &&
+                  defaultFormat != NumFormat.standard_0;
         case IntCellValue() || DoubleCellValue():
           needsFormatUpdate = !currentStyle.numberFormat.accepts(value) ||
               (currentStyle.numberFormat == NumFormat.standard_0 &&
@@ -191,13 +192,15 @@ class Sheet {
               (currentStyle.numberFormat == NumFormat.standard_0 &&
                   defaultFormat != NumFormat.standard_0);
         case BoolCellValue():
-          needsFormatUpdate = currentStyle.numberFormat == NumFormat.standard_0 &&
-              defaultFormat != NumFormat.standard_0;
+          needsFormatUpdate =
+              currentStyle.numberFormat == NumFormat.standard_0 &&
+                  defaultFormat != NumFormat.standard_0;
       }
 
       if (needsFormatUpdate) {
         cell._cellStyle = currentStyle.copyWith(
-            numberFormat: (value == null) ? NumFormat.standard_0 : defaultFormat);
+            numberFormat:
+                (value == null) ? NumFormat.standard_0 : defaultFormat);
         _excel._styleChanges = true;
       }
     }
@@ -208,6 +211,61 @@ class Sheet {
 
     if ((_maxRows - 1) < rowIndex) {
       _maxRows = rowIndex + 1;
+    }
+  }
+
+  void _updateCellDirect(Data cell, CellValue? value) {
+    if (_spanList.isNotEmpty) {
+      updateCell(cell.cellIndex, value);
+      return;
+    }
+
+    cell._value = value;
+    final currentStyle = cell._cellStyle;
+    final defaultFormat = NumFormat.defaultFor(value);
+
+    if (currentStyle == null) {
+      cell._cellStyle = _excel._getDefaultStyle(defaultFormat);
+      if (defaultFormat != NumFormat.standard_0) {
+        _excel._styleChanges = true;
+      }
+    } else {
+      final bool needsFormatUpdate;
+      switch (value) {
+        case null:
+          needsFormatUpdate = currentStyle.numberFormat != NumFormat.standard_0;
+        case FormulaCellValue() || TextCellValue():
+          needsFormatUpdate =
+              currentStyle.numberFormat == NumFormat.standard_0 &&
+                  defaultFormat != NumFormat.standard_0;
+        case IntCellValue() || DoubleCellValue():
+          needsFormatUpdate = !currentStyle.numberFormat.accepts(value) ||
+              (currentStyle.numberFormat == NumFormat.standard_0 &&
+                  defaultFormat != NumFormat.standard_0);
+        case DateCellValue() || TimeCellValue() || DateTimeCellValue():
+          needsFormatUpdate = !currentStyle.numberFormat.accepts(value) ||
+              (currentStyle.numberFormat == NumFormat.standard_0 &&
+                  defaultFormat != NumFormat.standard_0);
+        case BoolCellValue():
+          needsFormatUpdate =
+              currentStyle.numberFormat == NumFormat.standard_0 &&
+                  defaultFormat != NumFormat.standard_0;
+      }
+
+      if (needsFormatUpdate) {
+        cell._cellStyle = currentStyle.copyWith(
+            numberFormat:
+                (value == null) ? NumFormat.standard_0 : defaultFormat);
+        _excel._styleChanges = true;
+      }
+    }
+
+    if ((_maxColumns - 1) < cell.columnIndex) {
+      _maxColumns = cell.columnIndex + 1;
+    }
+
+    if ((_maxRows - 1) < cell.rowIndex) {
+      _maxRows = cell.rowIndex + 1;
     }
   }
 

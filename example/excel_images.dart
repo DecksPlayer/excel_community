@@ -20,8 +20,8 @@ void main(List<String> args) {
   );
   sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('F1'));
 
-  sheet.updateCell(CellIndex.indexByString('A3'),
-      TextCellValue('PNG (assets/logo.png):'),
+  sheet.updateCell(
+      CellIndex.indexByString('A3'), TextCellValue('PNG (assets/logo.png):'),
       cellStyle: CellStyle(bold: true));
   sheet.updateCell(CellIndex.indexByString('D3'),
       TextCellValue('SVG — Excel 365 (assets/logo.svg):'),
@@ -33,7 +33,7 @@ void main(List<String> args) {
   sheet.addImage(ExcelImage.fromFile(
     File('assets/logo.png'),
     anchor: ImageAnchor.fromPixels(
-      column: 0, row: 4,      // A5
+      column: 0, row: 4, // A5
       widthPixels: 200,
       heightPixels: 80,
     ),
@@ -46,7 +46,7 @@ void main(List<String> args) {
   sheet.addImage(ExcelImage.fromFile(
     File('assets/logo.svg'),
     anchor: ImageAnchor.fromPixels(
-      column: 3, row: 4,      // D5
+      column: 3, row: 4, // D5
       widthPixels: 200,
       heightPixels: 80,
     ),
@@ -68,8 +68,8 @@ void main(List<String> args) {
       fromRow: 13,
       colOffset: 0,
       rowOffset: 0,
-      widthEmu: 1_800_000,   // ≈ 5 cm
-      heightEmu: 720_000,    // ≈ 2 cm
+      widthEmu: 1_800_000, // ≈ 5 cm
+      heightEmu: 720_000, // ≈ 2 cm
     ),
   ));
 
@@ -94,4 +94,3 @@ void main(List<String> args) {
     print('Error: could not encode workbook.');
   }
 }
-

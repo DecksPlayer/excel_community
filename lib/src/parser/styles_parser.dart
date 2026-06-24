@@ -115,7 +115,8 @@ class _StylesParser {
         final formatCode = node.getAttribute('formatCode')!;
         // Register all explicitly declared formats. Excel can include
         // built-in IDs (0–163) in numFmts to override them for this file.
-        _excel._numFormats.add(numFmtId, NumFormat.custom(formatCode: formatCode));
+        _excel._numFormats
+            .add(numFmtId, NumFormat.custom(formatCode: formatCode));
       });
     });
   }
@@ -212,9 +213,10 @@ class _StylesParser {
           italic: isItalic,
           strikethrough: isStrikethrough,
           underline: underline,
-          backgroundColorHex: backgroundColor == 'none' || backgroundColor.isEmpty
-              ? ExcelColor.none
-              : backgroundColor.excelColor,
+          backgroundColorHex:
+              backgroundColor == 'none' || backgroundColor.isEmpty
+                  ? ExcelColor.none
+                  : backgroundColor.excelColor,
           horizontalAlign: horizontalAlign,
           verticalAlign: verticalAlign,
           textWrapping: textWrapping,
@@ -283,14 +285,14 @@ class _StylesParser {
       fontStyle.isStrikethrough = true;
     }
 
-    final underlineValue = _nodeChildren(font, 'u', attribute: 'val');
-    if (underlineValue != null && underlineValue != true) {
-      if ((underlineValue as String).toLowerCase() == 'double') {
+    final underlineElement = font.findElements('u').firstOrNull;
+    if (underlineElement != null) {
+      final uVal = underlineElement.getAttribute('val')?.toLowerCase();
+      if (uVal == 'none') {
+        fontStyle.underline = Underline.None;
+      } else if (uVal == 'double') {
         fontStyle.underline = Underline.Double;
-      }
-    } else {
-      final underlineElement = _nodeChildren(font, 'u');
-      if (underlineElement != null && underlineElement == true) {
+      } else {
         fontStyle.underline = Underline.Single;
       }
     }
