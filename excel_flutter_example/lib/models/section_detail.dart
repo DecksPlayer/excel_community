@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 enum SelectedSection {
+  about,
   simpleExcel,
   columnChart,
   lineChart,
