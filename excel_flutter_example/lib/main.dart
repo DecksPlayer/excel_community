@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Border, BorderStyle;
 import 'package:flutter/painting.dart' as fp;
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'models/section_detail.dart';
 import 'data/code_snippets.dart';
@@ -93,6 +94,15 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.multiSheets:
           resultStatus = await ExcelGenerator.generateMultiSheets();
           break;
+        case SelectedSection.pivotTemplate:
+          resultStatus = await ExcelGenerator.generatePivotTemplate();
+          break;
+        case SelectedSection.cellLocking:
+          resultStatus = await ExcelGenerator.generateLockedCellsReport();
+          break;
+        case SelectedSection.freezePanes:
+          resultStatus = await ExcelGenerator.generateFreezePanes();
+          break;
         case SelectedSection.allCharts:
           resultStatus = await ExcelGenerator.generateAllCharts();
           break;
@@ -129,7 +139,11 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: const Color(0xFF0F172A), // Slate 900
         title: Row(
           children: [
-            const Icon(Icons.table_view, color: Color(0xFF10B981), size: 24),
+            SvgPicture.asset(
+              'assets/logo.svg',
+              width: 28,
+              height: 28,
+            ),
             const SizedBox(width: 8),
             Text(
               widget.title,
@@ -261,6 +275,9 @@ class _MyHomePageState extends State<MyHomePage> {
               _buildSidebarItem(SelectedSection.textStyles, 'Text Underlines & Fills', Icons.format_underlined, Colors.deepPurple),
               _buildSidebarItem(SelectedSection.numberFormats, 'Number Formatting', Icons.pin, Colors.teal),
               _buildSidebarItem(SelectedSection.multiSheets, 'Multi-Worksheets', Icons.layers_outlined, Colors.cyan),
+              _buildSidebarItem(SelectedSection.pivotTemplate, 'Templates & Pivot Tables', Icons.content_paste_go_outlined, Colors.indigo),
+              _buildSidebarItem(SelectedSection.cellLocking, 'Sheet Protection & Locks', Icons.lock_outline, Colors.red),
+              _buildSidebarItem(SelectedSection.freezePanes, 'Freeze Panes', Icons.view_headline_outlined, Colors.indigo),
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
                 child: Text('Demonstrations', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF64748B))),
@@ -359,14 +376,27 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'excel_community',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
+              Wrap(
+                alignment: WrapAlignment.start,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  SvgPicture.asset(
+                    'assets/logo.svg',
+                    width: 44,
+                    height: 44,
+                  ),
+                  const Text(
+                    'excel_community',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               const Text(
@@ -561,6 +591,85 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildHeaderCard(BuildContext context, SectionDetail detail) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 700;
+
+    if (isCompact) {
+      return Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: detail.themeColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(detail.icon, color: detail.themeColor, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      detail.title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                detail.description,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isGenerating ? null : _handleGeneration,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: detail.themeColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                  ),
+                  icon: _isGenerating
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Icon(Icons.file_download_outlined, size: 16),
+                  label: Text(
+                    _isGenerating ? 'Generating...' : 'Generate Spreadsheet',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -976,6 +1085,45 @@ class _MyHomePageState extends State<MyHomePage> {
             'Isolate data schemas across dedicated worksheets',
           ],
           codeSnippet: multiSheetsSnippet,
+        );
+      case SelectedSection.pivotTemplate:
+        return SectionDetail(
+          title: 'Templates & Pivot Tables',
+          description: 'Modify pre-configured Excel templates containing Pivot Tables while preserving all formulas and connections.',
+          icon: Icons.content_paste_go_outlined,
+          themeColor: Colors.indigo,
+          highlights: [
+            'Load templates using Excel.decodeBytes(...)',
+            'All Pivot Cache Definitions and Filters are fully preserved',
+            'Modify source data sheets, and let Excel calculate Pivot updates on open',
+          ],
+          codeSnippet: pivotTemplateSnippet,
+        );
+      case SelectedSection.cellLocking:
+        return SectionDetail(
+          title: 'Sheet Protection & Locks',
+          description: 'Modify pre-configured Excel templates containing sheet protection and cell locks while preserving read-only properties.',
+          icon: Icons.lock_outline,
+          themeColor: Colors.red,
+          highlights: [
+            'All Sheet Protection XML tags are fully preserved upon output',
+            'Cells set as locked in template remain read-only for Excel users',
+            'Editable regions set as unlocked in template remain editable',
+          ],
+          codeSnippet: cellLockingSnippet,
+        );
+      case SelectedSection.freezePanes:
+        return SectionDetail(
+          title: 'Freeze Panes',
+          description: 'Modify pre-configured Excel templates containing frozen rows or columns while preserving layout states.',
+          icon: Icons.view_headline_outlined,
+          themeColor: Colors.indigo,
+          highlights: [
+            'All Sheet Views and Frozen Pane boundaries are fully preserved',
+            'Selected rows/columns stay fixed in place during vertical/horizontal scrolling',
+            'Crucial for large datasets to keep headers or keys always visible',
+          ],
+          codeSnippet: freezePanesSnippet,
         );
       case SelectedSection.allCharts:
         return SectionDetail(

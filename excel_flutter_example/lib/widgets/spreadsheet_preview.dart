@@ -73,48 +73,50 @@ class SpreadsheetPreview extends StatelessWidget {
               height: rowHeight * 10,
               child: Stack(
                 children: [
-                  Column(
-                    children: List.generate(10, (rowIndex) {
-                      final rowNum = rowIndex + 1;
-                      return SizedBox(
-                        height: rowHeight,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              color: const Color(0xFFF1F5F9),
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(
-                                border: fp.Border(
-                                  right: fp.BorderSide(color: Color(0xFFCBD5E1)),
-                                  bottom: fp.BorderSide(color: Color(0xFFCBD5E1)),
-                                ),
-                              ),
-                              child: Text(
-                                '$rowNum',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                            ...List.generate(6, (colIndex) {
-                              return Container(
-                                width: colWidth,
+                  SingleChildScrollView(
+                    child: Column(
+                      children: List.generate(20, (rowIndex) {
+                        final rowNum = rowIndex + 1;
+                        return SizedBox(
+                          height: rowHeight,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                alignment: Alignment.center,
                                 decoration: const BoxDecoration(
+                                  color: Color(0xFFF1F5F9),
                                   border: fp.Border(
-                                    right: fp.BorderSide(color: Color(0xFFE2E8F0)),
-                                    bottom: fp.BorderSide(color: Color(0xFFE2E8F0)),
+                                    right: fp.BorderSide(color: Color(0xFFCBD5E1)),
+                                    bottom: fp.BorderSide(color: Color(0xFFCBD5E1)),
                                   ),
                                 ),
-                                child: _buildMockCellContent(rowIndex, colIndex),
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    }),
+                                child: Text(
+                                  '$rowNum',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                              ...List.generate(6, (colIndex) {
+                                return Container(
+                                  width: colWidth,
+                                  decoration: const BoxDecoration(
+                                    border: fp.Border(
+                                      right: fp.BorderSide(color: Color(0xFFE2E8F0)),
+                                      bottom: fp.BorderSide(color: Color(0xFFE2E8F0)),
+                                    ),
+                                  ),
+                                  child: _buildMockCellContent(rowIndex, colIndex),
+                                );
+                              }),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                   _buildMockOverlay(context, colWidth, rowHeight),
                 ],
@@ -173,7 +175,164 @@ class SpreadsheetPreview extends StatelessWidget {
   }
 
   Widget _buildMockCellContent(int rowIndex, int colIndex) {
-    if (selectedSection == SelectedSection.multiSheets) {
+    if (selectedSection == SelectedSection.freezePanes) {
+      if (rowIndex == 0) {
+        if (colIndex == 0) {
+          return Container(
+            color: Colors.blue.shade50,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 4),
+            child: const Text('Product Name ▾', style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Colors.blue)),
+          );
+        }
+        if (colIndex == 1) {
+          return Container(
+            color: Colors.blue.shade50,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 4),
+            child: const Text('Revenue ▾', style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Colors.blue)),
+          );
+        }
+      } else {
+        if (colIndex == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 4, top: 6),
+            child: Text('Product $rowIndex', style: const TextStyle(fontSize: 6)),
+          );
+        }
+        if (colIndex == 1) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 4, top: 6),
+            child: Text('\$${150 * rowIndex}', style: const TextStyle(fontSize: 6)),
+          );
+        }
+      }
+    } else if (selectedSection == SelectedSection.cellLocking) {
+      if (rowIndex == 0 && colIndex == 0) {
+        return Container(
+          color: Colors.red.shade50,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Row(
+            children: [
+              Icon(Icons.lock_outline, size: 8, color: Colors.red),
+              SizedBox(width: 2),
+              Text('Header A (Locked)', style: TextStyle(fontSize: 5, fontWeight: FontWeight.bold, color: Colors.red)),
+            ],
+          ),
+        );
+      }
+      if (rowIndex == 0 && colIndex == 1) {
+        return Container(
+          color: Colors.green.shade50,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 8, color: Colors.green),
+              SizedBox(width: 2),
+              Text('Header B (Edit)', style: TextStyle(fontSize: 5, fontWeight: FontWeight.bold, color: Colors.green)),
+            ],
+          ),
+        );
+      }
+      if (rowIndex == 1 && colIndex == 0) {
+        return Container(
+          color: Colors.red.shade50,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Row(
+            children: [
+              Icon(Icons.lock_outline, size: 6, color: Colors.red),
+              SizedBox(width: 2),
+              Text('North Sales', style: TextStyle(fontSize: 6, color: Colors.red)),
+            ],
+          ),
+        );
+      }
+      if (rowIndex == 1 && colIndex == 1) {
+        return Container(
+          color: Colors.green.shade50,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 6, color: Colors.green),
+              SizedBox(width: 2),
+              Text('8,500 (Editable)', style: TextStyle(fontSize: 6, color: Colors.green)),
+            ],
+          ),
+        );
+      }
+      if (rowIndex == 2 && colIndex == 0) {
+        return Container(
+          color: Colors.red.shade50,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Row(
+            children: [
+              Icon(Icons.lock_outline, size: 6, color: Colors.red),
+              SizedBox(width: 2),
+              Text('South Sales', style: TextStyle(fontSize: 6, color: Colors.red)),
+            ],
+          ),
+        );
+      }
+      if (rowIndex == 2 && colIndex == 1) {
+        return Container(
+          color: Colors.green.shade50,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 6, color: Colors.green),
+              SizedBox(width: 2),
+              Text('6,400 (Editable)', style: TextStyle(fontSize: 6, color: Colors.green)),
+            ],
+          ),
+        );
+      }
+    } else if (selectedSection == SelectedSection.pivotTemplate) {
+      if (rowIndex == 0 && colIndex == 0) {
+        return Container(
+          color: Colors.blueGrey.shade100,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Text('Row Labels ▾', style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold)),
+        );
+      }
+      if (rowIndex == 0 && colIndex == 1) {
+        return Container(
+          color: Colors.blueGrey.shade100,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Text('Sum of Amount', style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold)),
+        );
+      }
+      if (rowIndex == 1 && colIndex == 0) return const Padding(padding: EdgeInsets.only(left: 4, top: 6), child: Text('North Region', style: TextStyle(fontSize: 7)));
+      if (rowIndex == 1 && colIndex == 1) return const Padding(padding: EdgeInsets.only(left: 4, top: 6), child: Text('\$45,000', style: TextStyle(fontSize: 7)));
+      if (rowIndex == 2 && colIndex == 0) return const Padding(padding: EdgeInsets.only(left: 4, top: 6), child: Text('South Region', style: TextStyle(fontSize: 7)));
+      if (rowIndex == 2 && colIndex == 1) return const Padding(padding: EdgeInsets.only(left: 4, top: 6), child: Text('\$32,000', style: TextStyle(fontSize: 7)));
+      if (rowIndex == 3 && colIndex == 0) return const Padding(padding: EdgeInsets.only(left: 4, top: 6), child: Text('East Region', style: TextStyle(fontSize: 7)));
+      if (rowIndex == 3 && colIndex == 1) return const Padding(padding: EdgeInsets.only(left: 4, top: 6), child: Text('\$51,000', style: TextStyle(fontSize: 7)));
+      
+      if (rowIndex == 4 && colIndex == 0) {
+        return Container(
+          color: Colors.grey.shade100,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Text('Grand Total', style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold)),
+        );
+      }
+      if (rowIndex == 4 && colIndex == 1) {
+        return Container(
+          color: Colors.grey.shade100,
+          padding: const EdgeInsets.only(left: 4),
+          alignment: Alignment.centerLeft,
+          child: const Text('\$128,000', style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold)),
+        );
+      }
+    } else if (selectedSection == SelectedSection.multiSheets) {
       if (rowIndex == 0 && colIndex == 0) {
         return Container(
           color: Colors.blue.shade50,

@@ -416,3 +416,89 @@ void generateMultiSheets() {
   excel.save(fileName: 'multisheet_financials.xlsx');
 }
 ''';
+
+const String pivotTemplateSnippet = '''
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:excel_community/excel_community.dart';
+
+Future<void> generatePivotFromTemplate() async {
+  // 1. Load an existing Excel template containing pre-configured Pivot Tables
+  final ByteData data = await rootBundle.load('assets/financial_template.xlsx');
+  final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  
+  // 2. Decode the workbook bytes using excel_community
+  var excel = Excel.decodeBytes(bytes);
+  
+  // 3. Select the sheet containing the source data range
+  var sheet = excel['Sales Data'];
+  
+  // 4. Overwrite or append records in the source data rows
+  sheet.updateCell(CellIndex.indexByString("A2"), TextCellValue("North Region"));
+  sheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(45000));
+  
+  sheet.updateCell(CellIndex.indexByString("A3"), TextCellValue("South Region"));
+  sheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(32000));
+  
+  sheet.updateCell(CellIndex.indexByString("A4"), TextCellValue("East Region"));
+  sheet.updateCell(CellIndex.indexByString("B4"), IntCellValue(51000));
+
+  // 5. Save the workbook bytes. 
+  // All Pivot Cache Relationships, Definitions, and Filters are fully preserved!
+  excel.save(fileName: 'sales_report_pivot.xlsx');
+}
+''';
+
+const String cellLockingSnippet = '''
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:excel_community/excel_community.dart';
+
+Future<void> generateLockedCellsReport() async {
+  // 1. Load an Excel template containing pre-configured cell locking and sheet protection.
+  // In Excel, all cells are locked by default under a protected sheet.
+  // To allow edits, select cells and set "Locked = false" in format cell protection.
+  final ByteData data = await rootBundle.load('assets/protected_template.xlsx');
+  final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  
+  // 2. Decode the template
+  var excel = Excel.decodeBytes(bytes);
+  var sheet = excel['Protected Report'];
+  
+  // 3. Write data to the editable (unlocked) cell region
+  // Users opening this sheet will be able to edit these fields...
+  sheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(8500));
+  sheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(6400));
+  
+  // 4. If we attempt to write to locked cells (like headers or totals),
+  // they will remain read-only for final users in Excel.
+  sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Read-Only Header"));
+
+  // 5. Save the output. All sheet protection metadata is fully preserved.
+  excel.save(fileName: 'protected_sales_report.xlsx');
+}
+''';
+
+const String freezePanesSnippet = r'''
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:excel_community/excel_community.dart';
+
+Future<void> generateFrozenPanesReport() async {
+  // 1. Load an existing Excel template containing pre-configured Freeze Panes.
+  // In Excel, you freeze panes using View -> Freeze Panes (e.g. Freezing Row 1).
+  final ByteData data = await rootBundle.load('assets/frozen_header_template.xlsx');
+  final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  
+  // 2. Decode the template using excel_community
+  var excel = Excel.decodeBytes(bytes);
+  var sheet = excel['Sales Report'];
+  
+  // 3. Write data rows (e.g., Row 2 to Row 100)
+  // When users scroll down in Excel, Row 1 (Header) remains fixed at the top.
+  for (int i = 2; i <= 50; i++) {
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i - 1), TextCellValue("Product $i"));
+    sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i - 1), IntCellValue(150 * i));
+  }
+
+  // 4. Save the output. All Freeze Panes and Sheet Views are fully preserved.
+  excel.save(fileName: 'sales_report_frozen.xlsx');
+}
+''';

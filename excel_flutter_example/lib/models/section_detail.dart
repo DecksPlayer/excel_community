@@ -15,6 +15,9 @@ enum SelectedSection {
   textStyles,
   numberFormats,
   multiSheets,
+  pivotTemplate,
+  cellLocking,
+  freezePanes,
   allCharts,
   fullDemo,
 }
