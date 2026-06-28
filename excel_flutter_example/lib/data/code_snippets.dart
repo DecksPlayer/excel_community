@@ -449,56 +449,72 @@ Future<void> generatePivotFromTemplate() async {
 ''';
 
 const String cellLockingSnippet = '''
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:excel_community/excel_community.dart';
 
 Future<void> generateLockedCellsReport() async {
-  // 1. Load an Excel template containing pre-configured cell locking and sheet protection.
-  // In Excel, all cells are locked by default under a protected sheet.
-  // To allow edits, select cells and set "Locked = false" in format cell protection.
-  final ByteData data = await rootBundle.load('assets/protected_template.xlsx');
-  final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-  
-  // 2. Decode the template
-  var excel = Excel.decodeBytes(bytes);
+  // 1. Create a new Excel workbook and sheet
+  var excel = Excel.createExcel();
   var sheet = excel['Protected Report'];
-  
-  // 3. Write data to the editable (unlocked) cell region
-  // Users opening this sheet will be able to edit these fields...
-  sheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(8500));
-  sheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(6400));
-  
-  // 4. If we attempt to write to locked cells (like headers or totals),
-  // they will remain read-only for final users in Excel.
-  sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Read-Only Header"));
+  excel.delete('Sheet1');
 
-  // 5. Save the output. All sheet protection metadata is fully preserved.
+  // 2. Protect the sheet programmatically with a password hash
+  sheet.protect('password');
+
+  // Excel locks all cells by default when sheet protection is active.
+  // Explicitly configure cell locks:
+  final headerStyle = CellStyle(
+    bold: true,
+    locked: true,
+    backgroundColorHex: ExcelColor.fromHexString('#D9D9D9'),
+  );
+  
+  // Set locked: false to allow editing on these cells
+  final editableStyle = CellStyle(
+    locked: false, 
+    backgroundColorHex: ExcelColor.fromHexString('#E2EFDA'),
+  );
+  
+  final readOnlyStyle = CellStyle(locked: true);
+
+  // 3. Write data to the cells
+  sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Read-Only Header"), cellStyle: headerStyle);
+  sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Editable Values"), cellStyle: headerStyle);
+
+  sheet.updateCell(CellIndex.indexByString("A2"), TextCellValue("North Sales"), cellStyle: readOnlyStyle);
+  sheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(8500), cellStyle: editableStyle);
+
+  sheet.updateCell(CellIndex.indexByString("A3"), TextCellValue("South Sales"), cellStyle: readOnlyStyle);
+  sheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(6400), cellStyle: editableStyle);
+
+  // 4. Save the output. Sheet protection and cell lock styles are serialized successfully.
   excel.save(fileName: 'protected_sales_report.xlsx');
 }
 ''';
 
 const String freezePanesSnippet = r'''
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:excel_community/excel_community.dart';
 
-Future<void> generateFrozenPanesReport() async {
-  // 1. Load an existing Excel template containing pre-configured Freeze Panes.
-  // In Excel, you freeze panes using View -> Freeze Panes (e.g. Freezing Row 1).
-  final ByteData data = await rootBundle.load('assets/frozen_header_template.xlsx');
-  final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-  
-  // 2. Decode the template using excel_community
-  var excel = Excel.decodeBytes(bytes);
+void generateFrozenPanesReport() {
+  // 1. Create a new Excel workbook and sheet
+  var excel = Excel.createExcel();
   var sheet = excel['Sales Report'];
-  
-  // 3. Write data rows (e.g., Row 2 to Row 100)
-  // When users scroll down in Excel, Row 1 (Header) remains fixed at the top.
+  excel.delete('Sheet1');
+
+  // 2. Add header row
+  sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Product Name"), cellStyle: CellStyle(bold: true));
+  sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Sales Revenue"), cellStyle: CellStyle(bold: true));
+
+  // 3. Populate data rows
   for (int i = 2; i <= 50; i++) {
     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i - 1), TextCellValue("Product $i"));
     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i - 1), IntCellValue(150 * i));
   }
 
-  // 4. Save the output. All Freeze Panes and Sheet Views are fully preserved.
+  // 4. Freeze Row 1 and Column A programmatically
+  sheet.frozenRows = 1;
+  sheet.frozenColumns = 1;
+
+  // 5. Save the output
   excel.save(fileName: 'sales_report_frozen.xlsx');
 }
 ''';

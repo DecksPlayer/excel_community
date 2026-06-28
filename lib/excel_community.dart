@@ -78,6 +78,7 @@ part 'src/parser/worksheet_parser.dart';
 
 /// Sheet
 part 'src/sheet/sheet.dart';
+part 'src/sheet/sheet_protection.dart';
 part 'src/sheet/sheet_dimensions.dart';
 part 'src/sheet/sheet_spans.dart';
 part 'src/sheet/sheet_charts.dart';

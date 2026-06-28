@@ -149,6 +149,50 @@ class _WorksheetParser {
           if (rId != null) {
             sheetObject._drawingRId = rId;
           }
+        } else if (tagName == 'sheetProtection' ||
+            tagName.endsWith(':sheetProtection')) {
+          sheetObject.sheetProtection = SheetProtection(
+            sheet: _getAttr(event, 'sheet') == '1' ||
+                _getAttr(event, 'sheet') == 'true' ||
+                _getAttr(event, 'sheet') == null,
+            objects: _getAttr(event, 'objects') == '1' ||
+                _getAttr(event, 'objects') == 'true',
+            scenarios: _getAttr(event, 'scenarios') == '1' ||
+                _getAttr(event, 'scenarios') == 'true',
+            formatCells: _getAttr(event, 'formatCells') == '1' ||
+                _getAttr(event, 'formatCells') == 'true',
+            formatColumns: _getAttr(event, 'formatColumns') == '1' ||
+                _getAttr(event, 'formatColumns') == 'true',
+            formatRows: _getAttr(event, 'formatRows') == '1' ||
+                _getAttr(event, 'formatRows') == 'true',
+            insertColumns: _getAttr(event, 'insertColumns') == '1' ||
+                _getAttr(event, 'insertColumns') == 'true',
+            insertRows: _getAttr(event, 'insertRows') == '1' ||
+                _getAttr(event, 'insertRows') == 'true',
+            insertHyperlinks: _getAttr(event, 'insertHyperlinks') == '1' ||
+                _getAttr(event, 'insertHyperlinks') == 'true',
+            deleteColumns: _getAttr(event, 'deleteColumns') == '1' ||
+                _getAttr(event, 'deleteColumns') == 'true',
+            deleteRows: _getAttr(event, 'deleteRows') == '1' ||
+                _getAttr(event, 'deleteRows') == 'true',
+            selectLockedCells: _getAttr(event, 'selectLockedCells') == '1' ||
+                _getAttr(event, 'selectLockedCells') == 'true' ||
+                _getAttr(event, 'selectLockedCells') == null,
+            selectUnlockedCells:
+                _getAttr(event, 'selectUnlockedCells') == '1' ||
+                    _getAttr(event, 'selectUnlockedCells') == 'true' ||
+                    _getAttr(event, 'selectUnlockedCells') == null,
+            sort: _getAttr(event, 'sort') == '1' ||
+                _getAttr(event, 'sort') == 'true',
+            autoFilter: _getAttr(event, 'autoFilter') == '1' ||
+                _getAttr(event, 'autoFilter') == 'true',
+            pivotTables: _getAttr(event, 'pivotTables') == '1' ||
+                _getAttr(event, 'pivotTables') == 'true',
+          );
+          final pw = _getAttr(event, 'password');
+          if (pw != null) {
+            sheetObject.sheetProtection.password = pw;
+          }
         } else if (tagName == 'mergeCell' || tagName.endsWith(':mergeCell')) {
           final ref = _getAttr(event, 'ref');
           if (ref != null && ref.contains(':') && ref.split(':').length == 2) {
