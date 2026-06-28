@@ -120,14 +120,80 @@ class SpreadsheetPreview extends StatelessWidget {
                 ],
               ),
             ),
+            if (selectedSection == SelectedSection.multiSheets) ...[
+              const Divider(height: 1, color: Color(0xFFCBD5E1)),
+              Container(
+                color: const Color(0xFFF8FAFC),
+                height: 28,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.playlist_add, size: 14, color: Color(0xFF64748B)),
+                    const SizedBox(width: 8),
+                    _buildSheetTab("Summary", isActive: true),
+                    _buildSheetTab("Revenues", isActive: false),
+                    _buildSheetTab("Expenses", isActive: false),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
+  Widget _buildSheetTab(String name, {required bool isActive}) {
+    return Container(
+      margin: const EdgeInsets.only(top: 4, right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.white : Colors.transparent,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(4),
+          topRight: Radius.circular(4),
+        ),
+        border: isActive
+            ? const fp.Border(
+                left: fp.BorderSide(color: Color(0xFFCBD5E1)),
+                right: fp.BorderSide(color: Color(0xFFCBD5E1)),
+                top: fp.BorderSide(color: Color(0xFF10B981), width: 2),
+              )
+            : null,
+      ),
+      child: Text(
+        name,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMockCellContent(int rowIndex, int colIndex) {
-    if (selectedSection == SelectedSection.imageEmbedding) {
+    if (selectedSection == SelectedSection.multiSheets) {
+      if (rowIndex == 0 && colIndex == 0) {
+        return Container(
+          color: Colors.blue.shade50,
+          alignment: Alignment.center,
+          child: const Text('Title', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+        );
+      }
+      if (rowIndex == 2 && colIndex == 0) {
+        return const Padding(
+          padding: EdgeInsets.only(left: 4, top: 4),
+          child: Text('Summary Sheet data is placed here.', style: TextStyle(fontSize: 6)),
+        );
+      }
+      if (rowIndex == 4 && colIndex == 0) {
+        return const Padding(
+          padding: EdgeInsets.only(left: 4),
+          child: Text('Check tabs at the bottom!', style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Colors.blue)),
+        );
+      }
+    } else if (selectedSection == SelectedSection.imageEmbedding) {
       if (rowIndex == 0 && colIndex == 0) {
         return Container(
           color: Colors.teal.shade50,

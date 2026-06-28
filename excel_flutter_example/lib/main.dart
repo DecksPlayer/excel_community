@@ -18,12 +18,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Excel Chart Example',
+      title: 'excel_community examples',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Excel Chart Example'),
+      home: const MyHomePage(title: 'excel_community examples'),
     );
   }
 }
@@ -86,6 +86,9 @@ class _MyHomePageState extends State<MyHomePage> {
           break;
         case SelectedSection.numberFormats:
           resultStatus = await ExcelGenerator.generateNumberFormats();
+          break;
+        case SelectedSection.multiSheets:
+          resultStatus = await ExcelGenerator.generateMultiSheets();
           break;
         case SelectedSection.allCharts:
           resultStatus = await ExcelGenerator.generateAllCharts();
@@ -248,6 +251,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               _buildSidebarItem(SelectedSection.textStyles, 'Text Underlines & Fills', Icons.format_underlined, Colors.deepPurple),
               _buildSidebarItem(SelectedSection.numberFormats, 'Number Formatting', Icons.pin, Colors.teal),
+              _buildSidebarItem(SelectedSection.multiSheets, 'Multi-Worksheets', Icons.layers_outlined, Colors.cyan),
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
                 child: Text('Demonstrations', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF64748B))),
@@ -691,6 +695,19 @@ class _MyHomePageState extends State<MyHomePage> {
             'Accounting currency values with indent alignment support (ID 44)',
           ],
           codeSnippet: numberFormatsSnippet,
+        );
+      case SelectedSection.multiSheets:
+        return SectionDetail(
+          title: 'Multi-Worksheets',
+          description: 'Create and organize multiple sheets inside a single Excel workbook.',
+          icon: Icons.layers_outlined,
+          themeColor: Colors.cyan,
+          highlights: [
+            'Create, rename, and select sheets on the fly',
+            'Delete default template sheets to clean up output',
+            'Isolate data schemas across dedicated worksheets',
+          ],
+          codeSnippet: multiSheetsSnippet,
         );
       case SelectedSection.allCharts:
         return SectionDetail(

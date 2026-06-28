@@ -13,6 +13,7 @@ enum SelectedSection {
   imageEmbedding,
   textStyles,
   numberFormats,
+  multiSheets,
   allCharts,
   fullDemo,
 }

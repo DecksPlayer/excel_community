@@ -376,3 +376,43 @@ void generateFullReport() {
   excel.save(fileName: 'financial_performance_report.xlsx');
 }
 ''';
+
+const String multiSheetsSnippet = '''
+import 'package:excel_community/excel_community.dart';
+
+void generateMultiSheets() {
+  // Create a new Excel workbook
+  var excel = Excel.createExcel();
+  
+  // Sheet 1: Summary Sheet
+  var summarySheet = excel['Summary'];
+  excel.delete('Sheet1'); // Remove the default worksheet
+
+  summarySheet.updateCell(
+    CellIndex.indexByString("A1"), 
+    TextCellValue("Monthly Financial Summary"),
+    cellStyle: CellStyle(bold: true, fontSize: 14)
+  );
+
+  // Sheet 2: Revenues Detail
+  var revenueSheet = excel['Revenues'];
+  revenueSheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Source"));
+  revenueSheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Amount"));
+  revenueSheet.updateCell(CellIndex.indexByString("A2"), TextCellValue("SaaS Subscriptions"));
+  revenueSheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(15400));
+  revenueSheet.updateCell(CellIndex.indexByString("A3"), TextCellValue("Consulting"));
+  revenueSheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(4200));
+
+  // Sheet 3: Expenses Detail
+  var expenseSheet = excel['Expenses'];
+  expenseSheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Category"));
+  expenseSheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Cost"));
+  expenseSheet.updateCell(CellIndex.indexByString("A2"), TextCellValue("Hosting & Cloud"));
+  expenseSheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(3100));
+  expenseSheet.updateCell(CellIndex.indexByString("A3"), TextCellValue("Marketing"));
+  expenseSheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(1200));
+
+  // Save the multi-sheet workbook
+  excel.save(fileName: 'multisheet_financials.xlsx');
+}
+''';
