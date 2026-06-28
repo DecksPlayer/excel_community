@@ -219,17 +219,29 @@ class _StyleXmlBuilders {
         CustomNumFormat() => _excel._numFormats.findOrAdd(numberFormat),
       };
 
-      celx.children.add(XmlElement(XmlName.parts('xf'), [
+      final List<XmlAttribute> protectionAttrs = [];
+      if (cellStyle.locked != null) {
+        protectionAttrs.add(XmlAttribute(XmlName.parts('locked'), cellStyle.locked! ? 'true' : 'false'));
+      }
+      if (cellStyle.hidden != null) {
+        protectionAttrs.add(XmlAttribute(XmlName.parts('hidden'), cellStyle.hidden! ? 'true' : 'false'));
+      }
+
+      final List<XmlAttribute> xfAttributes = [
         XmlAttribute(XmlName.parts('applyFont'), '1'),
         XmlAttribute(XmlName.parts('applyFill'), '1'),
         XmlAttribute(XmlName.parts('applyBorder'), '1'),
         XmlAttribute(XmlName.parts('applyAlignment'), '1'),
+        if (protectionAttrs.isNotEmpty)
+          XmlAttribute(XmlName.parts('applyProtection'), '1'),
         XmlAttribute(XmlName.parts('borderId'), '$borderId'),
         XmlAttribute(XmlName.parts('fillId'), '$fillId'),
         XmlAttribute(XmlName.parts('fontId'), '$fontId'),
         XmlAttribute(XmlName.parts('numFmtId'), numFmtId.toString()),
         XmlAttribute(XmlName.parts('xfId'), '0'),
-      ], [
+      ];
+
+      celx.children.add(XmlElement(XmlName.parts('xf'), xfAttributes, [
         XmlElement(XmlName.parts('alignment'), [
           XmlAttribute(
               XmlName.parts('horizontal'),
@@ -252,6 +264,8 @@ class _StyleXmlBuilders {
           XmlAttribute(XmlName.parts('shrinkToFit'),
               cellStyle.wrap == TextWrapping.Clip ? '1' : '0'),
         ], []),
+        if (protectionAttrs.isNotEmpty)
+          XmlElement(XmlName.parts('protection'), protectionAttrs, []),
       ]));
     }
   }

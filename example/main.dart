@@ -3,11 +3,11 @@ import 'package:path/path.dart';
 import 'package:excel_community/excel_community.dart';
 
 void main(List<String> args) {
-  //var file = "/Users/kawal/Desktop/excel/test/test_resources/example.xlsx";
-  //var bytes = File(file).readAsBytesSync();
+  // var file = "path/to/existing_excel_file.xlsx";
+  // var bytes = File(file).readAsBytesSync();
   var excel = Excel.createExcel();
   // or
-  //var excel = Excel.decodeBytes(bytes);
+  // var excel = Excel.decodeBytes(bytes);
 
   ///
   ///
@@ -157,7 +157,7 @@ void main(List<String> args) {
 
   // Saving the file
 
-  String outputFile = "/Users/kawal/Desktop/git_projects/r.xlsx";
+  String outputFile = "excel_example_output.xlsx";
 
   //stopwatch.reset();
   List<int>? fileBytes = excel.save();

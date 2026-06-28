@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-06-28
+
+### Added
+- **Sheet Protection**: Added full programmatic support for worksheet protection, including password hashing (legacy 16-bit XOR algorithm) and custom protection settings (objects, scenarios, format cells, select locked/unlocked cells, etc.).
+- **Cell Style Locking**: Exposed `locked` and `hidden` boolean properties on `CellStyle` to control cell editability/visibility under sheet protection.
+- **Worksheet Protection Parsing & Serialization**: Added parser and serializer rules to correctly process and serialize worksheet protection states and cell locking XML elements, fully compatible with Microsoft Excel and Google Sheets.
+
 ## [2.0.2] - 2026-06-13
 
 ### Fixed

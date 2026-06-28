@@ -139,6 +139,8 @@ class _StylesParser {
         VerticalAlign verticalAlign = VerticalAlign.Bottom;
         TextWrapping? textWrapping;
         int rotation = 0;
+        bool? locked;
+        bool? hidden;
 
         final fontId = _getFontIndex(node, 'fontId');
         if (fontId < fontList.length) {
@@ -197,6 +199,16 @@ class _StylesParser {
               rotation = (double.tryParse(rotationString) ?? 0.0).floor();
             }
           });
+          node.findElements('protection').forEach((child) {
+            final lockedVal = child.getAttribute('locked');
+            if (lockedVal != null) {
+              locked = (lockedVal == '1' || lockedVal == 'true');
+            }
+            final hiddenVal = child.getAttribute('hidden');
+            if (hiddenVal != null) {
+              hidden = (hiddenVal == '1' || hiddenVal == 'true');
+            }
+          });
         }
 
         // getByNumFmtId returns null only for truly unknown custom IDs.
@@ -229,6 +241,8 @@ class _StylesParser {
           diagonalBorderUp: borderSet?.diagonalBorderUp ?? false,
           diagonalBorderDown: borderSet?.diagonalBorderDown ?? false,
           numberFormat: numFormat,
+          locked: locked,
+          hidden: hidden,
         ));
       });
     });

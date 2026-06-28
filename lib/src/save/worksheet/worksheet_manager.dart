@@ -41,6 +41,7 @@ class _WorksheetManager {
       'sheetFormatPr',
       'cols',
       'sheetData',
+      'sheetProtection',
       'mergeCells',
       'headerFooter',
       'drawing',
@@ -142,7 +143,9 @@ class _WorksheetManager {
     printedTags.add('sheetData');
 
     // Write common other elements in order
-    writeOriginal('sheetProtection');
+    if (sheetObject.sheetProtection.sheet) {
+      out.write(sheetObject.sheetProtection.toXmlString());
+    }
     writeOriginal('autoFilter');
     writeOriginal('sortState');
     writeOriginal('dataConsolidate');

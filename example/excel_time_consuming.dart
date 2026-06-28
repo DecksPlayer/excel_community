@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:path/path.dart';
 import 'package:excel_community/excel_community.dart';
 
 void main(List<String> args) {
@@ -26,7 +25,7 @@ void main(List<String> args) {
   print('Encoding executed in ${stopwatch.elapsed}');
   stopwatch.reset();
   if (fileBytes != null) {
-    File(join("/Users/kawal/Desktop/r2.xlsx"))
+    File("excel_time_consuming_output.xlsx")
       ..createSync(recursive: true)
       ..writeAsBytesSync(fileBytes);
   }

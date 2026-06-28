@@ -56,9 +56,21 @@
 <!-- Breaking changes moved to the end -->
 
 
+## 📖 Documentation & Guides
+
+For more details on how to use `excel_community`, see the following detailed guides:
+
+- 🚀 **[Getting Started Guide](doc/getting_started.md)**: Installation, reading/writing files, and saving across different platforms.
+- 🎨 **[Cell Styling & Operations Guide](doc/styling_and_operations.md)**: How to update cells, set custom fonts, borders, alignments, and number formats.
+- 📊 **[Working with Charts Guide](doc/charts.md)**: Inserting column, bar, line, area, pie, scatter, and radar charts.
+- 🌄 **[Working with Images Guide](doc/images.md)**: Embedding PNG, JPEG, SVG, WebP, and other image formats.
+- 🎨 **[Chart Color Strategy Guide](doc/chart_colors.md)**: Detailed description of colors, opacities, and accessibility options used in charts.
+- 🏗️ **[Architecture & Design Guide](doc/architecture.md)**: Overview of the clean code architecture implemented in the chart components.
+
 ## If you find this tool useful, please drop a ⭐️
 
 ## Performance & Benchmarks
+<details open>
 
 `excel_community` is highly optimized for large-scale operations. Below is a cold-start scaling comparison (measuring Build + Encode time on a fresh Dart VM) and an isolated active-process benchmark (1,000,000 cells) against the original `excel` package (v4.0.6) and `excel_plus` (v0.0.5).
 
@@ -89,9 +101,9 @@
 
 > [!TIP]
 > **Eager vs. Lazy Parsing**: `excel_community` eagerly parses sheets on load to guarantee direct $O(1)$ cell updates and stable identities, whereas `excel_plus` loads cells lazily. While lazy loading makes the initial decode faster, `excel_community` delivers unmatched performance for workloads requiring heavy read/write cell manipulations and ultra-fast encoding.
+</details>
 
-<details open>
-<summary><h2>📖 Usage</h2></summary>
+<details open><summary><h2>📖 Usage</h2></summary>
 
 <details open>
 <summary><h3>📄 Read XLSX File</h3></summary>
@@ -284,8 +296,8 @@ print('CellType: ' + switch(cell.value) {
   BoolCellValue() => 'bool',
   DoubleCellValue() => 'double',
   DateCellValue() => 'date',
-  TimeCellValue => 'time',
-  DateTimeCellValue => 'date with time',
+  TimeCellValue() => 'time',
+  DateTimeCellValue() => 'date with time',
 });
 
 ///
@@ -330,6 +342,8 @@ sheetObject.removeRow(80);
 | diagonalBorder     | the diagonal "border" of the cell                                                                                                       |
 | diagonalBorderUp   | boolean value indicating if the diagonal "border" should be displayed on the up diagonal                                                |
 | diagonalBorderDown | boolean value indicating if the diagonal "border" should be displayed on the down diagonal                                              |
+| locked             | boolean value indicating if the cell should be locked (read-only) when sheet protection is active, default is `true`                     |
+| hidden             | boolean value indicating if the cell formulas should be hidden when sheet protection is active, default is `false`                        |
 | numberFormat       | a subtype of ```NumFormat``` to style the CellValue displayed, use default formats such as ```NumFormat.standard_34``` or create your own using ```CustomNumericNumFormat('#,##0.00 \\m\\²')``` ```CustomDateTimeNumFormat('m/d/yy h:mm')```  ```CustomTimeNumFormat('mm:ss')``` |
 
 </details>
@@ -374,6 +388,57 @@ CellStyle cellStyle = CellStyle(
   topBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: 'FFFF0000'),
   bottomBorder: Border(borderStyle: BorderStyle.Medium, borderColorHex: 'FF0000FF'),
 );
+```
+
+</details>
+
+<details>
+<summary><h3>🔒 Sheet Protection & Cell Locking</h3></summary>
+
+Excel sheet protection lets you lock down specific cells to make them read-only, while keeping other cells editable for final users.
+
+* **Sheet-level Protection**: Activate protection on a sheet using a raw string password (which is automatically legacy 16-bit hashed).
+* **Cell-level Locking/Hiding**: In Excel, all cells are locked by default under a protected sheet. To allow users to edit specific cells, you must set `locked: false` on their `CellStyle`.
+
+```dart
+var excel = Excel.createExcel();
+var sheet = excel['Protected Report'];
+
+// 1. Protect the sheet programmatically with a password
+sheet.protect('password');
+
+// 2. Configure CellStyles for locked (default) and unlocked (editable) cells
+final headerStyle = CellStyle(
+  bold: true,
+  locked: true, // locked cells are read-only under protection
+);
+
+final editableStyle = CellStyle(
+  locked: false, // unlocked cells remain editable by users
+);
+
+// 3. Apply styles to cells
+sheet.updateCell(
+  CellIndex.indexByString("A1"),
+  TextCellValue("Locked Header"),
+  cellStyle: headerStyle,
+);
+
+sheet.updateCell(
+  CellIndex.indexByString("B1"),
+  IntCellValue(100),
+  cellStyle: editableStyle, // Users can edit this cell in Excel!
+);
+```
+
+You can also customize advanced protection flags on `sheet.sheetProtection`:
+```dart
+sheet.sheetProtection
+  ..sheet = true
+  ..objects = true
+  ..scenarios = true
+  ..formatCells = false // allows formatting cells even when protected
+  ..selectLockedCells = true;
 ```
 
 </details>
@@ -1074,6 +1139,7 @@ File(join('$directory/output_file_name.xlsx'))
   ..writeAsBytesSync(fileBytes);
 ```
 
+</details>
 </details>
 
 ## Credits

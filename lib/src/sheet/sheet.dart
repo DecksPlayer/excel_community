@@ -18,6 +18,7 @@ class Sheet {
   final List<Chart> _charts = [];
   final List<ExcelImage> _images = [];
   String? _drawingRId;
+  SheetProtection sheetProtection = SheetProtection();
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -32,7 +33,8 @@ class Sheet {
             isRTLVal: oldSheetObject._isRTL,
             headerFooter: oldSheetObject._headerFooter,
             charts: oldSheetObject._charts,
-            images: oldSheetObject._images);
+            images: oldSheetObject._images,
+            sheetProtection: oldSheetObject.sheetProtection);
 
   Sheet._(this._excel, this._sheet,
       {Map<int, Map<int, Data>>? sh,
@@ -46,7 +48,9 @@ class Sheet {
       Map<int, bool>? columnAutoFitVal,
       HeaderFooter? headerFooter,
       List<Chart>? charts,
-      List<ExcelImage>? images}) {
+      List<ExcelImage>? images,
+      SheetProtection? sheetProtection}) {
+    this.sheetProtection = sheetProtection ?? SheetProtection();
     _headerFooter = headerFooter;
     if (charts != null) {
       _charts.addAll(charts);
@@ -308,5 +312,12 @@ class Sheet {
     }
 
     return (newRowIndex, newColumnIndex);
+  }
+
+  bool get isProtected => sheetProtection.sheet;
+
+  void protect(String password) {
+    sheetProtection = SheetProtection(sheet: true);
+    sheetProtection.setPassword(password);
   }
 }

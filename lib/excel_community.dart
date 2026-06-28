@@ -1,7 +1,7 @@
 /// A community-maintained fork of the excel library for reading, creating, editing and updating excel sheets.
 ///
 /// Supports XLSX format with client and server-side compatibility, including chart support.
-library excel_community;
+library;
 
 import 'dart:convert';
 import 'dart:math';
@@ -78,6 +78,7 @@ part 'src/parser/worksheet_parser.dart';
 
 /// Sheet
 part 'src/sheet/sheet.dart';
+part 'src/sheet/sheet_protection.dart';
 part 'src/sheet/sheet_dimensions.dart';
 part 'src/sheet/sheet_spans.dart';
 part 'src/sheet/sheet_charts.dart';

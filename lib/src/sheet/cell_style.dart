@@ -23,6 +23,8 @@ class CellStyle extends Equatable {
   bool _diagonalBorderUp = false;
   bool _diagonalBorderDown = false;
   NumFormat numberFormat;
+  bool? locked;
+  bool? hidden;
 
   CellStyle({
     ExcelColor fontColorHex = ExcelColor.black,
@@ -46,6 +48,8 @@ class CellStyle extends Equatable {
     bool diagonalBorderUp = false,
     bool diagonalBorderDown = false,
     this.numberFormat = NumFormat.standard_0,
+    this.locked,
+    this.hidden,
   })  : _textWrapping = textWrapping,
         _bold = bold,
         _fontSize = fontSize,
@@ -89,6 +93,8 @@ class CellStyle extends Equatable {
     bool? diagonalBorderUpVal,
     bool? diagonalBorderDownVal,
     NumFormat? numberFormat,
+    bool? lockedVal,
+    bool? hiddenVal,
   }) {
     return CellStyle(
       fontColorHex: fontColorHexVal ?? this._fontColorHex.excelColor,
@@ -113,6 +119,8 @@ class CellStyle extends Equatable {
       diagonalBorderUp: diagonalBorderUpVal ?? this._diagonalBorderUp,
       diagonalBorderDown: diagonalBorderDownVal ?? this._diagonalBorderDown,
       numberFormat: numberFormat ?? this.numberFormat,
+      locked: lockedVal ?? this.locked,
+      hidden: hiddenVal ?? this.hidden,
     );
   }
 
@@ -387,5 +395,7 @@ class CellStyle extends Equatable {
         _diagonalBorderUp,
         _diagonalBorderDown,
         numberFormat,
+        locked,
+        hidden,
       ];
 }
