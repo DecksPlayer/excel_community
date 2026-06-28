@@ -4,8 +4,7 @@ version: 2.1.0
 homepage: https://github.com/decksplayer/excel_community
 repository: https://github.com/decksplayer/excel_community
 issue_tracker: https://github.com/decksplayer/excel_community/issues
-screenshots:
-  - description: "Excel Community logo"
+logo:
     path: assets/logo.png
 funding:
   - https://paypal.me/gonojuarez

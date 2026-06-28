@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutView extends StatelessWidget {
   const AboutView({super.key});
@@ -97,6 +98,45 @@ class AboutView extends StatelessWidget {
                   fontSize: 13,
                   height: 1.6,
                 ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _launchUrl('https://github.com/decksplayer/excel_community'),
+                    icon: const Icon(Icons.code_rounded, color: Colors.white, size: 18),
+                    label: const Text(
+                      'GitHub Repository',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF475569)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => _launchUrl('https://pub.dev/packages/excel_community'),
+                    icon: const Icon(Icons.launch_rounded, color: Colors.white, size: 18),
+                    label: const Text(
+                      'View on pub.dev',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00B0FF),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -273,5 +313,12 @@ class AboutView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _launchUrl(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
   }
 }

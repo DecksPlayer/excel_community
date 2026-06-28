@@ -229,11 +229,11 @@ class _WorksheetParser {
       } else if (event is xml_events.XmlTextEvent) {
         if (insideCell) {
           if (insideValue) {
-            valueText = (valueText ?? '') + event.text;
+            valueText = (valueText ?? '') + event.value;
           } else if (insideFormula) {
-            formulaText = (formulaText ?? '') + event.text;
+            formulaText = (formulaText ?? '') + event.value;
           } else if (insideInlineText) {
-            inlineText = (inlineText ?? '') + event.text;
+            inlineText = (inlineText ?? '') + event.value;
           }
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
