@@ -56,9 +56,21 @@
 <!-- Breaking changes moved to the end -->
 
 
+## 📖 Documentation & Guides
+
+For more details on how to use `excel_community`, see the following detailed guides:
+
+- 🚀 **[Getting Started Guide](doc/getting_started.md)**: Installation, reading/writing files, and saving across different platforms.
+- 🎨 **[Cell Styling & Operations Guide](doc/styling_and_operations.md)**: How to update cells, set custom fonts, borders, alignments, and number formats.
+- 📊 **[Working with Charts Guide](doc/charts.md)**: Inserting column, bar, line, area, pie, scatter, and radar charts.
+- 🌄 **[Working with Images Guide](doc/images.md)**: Embedding PNG, JPEG, SVG, WebP, and other image formats.
+- 🎨 **[Chart Color Strategy Guide](doc/chart_colors.md)**: Detailed description of colors, opacities, and accessibility options used in charts.
+- 🏗️ **[Architecture & Design Guide](doc/architecture.md)**: Overview of the clean code architecture implemented in the chart components.
+
 ## If you find this tool useful, please drop a ⭐️
 
 ## Performance & Benchmarks
+<details open>
 
 `excel_community` is highly optimized for large-scale operations. Below is a cold-start scaling comparison (measuring Build + Encode time on a fresh Dart VM) and an isolated active-process benchmark (1,000,000 cells) against the original `excel` package (v4.0.6) and `excel_plus` (v0.0.5).
 
@@ -89,9 +101,9 @@
 
 > [!TIP]
 > **Eager vs. Lazy Parsing**: `excel_community` eagerly parses sheets on load to guarantee direct $O(1)$ cell updates and stable identities, whereas `excel_plus` loads cells lazily. While lazy loading makes the initial decode faster, `excel_community` delivers unmatched performance for workloads requiring heavy read/write cell manipulations and ultra-fast encoding.
+</details>
 
-<details open>
-<summary><h2>📖 Usage</h2></summary>
+<details open><summary><h2>📖 Usage</h2></summary>
 
 <details open>
 <summary><h3>📄 Read XLSX File</h3></summary>
@@ -284,8 +296,8 @@ print('CellType: ' + switch(cell.value) {
   BoolCellValue() => 'bool',
   DoubleCellValue() => 'double',
   DateCellValue() => 'date',
-  TimeCellValue => 'time',
-  DateTimeCellValue => 'date with time',
+  TimeCellValue() => 'time',
+  DateTimeCellValue() => 'date with time',
 });
 
 ///
@@ -1074,6 +1086,7 @@ File(join('$directory/output_file_name.xlsx'))
   ..writeAsBytesSync(fileBytes);
 ```
 
+</details>
 </details>
 
 ## Credits

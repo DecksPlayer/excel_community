@@ -54,19 +54,6 @@ int lettersToNumeric(String letters) {
   }
   return sum;
 }
-
-
-int? _getCellNumber(XmlElement cell) {
-  var r = cell.getAttribute('r');
-  if (r == null) {
-    return null;
-  }
-  return _cellCoordsFromCellId(r).$2;
-}
-
-
-
-
 String _twoDigits(int n) {
   if (n > 9) {
     return '$n';

@@ -1,8 +1,12 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Border, BorderStyle;
-import 'package:excel_community/excel_community.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter/painting.dart' as fp;
+import 'package:flutter/services.dart';
+
+import 'models/section_detail.dart';
+import 'data/code_snippets.dart';
+import 'services/excel_generator.dart';
+import 'widgets/spreadsheet_preview.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,1615 +40,684 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _status = 'Press a button to generate an Excel with a chart.';
   bool _isGenerating = false;
+  SelectedSection _selectedSection = SelectedSection.columnChart;
 
-  Future<void> _generateSimpleExcel() async {
+  Future<void> _handleGeneration() async {
     setState(() {
       _isGenerating = true;
-      _status = 'Generating simple Excel (NO chart)...';
+      _status = 'Generating Excel...';
     });
 
     try {
-      var excel = Excel.createExcel();
-      var sheet = excel['Sheet1'];
-
-      // Add simple data
-      sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Name"));
-      sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Age"));
-      sheet.updateCell(CellIndex.indexByString("A2"), TextCellValue("Alice"));
-      sheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(30));
-      sheet.updateCell(CellIndex.indexByString("A3"), TextCellValue("Bob"));
-      sheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(25));
-
-      if (kIsWeb) {
-        if (kDebugMode) {
-          print('Generating simple Excel for Web...');
-        }
-
-        final bytes = excel.save(fileName: 'simple_no_chart.xlsx');
-
-        if (bytes != null && bytes.isNotEmpty) {
-          setState(() {
-            _status =
-                '✅ Simple Excel generated successfully!\n'
-                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
-                'The download should start automatically.\n'
-                '\n📥 Check your Downloads folder\n'
-                '📌 File: simple_no_chart.xlsx';
-          });
-
-          if (kDebugMode) {
-            print('✅ Simple Excel saved for web: ${bytes.length} bytes');
-          }
-        } else {
-          setState(() {
-            _status =
-                '❌ Error: Failed to generate Excel file.\n'
-                'The file is empty or could not be encoded.';
-          });
-        }
-      } else {
-        var bytes = excel.encode();
-
-        if (bytes == null) {
-          setState(() {
-            _status = 'Error: Failed to encode Excel file.';
-          });
-          return;
-        }
-
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Save Simple Excel File',
-          fileName: 'simple_no_chart.xlsx',
-          type: FileType.custom,
-          allowedExtensions: ['xlsx'],
-        );
-
-        if (outputFile != null) {
-          final file = File(outputFile);
-          await file.writeAsBytes(bytes);
-
-          final savedFileSize = await file.length();
-
-          setState(() {
-            _status =
-                '✅ Simple Excel saved successfully!\n'
-                'Location: $outputFile\n'
-                'Size: ${(savedFileSize / 1024).toStringAsFixed(2)} KB\n'
-                '\n📌 Open with Excel to verify it works';
-          });
-        } else {
-          setState(() {
-            _status = 'Save cancelled.';
-          });
-        }
+      String resultStatus;
+      switch (_selectedSection) {
+        case SelectedSection.simpleExcel:
+          resultStatus = await ExcelGenerator.generateSimpleExcel();
+          break;
+        case SelectedSection.imageEmbedding:
+          resultStatus = await ExcelGenerator.generateExcelWithImage();
+          break;
+        case SelectedSection.columnChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.column);
+          break;
+        case SelectedSection.lineChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.line);
+          break;
+        case SelectedSection.pieChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.pie);
+          break;
+        case SelectedSection.areaChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.area);
+          break;
+        case SelectedSection.doughnutChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.doughnut);
+          break;
+        case SelectedSection.radarChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.radar);
+          break;
+        case SelectedSection.barChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.bar);
+          break;
+        case SelectedSection.scatterChart:
+          resultStatus = await ExcelGenerator.generateExcelWithChart(ChartType.scatter);
+          break;
+        case SelectedSection.textStyles:
+          resultStatus = await ExcelGenerator.generateUnderlineStyles();
+          break;
+        case SelectedSection.numberFormats:
+          resultStatus = await ExcelGenerator.generateNumberFormats();
+          break;
+        case SelectedSection.allCharts:
+          resultStatus = await ExcelGenerator.generateAllCharts();
+          break;
+        case SelectedSection.fullDemo:
+          resultStatus = await ExcelGenerator.generateFullDemo();
+          break;
       }
+      setState(() {
+        _status = resultStatus;
+      });
     } catch (e, stackTrace) {
       setState(() {
         _status = 'Error: $e';
       });
       if (kDebugMode) {
-        print('Error: $e');
-        print('Stack trace: $stackTrace');
+        print('Error generating Excel: $e');
+        print(stackTrace);
       }
     } finally {
       setState(() {
         _isGenerating = false;
       });
-    }
-  }
-
-  Future<void> _generateExcelWithChart(ChartType type) async {
-    setState(() {
-      _isGenerating = true;
-      _status = 'Generating Excel with chart...';
-    });
-
-    try {
-      var excel = Excel.createExcel();
-      var sheet = excel['Sheet1'];
-
-      // Add Headers
-      sheet.updateCell(
-        CellIndex.indexByString("A1"),
-        TextCellValue("Category"),
-      );
-      sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Value 1"));
-      sheet.updateCell(CellIndex.indexByString("C1"), TextCellValue("Value 2"));
-
-      // Add Data
-      final data = [
-        ['Jan', 10, 15],
-        ['Feb', 20, 25],
-        ['Mar', 15, 30],
-        ['Apr', 25, 20],
-        ['May', 30, 35],
-        ['Jun', 20, 40],
-      ];
-
-      for (var i = 0; i < data.length; i++) {
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1),
-          TextCellValue(data[i][0] as String),
-        );
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1),
-          IntCellValue(data[i][1] as int),
-        );
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1),
-          IntCellValue(data[i][2] as int),
-        );
-      }
-
-      Chart chart;
-      final series = [
-        ChartSeries(
-          name: "Series 1",
-          categoriesRange: r"Sheet1!$A$2:$A$7",
-          valuesRange: r"Sheet1!$B$2:$B$7",
-        ),
-        ChartSeries(
-          name: "Series 2",
-          categoriesRange: r"Sheet1!$A$2:$A$7",
-          valuesRange: r"Sheet1!$C$2:$C$7",
-        ),
-      ];
-
-      final anchor = ChartAnchor.at(column: 5, row: 1, width: 10, height: 15);
-
-      switch (type) {
-        case ChartType.column:
-          chart = ColumnChart(
-            title: "Monthly Data (Column)",
-            series: series,
-            anchor: anchor,
-          );
-        case ChartType.bar:
-          chart = BarChart(
-            title: "Monthly Data (Bar)",
-            series: series,
-            anchor: anchor,
-          );
-        case ChartType.line:
-          chart = LineChart(
-            title: "Monthly Data (Line)",
-            series: series,
-            anchor: anchor,
-          );
-        case ChartType.area:
-          chart = AreaChart(
-            title: "Monthly Data (Area)",
-            series: series,
-            anchor: anchor,
-          );
-        case ChartType.pie:
-          chart = PieChart(
-            title: "Pie Chart Example",
-            series: [series[0]], // Pie chart usually only takes one series
-            anchor: anchor,
-          );
-        case ChartType.doughnut:
-          chart = DoughnutChart(
-            title: "Doughnut Chart Example",
-            series: [series[0]], // Doughnut chart usually only takes one series
-            anchor: anchor,
-          );
-        case ChartType.radar:
-          chart = RadarChart(
-            title: "Radar Chart Example",
-            series: series,
-            anchor: anchor,
-            filled: true,
-          );
-        case ChartType.scatter:
-          chart = ScatterChart(
-            title: "Scatter Chart Example",
-            series: series,
-            anchor: anchor,
-          );
-      }
-
-      sheet.addChart(chart);
-
-      if (kDebugMode) {
-        print('Chart added to sheet');
-      }
-
-      if (kIsWeb) {
-        if (kDebugMode) {
-          print('Generating Excel for Web...');
-        }
-
-        final bytes = excel.save(fileName: 'chart_example.xlsx');
-
-        if (bytes != null && bytes.isNotEmpty) {
-          setState(() {
-            _status =
-                '✅ Excel generated successfully!\n'
-                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
-                'The download should start automatically.\n'
-                '\n📥 Check your Downloads folder\n'
-                '📌 File: chart_example.xlsx';
-          });
-
-          if (kDebugMode) {
-            print('✅ Excel saved for web: ${bytes.length} bytes');
-          }
-        } else {
-          setState(() {
-            _status =
-                '❌ Error: Failed to generate Excel file for web.\n'
-                'The file is empty or could not be encoded.';
-          });
-
-          if (kDebugMode) {
-            print('❌ Error: excel.save() returned null or empty');
-          }
-        }
-      } else {
-        var bytes = excel.encode();
-
-        if (bytes == null) {
-          setState(() {
-            _status = 'Error: Failed to encode Excel file.';
-          });
-          return;
-        }
-
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Save Excel File',
-          fileName: 'chart_example.xlsx',
-          type: FileType.custom,
-          allowedExtensions: ['xlsx'],
-        );
-
-        if (outputFile != null) {
-          final file = File(outputFile);
-
-          await file.writeAsBytes(bytes);
-
-          // Verify the file was written correctly
-          final savedFileSize = await file.length();
-
-          setState(() {
-            _status =
-                '✅ Excel saved successfully!\n'
-                'Location: $outputFile\n'
-                'Size: ${(savedFileSize / 1024).toStringAsFixed(2)} KB\n'
-                '\n📌 IMPORTANT: Open with Excel, not a text editor!';
-          });
-
-          if (kDebugMode) {
-            print('✅ File saved: $outputFile');
-            print('📊 Bytes generated: ${bytes.length}');
-            print('💾 File size: $savedFileSize bytes');
-          }
-        } else {
-          setState(() {
-            _status = 'Save cancelled.';
-          });
-        }
-      }
-    } catch (e, stackTrace) {
-      setState(() {
-        _status = 'Error: $e';
-      });
-      if (kDebugMode) {
-        print('Error generating Excel with chart: $e');
-        print('Stack trace: $stackTrace');
-      }
-    } finally {
-      setState(() {
-        _isGenerating = false;
-      });
-    }
-  }
-
-  Future<void> _generateUnderlineStylesExample() async {
-    setState(() {
-      _isGenerating = true;
-      _status = 'Generating Underline & Styles Example...';
-    });
-
-    try {
-      var excel = Excel.createExcel();
-      var sheet = excel['Text Styles Demo'];
-      excel.delete('Sheet1');
-
-      // Título principal
-      sheet.updateCell(
-        CellIndex.indexByString('A1'),
-        TextCellValue('EJEMPLOS DE ESTILOS DE TEXTO'),
-        cellStyle: CellStyle(
-          bold: true,
-          fontSize: 16,
-          fontColorHex: ExcelColor.blue,
-          horizontalAlign: HorizontalAlign.Center,
-        ),
-      );
-      sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('D1'));
-
-      // === EJEMPLOS DE UNDERLINE ===
-      int row = 3;
-
-      // Header
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('UNDERLINE (SUBRAYADO)'),
-        cellStyle: CellStyle(
-          bold: true,
-          fontSize: 14,
-          backgroundColorHex: ExcelColor.grey200,
-        ),
-      );
-      sheet.merge(
-        CellIndex.indexByString('A$row'),
-        CellIndex.indexByString('D$row'),
-      );
-      row += 2;
-
-      // Sin subrayado
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Sin subrayado:'),
-        cellStyle: CellStyle(bold: true),
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('B$row'),
-        TextCellValue('Este texto NO tiene subrayado'),
-        cellStyle: CellStyle(underline: Underline.None, fontSize: 12),
-      );
-      row++;
-
-      // Subrayado simple
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Subrayado Simple:'),
-        cellStyle: CellStyle(bold: true),
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('B$row'),
-        TextCellValue('Este texto tiene subrayado SIMPLE'),
-        cellStyle: CellStyle(
-          underline: Underline.Single,
-          fontSize: 12,
-          fontColorHex: ExcelColor.blue,
-        ),
-      );
-      row++;
-
-      // Subrayado doble
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Subrayado Doble:'),
-        cellStyle: CellStyle(bold: true),
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('B$row'),
-        TextCellValue('Este texto tiene subrayado DOBLE'),
-        cellStyle: CellStyle(
-          underline: Underline.Double,
-          fontSize: 12,
-          fontColorHex: ExcelColor.red,
-        ),
-      );
-      row += 2;
-
-      // === COMBINACIONES ===
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('COMBINACIONES DE ESTILOS'),
-        cellStyle: CellStyle(
-          bold: true,
-          fontSize: 14,
-          backgroundColorHex: ExcelColor.grey200,
-        ),
-      );
-      sheet.merge(
-        CellIndex.indexByString('A$row'),
-        CellIndex.indexByString('D$row'),
-      );
-      row += 2;
-
-      // Bold + Underline
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Negrita + Subrayado Simple'),
-        cellStyle: CellStyle(
-          bold: true,
-          underline: Underline.Single,
-          fontSize: 12,
-        ),
-      );
-      row++;
-
-      // Italic + Underline
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Cursiva + Subrayado Doble'),
-        cellStyle: CellStyle(
-          italic: true,
-          underline: Underline.Double,
-          fontSize: 12,
-        ),
-      );
-      row++;
-
-      // Bold + Italic + Underline
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Negrita + Cursiva + Subrayado'),
-        cellStyle: CellStyle(
-          bold: true,
-          italic: true,
-          underline: Underline.Single,
-          fontSize: 12,
-          fontColorHex: ExcelColor.purple,
-        ),
-      );
-      row++;
-
-      // Strikethrough
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Texto Tachado (Strikethrough)'),
-        cellStyle: CellStyle(
-          strikethrough: true,
-          fontSize: 12,
-          fontColorHex: ExcelColor.red,
-        ),
-      );
-      row++;
-
-      // Strikethrough + Underline
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Tachado + Subrayado'),
-        cellStyle: CellStyle(
-          strikethrough: true,
-          underline: Underline.Single,
-          fontSize: 12,
-        ),
-      );
-      row++;
-
-      // All styles combined
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Negrita + Cursiva + Tachado + Subrayado'),
-        cellStyle: CellStyle(
-          bold: true,
-          italic: true,
-          strikethrough: true,
-          underline: Underline.Double,
-          fontSize: 12,
-          fontColorHex: ExcelColor.green,
-        ),
-      );
-      row++;
-
-      // Color de fondo + Underline
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Fondo Amarillo + Subrayado'),
-        cellStyle: CellStyle(
-          underline: Underline.Single,
-          fontSize: 12,
-          backgroundColorHex: ExcelColor.yellow,
-          fontColorHex: ExcelColor.black,
-        ),
-      );
-      row += 2;
-
-      // === TABLA CON BORDES ===
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('TABLA CON BORDES Y ESTILOS'),
-        cellStyle: CellStyle(
-          bold: true,
-          fontSize: 14,
-          backgroundColorHex: ExcelColor.grey200,
-        ),
-      );
-      sheet.merge(
-        CellIndex.indexByString('A$row'),
-        CellIndex.indexByString('D$row'),
-      );
-      row += 2;
-
-      // Encabezados de tabla
-      final headerStyle = CellStyle(
-        bold: true,
-        backgroundColorHex: ExcelColor.blue300,
-        fontColorHex: ExcelColor.white,
-        horizontalAlign: HorizontalAlign.Center,
-        leftBorder: Border(borderStyle: BorderStyle.Thin),
-        rightBorder: Border(borderStyle: BorderStyle.Thin),
-        topBorder: Border(borderStyle: BorderStyle.Thin),
-        bottomBorder: Border(borderStyle: BorderStyle.Thin),
-      );
-
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('Producto'),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('B$row'),
-        TextCellValue('Cantidad'),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('C$row'),
-        TextCellValue('Precio'),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('D$row'),
-        TextCellValue('Total'),
-        cellStyle: headerStyle,
-      );
-      row++;
-
-      // Filas de datos con diferentes estilos
-      final cellBorderStyle = CellStyle(
-        leftBorder: Border(borderStyle: BorderStyle.Thin),
-        rightBorder: Border(borderStyle: BorderStyle.Thin),
-        topBorder: Border(borderStyle: BorderStyle.Thin),
-        bottomBorder: Border(borderStyle: BorderStyle.Thin),
-      );
-
-      final data = [
-        ['Laptop', 2, 1200.50, 2401.00],
-        ['Mouse', 5, 25.99, 129.95],
-        ['Teclado', 3, 89.90, 269.70],
-      ];
-
-      for (var rowData in data) {
-        sheet.updateCell(
-          CellIndex.indexByString('A$row'),
-          TextCellValue(rowData[0] as String),
-          cellStyle: cellBorderStyle.copyWith(underlineVal: Underline.Single),
-        );
-        sheet.updateCell(
-          CellIndex.indexByString('B$row'),
-          IntCellValue(rowData[1] as int),
-          cellStyle: cellBorderStyle.copyWith(
-            horizontalAlignVal: HorizontalAlign.Center,
-          ),
-        );
-        sheet.updateCell(
-          CellIndex.indexByString('C$row'),
-          DoubleCellValue(rowData[2] as double),
-          cellStyle: cellBorderStyle.copyWith(
-            horizontalAlignVal: HorizontalAlign.Right,
-            numberFormat: NumFormat.standard_2,
-          ),
-        );
-        sheet.updateCell(
-          CellIndex.indexByString('D$row'),
-          DoubleCellValue(rowData[3] as double),
-          cellStyle: cellBorderStyle.copyWith(
-            horizontalAlignVal: HorizontalAlign.Right,
-            numberFormat: NumFormat.standard_2,
-            boldVal: true,
-            fontColorHexVal: ExcelColor.green,
-          ),
-        );
-        row++;
-      }
-
-      // Ajustar anchos de columna
-      sheet.setColumnWidth(0, 25.0);
-      sheet.setColumnWidth(1, 15.0);
-      sheet.setColumnWidth(2, 15.0);
-      sheet.setColumnWidth(3, 15.0);
-
-      // Guardar
-      if (kIsWeb) {
-        final bytes = excel.save(fileName: 'underline_styles_example.xlsx');
-        if (bytes != null && bytes.isNotEmpty) {
-          setState(() {
-            _status =
-                '✅ Underline & Styles Example generated successfully!\n'
-                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
-                'The download should start automatically.\n'
-                '\n📥 Check your Downloads folder\n'
-                '📌 File: underline_styles_example.xlsx\n'
-                '\n✅ Includes:\n'
-                '  • Underline (Single & Double)\n'
-                '  • Bold, Italic combinations\n'
-                '  • Colors and backgrounds\n'
-                '  • Table with borders\n'
-                '\n🔍 Open with Excel to verify all styles!';
-          });
-        } else {
-          setState(() {
-            _status = '❌ Error: Failed to generate file.';
-          });
-        }
-      } else {
-        var bytes = excel.encode();
-        if (bytes == null) {
-          setState(() => _status = 'Error: Failed to encode Excel file.');
-          return;
-        }
-
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Save Underline & Styles Example',
-          fileName: 'underline_styles_example.xlsx',
-          type: FileType.custom,
-          allowedExtensions: ['xlsx'],
-        );
-
-        if (outputFile != null) {
-          final file = File(outputFile);
-          await file.writeAsBytes(bytes);
-          final savedFileSize = await file.length();
-
-          setState(() {
-            _status =
-                '✅ Underline & Styles Example saved successfully!\n'
-                'Location: $outputFile\n'
-                'Size: ${(savedFileSize / 1024).toStringAsFixed(2)} KB\n'
-                '\n✅ Includes:\n'
-                '  • Underline (Single & Double)\n'
-                '  • Strikethrough\n'
-                '  • Bold, Italic combinations\n'
-                '  • Colors and backgrounds\n'
-                '  • Table with borders\n'
-                '\n🔍 Open with Excel to verify all styles!';
-          });
-        } else {
-          setState(() => _status = 'Save cancelled.');
-        }
-      }
-    } catch (e, stackTrace) {
-      setState(() => _status = 'Error: $e');
-      if (kDebugMode) {
-        print('Error generating underline example: $e');
-        print(stackTrace);
-      }
-    } finally {
-      setState(() => _isGenerating = false);
-    }
-  }
-
-  Future<void> _generateNumberFormatsExample() async {
-    setState(() {
-      _isGenerating = true;
-      _status = 'Generating Number Formats Example...';
-    });
-
-    try {
-      var excel = Excel.createExcel();
-      var sheet = excel['Number Formats'];
-      excel.delete('Sheet1');
-
-      // Title
-      sheet.updateCell(
-        CellIndex.indexByString('A1'),
-        TextCellValue('DEMO DE FORMATOS DE NÚMERO (BUILT-IN IDs)'),
-        cellStyle: CellStyle(
-          bold: true,
-          fontSize: 16,
-          fontColorHex: ExcelColor.blue,
-          horizontalAlign: HorizontalAlign.Center,
-        ),
-      );
-      sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('D1'));
-
-      int row = 3;
-
-      // Table Headers
-      final headerStyle = CellStyle(
-        bold: true,
-        backgroundColorHex: ExcelColor.blue300,
-        fontColorHex: ExcelColor.white,
-        horizontalAlign: HorizontalAlign.Center,
-        leftBorder: Border(borderStyle: BorderStyle.Thin),
-        rightBorder: Border(borderStyle: BorderStyle.Thin),
-        topBorder: Border(borderStyle: BorderStyle.Thin),
-        bottomBorder: Border(borderStyle: BorderStyle.Thin),
-      );
-
-      sheet.updateCell(
-        CellIndex.indexByString('A$row'),
-        TextCellValue('ID de Formato'),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('B$row'),
-        TextCellValue('Nombre / Descripción'),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('C$row'),
-        TextCellValue('Valor de Ejemplo'),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString('D$row'),
-        TextCellValue('Formateado'),
-        cellStyle: headerStyle,
-      );
-      row++;
-
-      final cellBorderStyle = CellStyle(
-        leftBorder: Border(borderStyle: BorderStyle.Thin),
-        rightBorder: Border(borderStyle: BorderStyle.Thin),
-        topBorder: Border(borderStyle: BorderStyle.Thin),
-        bottomBorder: Border(borderStyle: BorderStyle.Thin),
-      );
-
-      // We will define a list of formats to test
-      final formats = [
-        {
-          'id': 0,
-          'desc': 'General (Sin formato)',
-          'value': DoubleCellValue(1234.567),
-          'format': NumFormat.standard_0,
-        },
-        {
-          'id': 1,
-          'desc': 'Integer (0)',
-          'value': IntCellValue(1234),
-          'format': NumFormat.standard_1,
-        },
-        {
-          'id': 2,
-          'desc': 'Float (0.00)',
-          'value': DoubleCellValue(1234.567),
-          'format': NumFormat.standard_2,
-        },
-        {
-          'id': 3,
-          'desc': 'Integer con comas (#,##0)',
-          'value': IntCellValue(1234567),
-          'format': NumFormat.standard_3,
-        },
-        {
-          'id': 4,
-          'desc': 'Float con comas (#,##0.00)',
-          'value': DoubleCellValue(1234567.89),
-          'format': NumFormat.standard_4,
-        },
-        {
-          'id': 9,
-          'desc': 'Porcentaje (0%)',
-          'value': DoubleCellValue(0.756),
-          'format': NumFormat.standard_9,
-        },
-        {
-          'id': 10,
-          'desc': 'Porcentaje con decimales (0.00%)',
-          'value': DoubleCellValue(0.7563),
-          'format': NumFormat.standard_10,
-        },
-        {
-          'id': 11,
-          'desc': 'Científico (0.00E+00)',
-          'value': DoubleCellValue(123456789),
-          'format': NumFormat.standard_11,
-        },
-        {
-          'id': 14,
-          'desc': 'Fecha corta (mm-dd-yy)',
-          'value': DateCellValue(year: 2026, month: 5, day: 31),
-          'format': NumFormat.standard_14,
-        },
-        {
-          'id': 15,
-          'desc': 'Fecha larga (d-mmm-yy)',
-          'value': DateCellValue(year: 2026, month: 5, day: 31),
-          'format': NumFormat.standard_15,
-        },
-        {
-          'id': 18,
-          'desc': 'Hora 12h (h:mm AM/PM)',
-          'value': DateTimeCellValue(
-            year: 2026,
-            month: 5,
-            day: 31,
-            hour: 14,
-            minute: 30,
-            second: 0,
-          ),
-          'format': NumFormat.standard_18,
-        },
-        {
-          'id': 20,
-          'desc': 'Hora 24h (h:mm)',
-          'value': DateTimeCellValue(
-            year: 2026,
-            month: 5,
-            day: 31,
-            hour: 14,
-            minute: 30,
-            second: 0,
-          ),
-          'format': NumFormat.standard_20,
-        },
-        {
-          'id': 22,
-          'desc': 'Fecha y Hora (m/d/yy h:mm)',
-          'value': DateTimeCellValue(
-            year: 2026,
-            month: 5,
-            day: 31,
-            hour: 14,
-            minute: 30,
-            second: 0,
-          ),
-          'format': NumFormat.standard_22,
-        },
-        {
-          'id': 37,
-          'desc': 'Contabilidad entera con parént. (#,##0 ;(#,##0))',
-          'value': DoubleCellValue(-1234.5),
-          'format': NumFormat.standard_37,
-        },
-        {
-          'id': 38,
-          'desc': 'Contabilidad entera en rojo (#,##0 ;[Red](#,##0))',
-          'value': DoubleCellValue(-1234.5),
-          'format': NumFormat.standard_38,
-        },
-        {
-          'id': 39,
-          'desc': 'Contabilidad float con parént. (#,##0.00;(#,##0.00))',
-          'value': DoubleCellValue(-1234.56),
-          'format': NumFormat.standard_39,
-        },
-        {
-          'id': 40,
-          'desc': 'Contabilidad float en rojo (#,##0.00;[Red](#,##0.00))',
-          'value': DoubleCellValue(-1234.56),
-          'format': NumFormat.standard_40,
-        },
-        {
-          'id': 44,
-          'desc': 'Contabilidad (Moneda) con sangría (Accounting ID 44!)',
-          'value': DoubleCellValue(1234.56),
-          'format': NumFormat.standard_44,
-        },
-      ];
-
-      for (var f in formats) {
-        // ID Col A
-        sheet.updateCell(
-          CellIndex.indexByString('A$row'),
-          IntCellValue(f['id'] as int),
-          cellStyle: cellBorderStyle.copyWith(
-            horizontalAlignVal: HorizontalAlign.Center,
-          ),
-        );
-        // Desc Col B
-        sheet.updateCell(
-          CellIndex.indexByString('B$row'),
-          TextCellValue(f['desc'] as String),
-          cellStyle: cellBorderStyle,
-        );
-        // Raw Value Col C
-        sheet.updateCell(
-          CellIndex.indexByString('C$row'),
-          TextCellValue(f['value'].toString()),
-          cellStyle: cellBorderStyle,
-        );
-        // Formatted Value Col D
-        sheet.updateCell(
-          CellIndex.indexByString('D$row'),
-          f['value'] as CellValue,
-          cellStyle: cellBorderStyle.copyWith(
-            numberFormat: f['format'] as NumFormat,
-            horizontalAlignVal: HorizontalAlign.Right,
-          ),
-        );
-        row++;
-      }
-
-      sheet.setColumnWidth(0, 15.0);
-      sheet.setColumnWidth(1, 45.0);
-      sheet.setColumnWidth(2, 25.0);
-      sheet.setColumnWidth(3, 25.0);
-
-      // Save
-      if (kIsWeb) {
-        final bytes = excel.save(fileName: 'number_formats_example.xlsx');
-        if (bytes != null && bytes.isNotEmpty) {
-          setState(() {
-            _status =
-                '✅ Number Formats Example generated successfully!\n'
-                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
-                'The download should start automatically.\n'
-                '\n📥 Check your Downloads folder\n'
-                '📌 File: number_formats_example.xlsx\n'
-                '\n🔍 Open with Excel to verify implicit built-in formatting (including ID 44)!';
-          });
-        } else {
-          setState(() {
-            _status = '❌ Error: Failed to generate file.';
-          });
-        }
-      } else {
-        var bytes = excel.encode();
-        if (bytes == null) {
-          setState(() => _status = 'Error: Failed to encode Excel file.');
-          return;
-        }
-
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Save Number Formats Example',
-          fileName: 'number_formats_example.xlsx',
-          type: FileType.custom,
-          allowedExtensions: ['xlsx'],
-        );
-
-        if (outputFile != null) {
-          final file = File(outputFile);
-          await file.writeAsBytes(bytes);
-          final savedFileSize = await file.length();
-
-          setState(() {
-            _status =
-                '✅ Number Formats Example saved successfully!\n'
-                'Location: $outputFile\n'
-                'Size: ${(savedFileSize / 1024).toStringAsFixed(2)} KB\n'
-                '\n🔍 Open with Excel to verify implicit built-in formatting (including ID 44)!';
-          });
-        } else {
-          setState(() => _status = 'Save cancelled.');
-        }
-      }
-    } catch (e, stackTrace) {
-      setState(() => _status = 'Error: $e');
-      if (kDebugMode) {
-        print('Error generating number formats example: $e');
-        print(stackTrace);
-      }
-    } finally {
-      setState(() => _isGenerating = false);
-    }
-  }
-
-  Future<void> _generateFullExample() async {
-    setState(() {
-      _isGenerating = true;
-      _status = 'Generating Full Demo Excel...';
-    });
-
-    try {
-      var excel = Excel.createExcel();
-      // Rename default sheet
-      var sheetName = 'Full Demo';
-      excel.rename('Sheet1', sheetName);
-      var sheet = excel[sheetName];
-
-      // 1. Defining Styles with Borders and Colors
-      final headerStyle = CellStyle(
-        bold: true,
-        fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
-        backgroundColorHex: ExcelColor.fromHexString('#4472C4'),
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        leftBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-        rightBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-        topBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-        bottomBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-      );
-
-      final dataStyle = CellStyle(
-        leftBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#D9D9D9'),
-        ),
-        rightBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#D9D9D9'),
-        ),
-        topBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#D9D9D9'),
-        ),
-        bottomBorder: Border(
-          borderStyle: BorderStyle.Thin,
-          borderColorHex: ExcelColor.fromHexString('#D9D9D9'),
-        ),
-      );
-
-      final formulaStyle = CellStyle(
-        bold: true,
-        backgroundColorHex: ExcelColor.fromHexString('#E2EFDA'),
-        leftBorder: Border(
-          borderStyle: BorderStyle.Medium,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-        rightBorder: Border(
-          borderStyle: BorderStyle.Medium,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-        topBorder: Border(
-          borderStyle: BorderStyle.Medium,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-        bottomBorder: Border(
-          borderStyle: BorderStyle.Medium,
-          borderColorHex: ExcelColor.fromHexString('#000000'),
-        ),
-      );
-
-      final multiColorStyle = CellStyle(
-        bold: true,
-        horizontalAlign: HorizontalAlign.Center,
-        verticalAlign: VerticalAlign.Center,
-        leftBorder: Border(
-          borderStyle: BorderStyle.Thick,
-          borderColorHex: ExcelColor.fromHexString('#00FF00'),
-        ), // Green
-        rightBorder: Border(
-          borderStyle: BorderStyle.Thick,
-          borderColorHex: ExcelColor.fromHexString('#FFFF00'),
-        ), // Yellow
-        topBorder: Border(
-          borderStyle: BorderStyle.Thick,
-          borderColorHex: ExcelColor.fromHexString('#FF0000'),
-        ), // Red
-        bottomBorder: Border(
-          borderStyle: BorderStyle.Thick,
-          borderColorHex: ExcelColor.fromHexString('#0000FF'),
-        ), // Blue
-      );
-
-      // 2. Headers
-      sheet.updateCell(
-        CellIndex.indexByString("A1"),
-        TextCellValue("Month"),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("B1"),
-        TextCellValue("Revenue"),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("C1"),
-        TextCellValue("Expenses"),
-        cellStyle: headerStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("D1"),
-        TextCellValue("Profit"),
-        cellStyle: headerStyle,
-      );
-
-      // 3. Data and Formulas
-      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-      final revenues = [1000, 1200, 1500, 1300, 1700, 2000];
-      final expenses = [800, 900, 1000, 950, 1100, 1200];
-
-      for (var i = 0; i < months.length; i++) {
-        var row = i + 2;
-        sheet.updateCell(
-          CellIndex.indexByString("A$row"),
-          TextCellValue(months[i]),
-          cellStyle: dataStyle,
-        );
-        sheet.updateCell(
-          CellIndex.indexByString("B$row"),
-          IntCellValue(revenues[i]),
-          cellStyle: dataStyle,
-        );
-        sheet.updateCell(
-          CellIndex.indexByString("C$row"),
-          IntCellValue(expenses[i]),
-          cellStyle: dataStyle,
-        );
-        // Formula: Revenue - Expenses
-        sheet.updateCell(
-          CellIndex.indexByString("D$row"),
-          FormulaCellValue("B$row-C$row"),
-          cellStyle: dataStyle,
-        );
-      }
-
-      // 4. Totals with Formulas
-      var totalRow = months.length + 2;
-      sheet.updateCell(
-        CellIndex.indexByString("A$totalRow"),
-        TextCellValue("TOTAL"),
-        cellStyle: formulaStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("B$totalRow"),
-        FormulaCellValue("SUM(B2:B${totalRow - 1})"),
-        cellStyle: formulaStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("C$totalRow"),
-        FormulaCellValue("SUM(C2:C${totalRow - 1})"),
-        cellStyle: formulaStyle,
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("D$totalRow"),
-        FormulaCellValue("SUM(D2:D${totalRow - 1})"),
-        cellStyle: formulaStyle,
-      );
-
-      // 5. Multi-colored Border Demo
-      sheet.updateCell(
-        CellIndex.indexByString("A${totalRow + 2}"),
-        TextCellValue("Multi-colored Borders"),
-        cellStyle: multiColorStyle,
-      );
-      sheet.setColumnWidth(0, 25.0);
-
-      // 5. Chart using the data
-      final series = [
-        ChartSeries(
-          name: "Revenue",
-          categoriesRange: "'Full Demo'!\$A\$2:\$A\$7",
-          valuesRange: "'Full Demo'!\$B\$2:\$B\$7",
-        ),
-        ChartSeries(
-          name: "Profit",
-          categoriesRange: "'Full Demo'!\$A\$2:\$A\$7",
-          valuesRange: "'Full Demo'!\$D\$2:\$D\$7",
-        ),
-      ];
-
-      final chart = ColumnChart(
-        title: "Financial Overview",
-        series: series,
-        anchor: ChartAnchor.at(column: 6, row: 1, width: 10, height: 15),
-      );
-
-      sheet.addChart(chart);
-
-      // 6. Save and Download
-      if (kIsWeb) {
-        final bytes = excel.save(fileName: 'full_demo_example.xlsx');
-        if (bytes != null && bytes.isNotEmpty) {
-          setState(() {
-            _status =
-                '✅ Full Demo Excel generated successfully!\n'
-                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
-                'The download should start automatically.\n'
-                '📌 Includes: Formulas, Headers, Borders, and Charts.';
-          });
-        }
-      } else {
-        var bytes = excel.encode();
-        if (bytes == null) {
-          setState(() => _status = 'Error: Failed to encode Excel file.');
-          return;
-        }
-
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Save Full Demo Excel',
-          fileName: 'full_demo_example.xlsx',
-          type: FileType.custom,
-          allowedExtensions: ['xlsx'],
-        );
-
-        if (outputFile != null) {
-          final file = File(outputFile);
-          await file.writeAsBytes(bytes);
-          setState(() {
-            _status =
-                '✅ Full Demo Excel saved successfully!\n'
-                'Location: $outputFile\n'
-                '📌 Includes: Formulas, Headers, Borders, and Charts.';
-          });
-        }
-      }
-    } catch (e, stackTrace) {
-      setState(() => _status = 'Error: $e');
-      if (kDebugMode) {
-        print('Error generating full demo: $e');
-        print(stackTrace);
-      }
-    } finally {
-      setState(() => _isGenerating = false);
-    }
-  }
-
-  Future<void> _generateAllChartsExample() async {
-    setState(() {
-      _isGenerating = true;
-      _status = 'Generating Excel with ALL chart types...';
-    });
-
-    try {
-      var excel = Excel.createExcel();
-      var sheet = excel['All Charts Demo'];
-      excel.delete('Sheet1');
-
-      // Add Data for charts
-      sheet.updateCell(
-        CellIndex.indexByString("A1"),
-        TextCellValue("Category"),
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("B1"),
-        TextCellValue("Series A"),
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("C1"),
-        TextCellValue("Series B"),
-      );
-
-      final data = [
-        ['Q1', 10, 15],
-        ['Q2', 25, 20],
-        ['Q3', 15, 30],
-        ['Q4', 30, 25],
-      ];
-
-      for (var i = 0; i < data.length; i++) {
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1),
-          TextCellValue(data[i][0] as String),
-        );
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1),
-          IntCellValue(data[i][1] as int),
-        );
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1),
-          IntCellValue(data[i][2] as int),
-        );
-      }
-
-      final seriesMulti = [
-        ChartSeries(
-          name: "Series A",
-          categoriesRange: "'All Charts Demo'!\$A\$2:\$A\$5",
-          valuesRange: "'All Charts Demo'!\$B\$2:\$B\$5",
-        ),
-        ChartSeries(
-          name: "Series B",
-          categoriesRange: "'All Charts Demo'!\$A\$2:\$A\$5",
-          valuesRange: "'All Charts Demo'!\$C\$2:\$C\$5",
-        ),
-      ];
-      final seriesSingle = [seriesMulti[0]];
-
-      // Add all charts in a grid
-      // Row 1
-      sheet.addChart(
-        ColumnChart(
-          title: "Column Chart",
-          series: seriesMulti,
-          anchor: ChartAnchor.at(column: 5, row: 1, width: 8, height: 12),
-        ),
-      );
-      sheet.addChart(
-        BarChart(
-          title: "Bar Chart",
-          series: seriesMulti,
-          anchor: ChartAnchor.at(column: 14, row: 1, width: 8, height: 12),
-        ),
-      );
-
-      // Row 2
-      sheet.addChart(
-        LineChart(
-          title: "Line Chart",
-          series: seriesMulti,
-          anchor: ChartAnchor.at(column: 5, row: 14, width: 8, height: 12),
-        ),
-      );
-      sheet.addChart(
-        AreaChart(
-          title: "Area Chart",
-          series: seriesMulti,
-          anchor: ChartAnchor.at(column: 14, row: 14, width: 8, height: 12),
-        ),
-      );
-
-      // Row 3
-      sheet.addChart(
-        PieChart(
-          title: "Pie Chart",
-          series: seriesSingle,
-          anchor: ChartAnchor.at(column: 5, row: 27, width: 8, height: 12),
-        ),
-      );
-      sheet.addChart(
-        DoughnutChart(
-          title: "Doughnut Chart",
-          series: seriesSingle,
-          anchor: ChartAnchor.at(column: 14, row: 27, width: 8, height: 12),
-        ),
-      );
-
-      // Row 4
-      sheet.addChart(
-        RadarChart(
-          title: "Radar Chart",
-          series: seriesMulti,
-          anchor: ChartAnchor.at(column: 5, row: 40, width: 8, height: 12),
-          filled: true,
-        ),
-      );
-
-      // Scatter Chart Improvement: Needs numeric X and Y values to look good
-      sheet.updateCell(
-        CellIndex.indexByString("E1"),
-        TextCellValue("X Values"),
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("F1"),
-        TextCellValue("Y Values A"),
-      );
-      sheet.updateCell(
-        CellIndex.indexByString("G1"),
-        TextCellValue("Y Values B"),
-      );
-
-      final scatterData = [
-        [1.0, 5.0, 10.0],
-        [2.5, 12.0, 8.0],
-        [4.0, 18.0, 15.0],
-        [5.5, 25.0, 22.0],
-        [7.0, 30.0, 28.0],
-        [8.5, 45.0, 35.0],
-        [10.0, 55.0, 48.0],
-      ];
-
-      for (var i = 0; i < scatterData.length; i++) {
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i + 1),
-          DoubleCellValue(scatterData[i][0]),
-        );
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: i + 1),
-          DoubleCellValue(scatterData[i][1]),
-        );
-        sheet.updateCell(
-          CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: i + 1),
-          DoubleCellValue(scatterData[i][2]),
-        );
-      }
-
-      final scatterSeries = [
-        ChartSeries(
-          name: "Trend A",
-          categoriesRange: "'All Charts Demo'!\$E\$2:\$E\$8",
-          valuesRange: "'All Charts Demo'!\$F\$2:\$F\$8",
-        ),
-        ChartSeries(
-          name: "Trend B",
-          categoriesRange: "'All Charts Demo'!\$E\$2:\$E\$8",
-          valuesRange: "'All Charts Demo'!\$G\$2:\$G\$8",
-        ),
-      ];
-
-      sheet.addChart(
-        ScatterChart(
-          title: "Scatter Chart (XY Relationship)",
-          series: scatterSeries,
-          anchor: ChartAnchor.at(column: 14, row: 40, width: 8, height: 12),
-        ),
-      );
-
-      if (kIsWeb) {
-        final bytes = excel.save(fileName: 'all_charts_demo.xlsx');
-        if (bytes != null && bytes.isNotEmpty) {
-          setState(() {
-            _status =
-                '✅ Excel with ALL charts generated successfully!\n'
-                'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
-                'The download should start automatically.\n'
-                '📌 Includes: Column, Bar, Line, Area, Pie, Doughnut, Radar, Scatter.';
-          });
-        }
-      } else {
-        var bytes = excel.encode();
-        if (bytes != null) {
-          String? outputFile = await FilePicker.platform.saveFile(
-            dialogTitle: 'Save All Charts Excel',
-            fileName: 'all_charts_demo.xlsx',
-            type: FileType.custom,
-            allowedExtensions: ['xlsx'],
-          );
-          if (outputFile != null) {
-            await File(outputFile).writeAsBytes(bytes);
-            setState(() {
-              _status =
-                  '✅ Excel with ALL charts saved successfully!\n'
-                  'Location: $outputFile';
-            });
-          }
-        }
-      }
-    } catch (e, stackTrace) {
-      setState(() => _status = 'Error: $e');
-      if (kDebugMode) {
-        print('Error generating all charts: $e');
-        print(stackTrace);
-      }
-    } finally {
-      setState(() => _isGenerating = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 950;
+    final detail = _getSectionDetail(_selectedSection);
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC), // Slate 50
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: const Color(0xFF0F172A), // Slate 900
+        title: Row(
+          children: [
+            const Icon(Icons.table_view, color: Color(0xFF10B981), size: 24),
+            const SizedBox(width: 8),
+            Text(
+              widget.title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          if (kIsWeb)
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B), // Slate 800
+                  borderRadius: BorderRadius.circular(20),
+                  border: fp.Border.all(color: Colors.white10),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.language, size: 14, color: Color(0xFF10B981)),
+                    SizedBox(width: 6),
+                    Text(
+                      'Wasm Web Optimized',
+                      style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Icon(Icons.table_chart, size: 80, color: Colors.blue),
-                const SizedBox(height: 20),
-                Text(
-                  'Excel Charts Demo',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  _status,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 40),
-                if (_isGenerating)
-                  const CircularProgressIndicator()
-                else ...[
-                  ElevatedButton.icon(
-                    onPressed: _generateSimpleExcel,
-                    icon: const Icon(Icons.table_view),
-                    label: const Text('Test: Simple Excel (No Chart)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade100,
+      drawer: isDesktop ? null : Drawer(
+        child: _buildSidebar(context),
+      ),
+      body: Row(
+        children: [
+          if (isDesktop)
+            Container(
+              width: 260,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: fp.Border(right: fp.BorderSide(color: Color(0xFFE2E8F0))),
+              ),
+              child: _buildSidebar(context),
+            ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderCard(context, detail),
+                  const SizedBox(height: 24),
+                  if (isDesktop)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 3, child: _buildCodeViewCard(context, detail)),
+                        const SizedBox(width: 24),
+                        Expanded(flex: 2, child: _buildPreviewCard(context, detail)),
+                      ],
+                    )
+                  else ...[
+                    _buildPreviewCard(context, detail),
+                    const SizedBox(height: 24),
+                    _buildCodeViewCard(context, detail),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebar(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+          child: Text(
+            'EXCEL SPREADSHEETS',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF94A3B8), // Slate 400
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            children: [
+              _buildSidebarItem(SelectedSection.simpleExcel, 'Quick Start (No Chart)', Icons.bolt, Colors.amber),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
+                child: Text('Chart Types', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF64748B))),
+              ),
+              _buildSidebarItem(SelectedSection.columnChart, 'Column Chart', Icons.bar_chart, Colors.blue),
+              _buildSidebarItem(SelectedSection.lineChart, 'Line Chart', Icons.show_chart, Colors.orange),
+              _buildSidebarItem(SelectedSection.pieChart, 'Pie Chart', Icons.pie_chart, Colors.red),
+              _buildSidebarItem(SelectedSection.areaChart, 'Area Chart', Icons.area_chart, Colors.purple),
+              _buildSidebarItem(SelectedSection.doughnutChart, 'Doughnut Chart', Icons.donut_large, Colors.teal),
+              _buildSidebarItem(SelectedSection.radarChart, 'Radar Chart', Icons.radar, Colors.indigo),
+              _buildSidebarItem(SelectedSection.barChart, 'Bar Chart', Icons.horizontal_split, Colors.pink),
+              _buildSidebarItem(SelectedSection.scatterChart, 'Scatter Chart', Icons.scatter_plot, Colors.deepOrange),
+              _buildSidebarItem(SelectedSection.imageEmbedding, 'Image Embedding', Icons.image_outlined, Colors.teal),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
+                child: Text('Style & Formatting', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF64748B))),
+              ),
+              _buildSidebarItem(SelectedSection.textStyles, 'Text Underlines & Fills', Icons.format_underlined, Colors.deepPurple),
+              _buildSidebarItem(SelectedSection.numberFormats, 'Number Formatting', Icons.pin, Colors.teal),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
+                child: Text('Demonstrations', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF64748B))),
+              ),
+              _buildSidebarItem(SelectedSection.allCharts, 'All 8 Charts Grid', Icons.grid_view, Colors.blueGrey),
+              _buildSidebarItem(SelectedSection.fullDemo, 'Full Sheet Report', Icons.star, Colors.amber.shade700),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSidebarItem(SelectedSection section, String label, IconData icon, Color color) {
+    final isSelected = _selectedSection == section;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      decoration: BoxDecoration(
+        color: isSelected ? color.withOpacity(0.08) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        onTap: () {
+          setState(() {
+            _selectedSection = section;
+          });
+          if (Scaffold.of(context).isDrawerOpen) {
+            Navigator.pop(context);
+          }
+        },
+        leading: Icon(
+          icon,
+          color: isSelected ? color : const Color(0xFF64748B),
+          size: 18,
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF475569),
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 13,
+          ),
+        ),
+        dense: true,
+        visualDensity: const VisualDensity(vertical: -2),
+      ),
+    );
+  }
+
+  Widget _buildHeaderCard(BuildContext context, SectionDetail detail) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: detail.themeColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(detail.icon, color: detail.themeColor, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    detail.title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Excel with Charts:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _generateExcelWithChart(ChartType.column),
-                    icon: const Icon(Icons.bar_chart),
-                    label: const Text('Generate Column Chart'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _generateExcelWithChart(ChartType.line),
-                    icon: const Icon(Icons.show_chart),
-                    label: const Text('Generate Line Chart'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _generateExcelWithChart(ChartType.pie),
-                    icon: const Icon(Icons.pie_chart),
-                    label: const Text('Generate Pie Chart'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _generateExcelWithChart(ChartType.area),
-                    icon: const Icon(Icons.area_chart),
-                    label: const Text('Generate Area Chart'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () =>
-                        _generateExcelWithChart(ChartType.doughnut),
-                    icon: const Icon(Icons.donut_small),
-                    label: const Text('Generate Doughnut Chart'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _generateExcelWithChart(ChartType.radar),
-                    icon: const Icon(Icons.radar),
-                    label: const Text('Generate Radar Chart'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _generateExcelWithChart(ChartType.bar),
-                    icon: const Icon(Icons.horizontal_split),
-                    label: const Text('Generate Bar Chart'),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () => _generateExcelWithChart(ChartType.scatter),
-                    icon: const Icon(Icons.scatter_plot),
-                    label: const Text('Generate Scatter Chart'),
-                  ),
-                  const SizedBox(height: 30),
-                  const Divider(),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Special Examples:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: _generateUnderlineStylesExample,
-                    icon: const Icon(
-                      Icons.format_underlined,
-                      color: Colors.deepPurple,
-                    ),
-                    label: const Text('Generate Underline & Text Styles'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple.shade50,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: _generateNumberFormatsExample,
-                    icon: const Icon(Icons.pin, color: Colors.teal),
-                    label: const Text('GENERATE NUMBER FORMATS (Built-in IDs)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal.shade50,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: _generateAllChartsExample,
-                    icon: const Icon(Icons.grid_view, color: Colors.indigo),
-                    label: const Text('GENERATE ALL CHARTS EXCEL'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo.shade50,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 15,
-                      ),
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: _generateFullExample,
-                    icon: const Icon(Icons.star, color: Colors.amber),
-                    label: const Text('GENERATE FULL DEMO (Everything)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade50,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 15,
-                      ),
-                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 4),
+                  Text(
+                    detail.description,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF64748B),
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: _isGenerating ? null : _handleGeneration,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: detail.themeColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                elevation: 0,
+              ),
+              icon: _isGenerating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Icon(Icons.file_download_outlined, size: 16),
+              label: Text(
+                _isGenerating ? 'Generating...' : 'Generate Spreadsheet',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }
+  Widget _buildCodeViewCard(BuildContext context, SectionDetail detail) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      color: const Color(0xFF0F172A), // Slate 900
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.code, color: Color(0xFF38BDF8), size: 18), // Sky 400
+                    SizedBox(width: 8),
+                    Text(
+                      'Dart Source Code',
+                      style: TextStyle(
+                        color: Color(0xFFE2E8F0),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: detail.codeSnippet));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Color(0xFF10B981)),
+                            SizedBox(width: 8),
+                            Text('Code copied to clipboard successfully!'),
+                          ],
+                        ),
+                        backgroundColor: Color(0xFF1E293B),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 13, color: Color(0xFF38BDF8)),
+                  label: const Text(
+                    'Copy Code',
+                    style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(color: Colors.white10),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF020617), // Slate 950
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SelectableText(
+                detail.codeSnippet,
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  color: Color(0xFFF1F5F9),
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPreviewCard(BuildContext context, SectionDetail detail) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.remove_red_eye_outlined, color: detail.themeColor, size: 18),
+                const SizedBox(width: 8),
+                const Text(
+                  'Sheet Preview & Details',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Divider(color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 6),
+            const Text(
+              'Spreadsheet highlights:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF475569)),
+            ),
+            const SizedBox(height: 6),
+            Column(
+              children: detail.highlights.map((h) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.check_circle_outline, size: 14, color: Color(0xFF10B981)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          h,
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Generation Status:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF475569)),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
+                border: fp.Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Text(
+                _status,
+                style: const TextStyle(fontSize: 11, color: Color(0xFF334155), height: 1.3),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Mock Spreadsheet Anchoring View:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF475569)),
+            ),
+            const SizedBox(height: 10),
+            const Divider(color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 12),
+            SpreadsheetPreview(selectedSection: _selectedSection, detail: detail),
+          ],
+        ),
+      ),
+    );
+  }
+
+  SectionDetail _getSectionDetail(SelectedSection section) {
+    switch (section) {
+      case SelectedSection.simpleExcel:
+        return SectionDetail(
+          title: 'Quick Start Excel',
+          description: 'A basic Excel spreadsheet containing formatted texts and integer values without any charts.',
+          icon: Icons.bolt,
+          themeColor: Colors.amber,
+          highlights: [
+            'Basic single-sheet workbook creation',
+            'Supports Text and Integer cell values',
+            'Fast saving using File (Desktop) or auto-downloads (Web)',
+          ],
+          codeSnippet: simpleExcelSnippet,
+        );
+      case SelectedSection.columnChart:
+        return SectionDetail(
+          title: 'Column Chart',
+          description: 'Vertical clustered columns for category data comparison.',
+          icon: Icons.bar_chart,
+          themeColor: Colors.blue,
+          highlights: [
+            'Professional standard Excel Column charts',
+            'Compliance with ECMA-376 OOXML standards',
+            'Supports multiple data series overlay',
+          ],
+          codeSnippet: columnChartSnippet,
+        );
+      case SelectedSection.lineChart:
+        return SectionDetail(
+          title: 'Line Chart',
+          description: 'A trend display over continuous intervals with circular series markers.',
+          icon: Icons.show_chart,
+          themeColor: Colors.orange,
+          highlights: [
+            'Thick line borders (28575 EMUs) for modern aesthetics',
+            'Circular data markers matching series line colors',
+            'Perfect for time-series and continuous trends',
+          ],
+          codeSnippet: lineChartSnippet,
+        );
+      case SelectedSection.pieChart:
+        return SectionDetail(
+          title: 'Pie Chart',
+          description: 'Circular slice distribution demonstrating relative percentages.',
+          icon: Icons.pie_chart,
+          themeColor: Colors.red,
+          highlights: [
+            'Supports single series segment visualization',
+            'Shuffles standard 20-color palette for unique slices',
+            'Ensures no repeated colors within the same pie chart',
+          ],
+          codeSnippet: pieChartSnippet,
+        );
+      case SelectedSection.areaChart:
+        return SectionDetail(
+          title: 'Area Chart',
+          description: 'Filled area series overlay showing accumulation over categories.',
+          icon: Icons.area_chart,
+          themeColor: Colors.purple,
+          highlights: [
+            'Semi-transparent fills (50% opacity) for overlapping series visibility',
+            'Opaque contours (90% opacity, 2.25pt thick) defining series paths',
+            'Clean vector output for modern reporting sheets',
+          ],
+          codeSnippet: areaChartSnippet,
+        );
+      case SelectedSection.doughnutChart:
+        return SectionDetail(
+          title: 'Doughnut Chart',
+          description: 'A circular chart with a central cutout, displaying part-to-whole data.',
+          icon: Icons.donut_large,
+          themeColor: Colors.teal,
+          highlights: [
+            'Built-in hole size set to 50% for optimal readability',
+            'Shuffled colors from a professional 20-color palette',
+            'Compatible with Microsoft Excel, Excel 365, and Google Sheets',
+          ],
+          codeSnippet: doughnutChartSnippet,
+        );
+      case SelectedSection.radarChart:
+        return SectionDetail(
+          title: 'Radar Chart',
+          description: 'Spider chart showing multi-variable comparison in a radial layout.',
+          icon: Icons.radar,
+          themeColor: Colors.indigo,
+          highlights: [
+            'Filled radar series support with 45% transparency layers',
+            'Bold contour boundary lines with 85% opacity settings',
+            'Clean radial axes grid generation compliant with OOXML standards',
+          ],
+          codeSnippet: radarChartSnippet,
+        );
+      case SelectedSection.barChart:
+        return SectionDetail(
+          title: 'Bar Chart',
+          description: 'Horizontal clustered bars ideal for displaying descriptive labels.',
+          icon: Icons.horizontal_split,
+          themeColor: Colors.pink,
+          highlights: [
+            'Horizontal clustered columns formatting',
+            'Consistent 12-color rotating series palette',
+            'Thin borders matching series color fills (0.75pt)',
+          ],
+          codeSnippet: barChartSnippet,
+        );
+      case SelectedSection.scatterChart:
+        return SectionDetail(
+          title: 'Scatter Chart',
+          description: 'XY plotting representing numerical values mapping correlations.',
+          icon: Icons.scatter_plot,
+          themeColor: Colors.deepOrange,
+          highlights: [
+            'Requires both numeric X values and numeric Y values',
+            'Solid data points highlighted by a clean white outer halo',
+            'Aids readability when dealing with heavy overlapping point maps',
+          ],
+          codeSnippet: scatterChartSnippet,
+        );
+      case SelectedSection.imageEmbedding:
+        return SectionDetail(
+          title: 'Image Embedding',
+          description: 'Embed PNG, JPEG, SVG, WebP, and other image formats into your worksheets.',
+          icon: Icons.image_outlined,
+          themeColor: Colors.green,
+          highlights: [
+            'Embed images with custom pixel dimensions',
+            'Supports positioning using column/row coordinates and EMU offsets',
+            'Compatible with PNG, JPEG, BMP, GIF, SVG, and WebP formats',
+          ],
+          codeSnippet: imageEmbeddingSnippet,
+        );
+      case SelectedSection.textStyles:
+        return SectionDetail(
+          title: 'Text Styles & Underlines',
+          description: 'Format fonts, sizes, italic/bold, colors, backgrounds, strikethrough, and underlines.',
+          icon: Icons.format_underlined,
+          themeColor: Colors.deepPurple,
+          highlights: [
+            'Underline options: Underline.None, Underline.Single, Underline.Double',
+            'Font family selection (Arial, Calibri, Comic Sans, etc.)',
+            'Text strikethrough styling and color preservation',
+          ],
+          codeSnippet: textStylesSnippet,
+        );
+      case SelectedSection.numberFormats:
+        return SectionDetail(
+          title: 'Number Formatting',
+          description: 'Built-in standard and custom number formatting rules.',
+          icon: Icons.pin,
+          themeColor: Colors.teal,
+          highlights: [
+            'Integrates built-in ECMA-376 Standard formats (0-44)',
+            'Formats float decimals, scientific exponents, percentages, currencies',
+            'Accounting currency values with indent alignment support (ID 44)',
+          ],
+          codeSnippet: numberFormatsSnippet,
+        );
+      case SelectedSection.allCharts:
+        return SectionDetail(
+          title: 'All Charts Grid',
+          description: 'A composite grid layout showing all 8 supported charts side-by-side.',
+          icon: Icons.grid_view,
+          themeColor: Colors.blueGrey,
+          highlights: [
+            'Grid sheet layout positioning charts dynamically',
+            'Leverages distinct custom styles for each chart builder type',
+            'Full compliance validation under a single workbook relationship XML',
+          ],
+          codeSnippet: allChartsSnippet,
+        );
+      case SelectedSection.fullDemo:
+        return SectionDetail(
+          title: 'Full Sheet Demo',
+          description: 'A complete real-world reporting sheet with headers, custom cell styles, formulas, and charts.',
+          icon: Icons.star,
+          themeColor: Colors.amber.shade700,
+          highlights: [
+            'Alternating row styles with customized thin grid borders',
+            'Emits Excel formulas: SUM(A1:A5) and arithmetic equations',
+            'Anchors column charts automatically inside a styled spreadsheet',
+          ],
+          codeSnippet: fullDemoSnippet,
+        );
+    }
+  }
+}
