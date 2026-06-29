@@ -174,6 +174,13 @@ class Sidebar extends StatelessWidget {
                 Icons.view_headline_outlined,
                 Colors.indigo,
               ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.multiFreezePanes,
+                'Multi-Sheet Freeze Panes',
+                Icons.layers_outlined,
+                Colors.indigo,
+              ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
                 child: Text(

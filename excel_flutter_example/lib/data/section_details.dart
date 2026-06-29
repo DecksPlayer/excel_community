@@ -31,8 +31,7 @@ SectionDetail getSectionDetail(SelectedSection section) {
     case SelectedSection.columnChart:
       return SectionDetail(
         title: 'Column Chart',
-        description:
-            'Vertical clustered columns for category data comparison.',
+        description: 'Vertical clustered columns for category data comparison.',
         icon: Icons.bar_chart,
         themeColor: Colors.blue,
         highlights: [
@@ -236,6 +235,20 @@ SectionDetail getSectionDetail(SelectedSection section) {
           'Keeps headers/first columns fixed in place during vertical & horizontal scrolling',
         ],
         codeSnippet: freezePanesSnippet,
+      );
+    case SelectedSection.multiFreezePanes:
+      return SectionDetail(
+        title: 'Multi-Worksheet Freeze Panes',
+        description:
+            'Apply different freeze pane configurations per sheet in the same workbook. Demonstrates how Sales, Inventory, Customers, and Logs each get their own <pane> element.',
+        icon: Icons.layers_outlined,
+        themeColor: Colors.indigo,
+        highlights: [
+          'Four sheets in a single workbook, each with its own frozenRows / frozenColumns',
+          'Combines all four modes: rows+cols, rows only, columns only, and no freeze',
+          'Round-trip verified: decoding the file restores every freeze pane',
+        ],
+        codeSnippet: multiFreezePanesSnippet,
       );
     case SelectedSection.allCharts:
       return SectionDetail(

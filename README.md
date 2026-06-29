@@ -42,6 +42,7 @@
 - ✅ **Images**: Embed PNG, JPEG, BMP, GIF, TIFF, WMF, EMF, SVG, WebP and ICO images
 - ✅ **Cell Operations**: Merge cells, insert/delete rows and columns
 - ✅ **Sheet Management**: Create, copy, rename, delete sheets
+- ✅ **Freeze Panes**: Lock rows and/or columns so headers and key columns stay visible while scrolling (single sheet or multi-sheet workbooks)
 - ✅ **Cross-platform**: Works on Flutter Web, Android, iOS, Desktop
 
 ## Road-map:
@@ -440,6 +441,100 @@ sheet.sheetProtection
   ..formatCells = false // allows formatting cells even when protected
   ..selectLockedCells = true;
 ```
+
+</details>
+
+<details>
+<summary><h3>🧊 Freeze Panes</h3></summary>
+
+Freeze Panes lets you keep one or more rows (typically a header) and/or one or more columns (typically a key/identifier column) **always visible** while the user scrolls through the rest of the sheet. `excel_community` exposes this through two simple, nullable properties on `Sheet`:
+
+- `sheet.frozenRows` — number of rows frozen at the **top**.
+- `sheet.frozenColumns` — number of columns frozen on the **left**.
+
+Assign `null` (or `0`) to either property to disable that part of the freeze. The values are serialized to OOXML on save and fully restored on decode, so a freeze written by Excel and one written by `excel_community` are interchangeable.
+
+#### Basic usage
+
+```dart
+var excel = Excel.createExcel();
+var sheet = excel['Sales Report'];
+
+// Lock the header row (row 1) and the product column (column A).
+sheet.frozenRows = 1;
+sheet.frozenColumns = 1;
+
+// You can also freeze only rows, only columns, or nothing:
+sheet.frozenRows = 2;          // freeze the first 2 rows
+sheet.frozenColumns = null;    // no column freeze
+
+// sheet.frozenRows = null;     // remove the freeze entirely
+// sheet.frozenColumns = 3;     // freeze only the first 3 columns
+
+excel.save(fileName: 'sales_report.xlsx');
+```
+
+Under the hood, the writer emits a `<sheetView>` block that is strictly OOXML-compliant — including a `tabSelected="1"` on a single active sheet and `<selection>` entries that match the active panes (so Excel does not show the "recover as much as we can" dialog):
+
+```xml
+<sheetViews>
+  <sheetView tabSelected="1" workbookViewId="0">
+    <pane xSplit="1" ySplit="1" topLeftCell="B2"
+          activePane="bottomRight" state="frozen"/>
+    <selection pane="topRight"    activeCell="B2" sqref="B2"/>
+    <selection pane="bottomLeft"  activeCell="B2" sqref="B2"/>
+    <selection pane="bottomRight" activeCell="B2" sqref="B2"/>
+  </sheetView>
+</sheetViews>
+```
+
+For split-only modes the writer automatically picks the right `activePane`:
+
+| `frozenRows` | `frozenColumns` | `activePane` emitted | Selections emitted |
+| :--- | :--- | :--- | :--- |
+| `> 0` | `> 0` | `bottomRight` | `topRight`, `bottomLeft`, `bottomRight` |
+| `> 0` | `null` / `0` | `bottomLeft` | `bottomLeft` |
+| `null` / `0` | `> 0` | `topRight` | `topRight` |
+| `null` / `0` | `null` / `0` | _(no `<pane>` emitted)_ | _(self-closing `<sheetView>`)_ |
+
+#### Multi-sheet workbooks (different freezes per sheet)
+
+A common requirement is to apply a **different freeze configuration to each sheet** of the same workbook. Just assign the properties per sheet:
+
+```dart
+var excel = Excel.createExcel();
+excel.delete('Sheet1');
+
+final sales     = excel['Sales'];
+final inventory = excel['Inventory'];
+final customers = excel['Customers'];
+final logs      = excel['Logs'];
+
+// Populate each sheet with its data...
+// (omitted here for brevity)
+
+// Then assign a different freeze to each one.
+sales.frozenRows     = 1; sales.frozenColumns     = 1;     // rows + cols
+inventory.frozenRows = 2; inventory.frozenColumns = null; // rows only
+customers.frozenRows = null; customers.frozenColumns = 2;  // cols only
+logs.frozenRows = null; logs.frozenColumns = null;         // no freeze
+
+excel.save(fileName: 'multi_freeze_panes.xlsx');
+
+// Round-trip check:
+final reopened = Excel.decodeBytes(excel.encode()!);
+assert(reopened['Sales'].frozenRows == 1);
+assert(reopened['Inventory'].frozenColumns == null);
+assert(reopened['Customers'].frozenColumns == 2);
+assert(reopened['Logs'].frozenRows == null);
+```
+
+Run the full examples to see this in action:
+
+- `example/excel_freeze_panes.dart` — basic freeze (rows+cols, rows only, cols only, none).
+- `example/excel_freeze_panes_multisheet.dart` — multi-sheet workbook with one freeze per sheet and a round-trip assertion.
+
+The Flutter example app (`excel_flutter_example/`) exposes the same behavior under the **Freeze Panes** and **Multi-Sheet Freeze Panes** sidebar entries.
 
 </details>
 

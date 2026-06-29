@@ -8,15 +8,19 @@ import 'helpers/protection_helper.dart';
 import 'helpers/full_demo_helper.dart';
 
 class ExcelGenerator {
-  static Future<String> generateExcelWithImage() => generateExcelWithImageHelper();
+  static Future<String> generateExcelWithImage() =>
+      generateExcelWithImageHelper();
 
   static Future<String> generateSimpleExcel() => generateSimpleExcelHelper();
 
-  static Future<String> generateExcelWithChart(ChartType type) => generateExcelWithChartHelper(type);
+  static Future<String> generateExcelWithChart(ChartType type) =>
+      generateExcelWithChartHelper(type);
 
-  static Future<String> generateUnderlineStyles() => generateUnderlineStylesHelper();
+  static Future<String> generateUnderlineStyles() =>
+      generateUnderlineStylesHelper();
 
-  static Future<String> generateNumberFormats() => generateNumberFormatsHelper();
+  static Future<String> generateNumberFormats() =>
+      generateNumberFormatsHelper();
 
   static Future<String> generateFullDemo() => generateFullDemoHelper();
 
@@ -24,9 +28,14 @@ class ExcelGenerator {
 
   static Future<String> generateMultiSheets() => generateMultiSheetsHelper();
 
-  static Future<String> generatePivotTemplate() => generatePivotTemplateHelper();
+  static Future<String> generatePivotTemplate() =>
+      generatePivotTemplateHelper();
 
-  static Future<String> generateLockedCellsReport() => generateLockedCellsReportHelper();
+  static Future<String> generateLockedCellsReport() =>
+      generateLockedCellsReportHelper();
 
   static Future<String> generateFreezePanes() => generateFreezePanesHelper();
+
+  static Future<String> generateMultiFreezePanes() =>
+      generateMultiFreezePanesHelper();
 }

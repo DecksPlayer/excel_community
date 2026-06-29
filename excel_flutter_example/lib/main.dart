@@ -122,6 +122,9 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.freezePanes:
           resultStatus = await ExcelGenerator.generateFreezePanes();
           break;
+        case SelectedSection.multiFreezePanes:
+          resultStatus = await ExcelGenerator.generateMultiFreezePanes();
+          break;
         case SelectedSection.allCharts:
           resultStatus = await ExcelGenerator.generateAllCharts();
           break;

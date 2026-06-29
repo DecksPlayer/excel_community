@@ -67,6 +67,8 @@ class _WorksheetParser {
     String? formulaText;
     String? inlineText;
 
+    bool insideSheetView = false;
+
     for (final event in events) {
       if (event is xml_events.XmlStartElementEvent) {
         final tagName = event.name;
@@ -74,6 +76,18 @@ class _WorksheetParser {
         if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
           final rtl = _getAttr(event, 'rightToLeft');
           sheetObject.isRTL = rtl == '1';
+          insideSheetView = true;
+        } else if (insideSheetView &&
+            (tagName == 'pane' || tagName.endsWith(':pane'))) {
+          // <pane xSplit="..." ySplit="..." topLeftCell="..." state="frozen" />
+          final xSplit = int.tryParse(_getAttr(event, 'xSplit') ?? '');
+          final ySplit = int.tryParse(_getAttr(event, 'ySplit') ?? '');
+          if ((xSplit ?? 0) > 0) {
+            sheetObject._frozenColumns = xSplit;
+          }
+          if ((ySplit ?? 0) > 0) {
+            sheetObject._frozenRows = ySplit;
+          }
         } else if (tagName == 'sheetFormatPr' ||
             tagName.endsWith(':sheetFormatPr')) {
           final colW =
@@ -266,6 +280,8 @@ class _WorksheetParser {
           } else if (tagName == 't' || tagName.endsWith(':t')) {
             insideInlineText = false;
           }
+        } else if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
+          insideSheetView = false;
         } else if ((tagName == 'headerFooter' ||
                 tagName.endsWith(':headerFooter')) &&
             currentHeaderFooterEvents != null) {

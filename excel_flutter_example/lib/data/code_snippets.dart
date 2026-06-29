@@ -510,11 +510,99 @@ void generateFrozenPanesReport() {
     sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i - 1), IntCellValue(150 * i));
   }
 
-  // 4. Freeze Row 1 and Column A programmatically
+  // 4. Freeze Row 1 and Column A programmatically.
+  //    The values are nullable: pass `null` (or `0`) to remove the freeze.
+  //    On save, a <pane xSplit ySplit topLeftCell state="frozen"/> element
+  //    is written; on decode, the values are restored from the same element.
   sheet.frozenRows = 1;
   sheet.frozenColumns = 1;
 
   // 5. Save the output
   excel.save(fileName: 'sales_report_frozen.xlsx');
+
+  // 6. (Optional) Verify round-trip:
+  //    final reopened = Excel.decodeBytes(excel.encode()!);
+  //    assert(reopened['Sales Report'].frozenRows == 1);
+  //    assert(reopened['Sales Report'].frozenColumns == 1);
+}
+''';
+
+const String multiFreezePanesSnippet = r'''
+import 'package:excel_community/excel_community.dart';
+
+void generateMultiFreezePanesReport() {
+  // 1. Create a new Excel workbook with multiple sheets
+  var excel = Excel.createExcel();
+  excel.delete('Sheet1');
+
+  // -------- Sheet 1: Sales — header row + product column frozen ------------
+  var sales = excel['Sales'];
+  _writeHeader(sales, ['Product', 'Revenue', 'Units', 'Region']);
+  for (var i = 2; i <= 25; i++) {
+    sales.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i - 1), TextCellValue('Product $i'));
+    sales.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i - 1), IntCellValue(150 * i));
+    sales.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i - 1), IntCellValue(10 * i));
+    sales.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i - 1), TextCellValue('Region $i'));
+  }
+  sales.frozenRows = 1;
+  sales.frozenColumns = 1;
+
+  // -------- Sheet 2: Inventory — only rows frozen (2 header rows) -----------
+  var inventory = excel['Inventory'];
+  _writeHeader(inventory, ['SKU', 'Name', 'Category', 'Stock', 'Price']);
+  for (var i = 2; i <= 18; i++) {
+    inventory.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i - 1), TextCellValue('SKU-$i'));
+    inventory.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i - 1), TextCellValue('Item $i'));
+    inventory.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i - 1), TextCellValue('Category $i'));
+    inventory.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i - 1), IntCellValue(50 * i));
+    inventory.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i - 1), DoubleCellValue(9.99 * i));
+  }
+  inventory.frozenRows = 2;
+  inventory.frozenColumns = null;
+
+  // -------- Sheet 3: Customers — only the first 2 columns frozen ------------
+  var customers = excel['Customers'];
+  _writeHeader(customers, ['AccountId', 'RegionId', 'Name', 'Email', 'Tier']);
+  for (var i = 2; i <= 20; i++) {
+    customers.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i - 1), TextCellValue('ACC-$i'));
+    customers.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i - 1), TextCellValue('REG-$i'));
+    customers.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i - 1), TextCellValue('Customer $i'));
+    customers.updateCell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: i - 1), TextCellValue('c$i@example.com'));
+    customers.updateCell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: i - 1), TextCellValue('Tier $i'));
+  }
+  customers.frozenRows = null;
+  customers.frozenColumns = 2;
+
+  // -------- Sheet 4: Logs — no freeze at all --------------------------------
+  var logs = excel['Logs'];
+  _writeHeader(logs, ['Timestamp', 'Level', 'Message']);
+  for (var i = 2; i <= 18; i++) {
+    logs.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i - 1), TextCellValue('2026-06-$i'));
+    logs.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i - 1), TextCellValue('INFO'));
+    logs.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i - 1), TextCellValue('Event #$i'));
+  }
+  logs.frozenRows = null;
+  logs.frozenColumns = null;
+
+  // 2. Save the workbook
+  excel.save(fileName: 'multi_freeze_panes.xlsx');
+
+  // 3. (Optional) Verify round-trip:
+  //    final reopened = Excel.decodeBytes(excel.encode()!);
+  //    assert(reopened['Sales'].frozenRows == 1);
+  //    assert(reopened['Sales'].frozenColumns == 1);
+  //    assert(reopened['Inventory'].frozenRows == 2);
+  //    assert(reopened['Customers'].frozenColumns == 2);
+  //    assert(reopened['Logs'].frozenRows == null);
+}
+
+void _writeHeader(Sheet sheet, List<String> headers) {
+  for (var c = 0; c < headers.length; c++) {
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: c, rowIndex: 0),
+      TextCellValue(headers[c]),
+      cellStyle: CellStyle(bold: true),
+    );
+  }
 }
 ''';

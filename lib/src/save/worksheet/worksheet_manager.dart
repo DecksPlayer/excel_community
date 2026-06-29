@@ -11,6 +11,12 @@ class _WorksheetManager {
     _excel._sharedStrings.clear();
     _styleIndexCache.clear();
 
+    // Only one sheet per workbook may carry tabSelected="1". Mark the first
+    // sheet in the iteration order as the active one; all others omit the
+    // attribute so Excel does not trigger the "recovery" dialog.
+    final sheetNames = _excel._sheetMap.keys.toList();
+    final activeSheetName = sheetNames.isNotEmpty ? sheetNames.first : null;
+
     _excel._sheetMap.forEach((sheetName, sheetObject) {
       if (!_excel._xmlSheetId.containsKey(sheetName)) {
         _save.parser._createSheet(sheetName);
@@ -19,14 +25,22 @@ class _WorksheetManager {
       final sheetId = _excel._xmlSheetId[sheetName]!;
       final originalXmlString = _excel._sheetXmls[sheetId]!;
 
-      final transformedXml =
-          _transformWorksheetXml(sheetName, sheetObject, originalXmlString);
+      final transformedXml = _transformWorksheetXml(
+        sheetName,
+        sheetObject,
+        originalXmlString,
+        isActiveSheet: sheetName == activeSheetName,
+      );
       _excel._sheetXmls[sheetId] = transformedXml;
     });
   }
 
   String _transformWorksheetXml(
-      String sheetName, Sheet sheetObject, String originalXml) {
+    String sheetName,
+    Sheet sheetObject,
+    String originalXml, {
+    required bool isActiveSheet,
+  }) {
     final events = xml_events.parseEvents(originalXml);
 
     final worksheetAttributes = <xml_events.XmlEventAttribute>[];
@@ -130,7 +144,7 @@ class _WorksheetManager {
     // 2. dimension
     writeOriginal('dimension');
     // 3. sheetViews
-    out.write(_buildSheetViewsXml(sheetObject));
+    out.write(_buildSheetViewsXml(sheetObject, isActiveSheet: isActiveSheet));
     printedTags.add('sheetViews');
     // 4. sheetFormatPr
     out.write(_buildSheetFormatPrXml(sheetObject));
@@ -199,15 +213,75 @@ class _WorksheetManager {
     return out.toString();
   }
 
-  String _buildSheetViewsXml(Sheet sheetObject) {
+  String _buildSheetViewsXml(Sheet sheetObject, {required bool isActiveSheet}) {
     final buffer = StringBuffer();
     buffer.write('<sheetViews>');
-    buffer.write('<sheetView workbookViewId="0"');
+    buffer.write('<sheetView');
+    if (isActiveSheet) {
+      buffer.write(' tabSelected="1"');
+    }
+    buffer.write(' workbookViewId="0"');
     if (sheetObject.isRTL) {
       buffer.write(' rightToLeft="1"');
     }
-    buffer.write('/></sheetViews>');
+
+    final frozenRows = sheetObject.frozenRows;
+    final frozenColumns = sheetObject.frozenColumns;
+    final hasRowSplit = (frozenRows ?? 0) > 0;
+    final hasColumnSplit = (frozenColumns ?? 0) > 0;
+
+    if (hasRowSplit || hasColumnSplit) {
+      final xSplit = hasColumnSplit ? frozenColumns! : 0;
+      final ySplit = hasRowSplit ? frozenRows! : 0;
+      final topLeftCol = _columnIndexToLetters(xSplit); // A, B, ...
+      final topLeftRow = ySplit + 1; // 1-based
+      final topLeftCell = '$topLeftCol$topLeftRow';
+
+      // Determine which panes exist for `state="frozen"` and pick the one
+      // that contains the active cell (topLeftCell). Emitting a selection
+      // for a non-existent pane (e.g. bottomRight when ySplit == 0) makes
+      // Excel flag the file as needing repair.
+      final panes = <String>[];
+      if (hasRowSplit && hasColumnSplit) {
+        panes.addAll(['topRight', 'bottomLeft', 'bottomRight']);
+      } else if (hasRowSplit) {
+        panes.add('bottomLeft');
+      } else if (hasColumnSplit) {
+        panes.add('topRight');
+      }
+      final activePane = panes.isEmpty ? 'bottomRight' : panes.last;
+
+      buffer.write('>');
+      buffer.write('<pane');
+      buffer.write(' xSplit="$xSplit"');
+      buffer.write(' ySplit="$ySplit"');
+      buffer.write(' topLeftCell="$topLeftCell"');
+      buffer.write(' activePane="$activePane"');
+      buffer.write(' state="frozen"/>');
+      for (final pane in panes) {
+        buffer.write('<selection pane="$pane"'
+            ' activeCell="$topLeftCell" sqref="$topLeftCell"/>');
+      }
+      buffer.write('</sheetView>');
+    } else {
+      buffer.write('/>');
+    }
+
+    buffer.write('</sheetViews>');
     return buffer.toString();
+  }
+
+  /// Converts a 0-based column index to the Excel column letter sequence
+  /// (0 -> A, 25 -> Z, 26 -> AA, 27 -> AB, …).
+  String _columnIndexToLetters(int columnIndex) {
+    if (columnIndex < 0) return 'A';
+    var index = columnIndex;
+    final buffer = StringBuffer();
+    do {
+      buffer.writeCharCode('A'.codeUnitAt(0) + (index % 26));
+      index = (index ~/ 26) - 1;
+    } while (index >= 0);
+    return buffer.toString().split('').reversed.join();
   }
 
   String _buildSheetFormatPrXml(Sheet sheetObject) {
