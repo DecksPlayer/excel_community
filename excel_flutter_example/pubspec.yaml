@@ -1,5 +1,5 @@
 name: excel_flutter_example
-description: "A new Flutter project."
+description: "Interactive Flutter Web showcase of the excel_community package: a sidebar-driven gallery that demonstrates reading, writing, and styling XLSX files, along with charts, images, freeze panes, and other features of the library, each section including live code and a generated preview."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

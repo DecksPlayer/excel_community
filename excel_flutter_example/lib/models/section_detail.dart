@@ -18,6 +18,7 @@ enum SelectedSection {
   pivotTemplate,
   cellLocking,
   freezePanes,
+  multiFreezePanes,
   allCharts,
   fullDemo,
 }

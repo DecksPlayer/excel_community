@@ -6,6 +6,8 @@ class Sheet {
   bool _isRTL = false;
   int _maxRows = 0;
   int _maxColumns = 0;
+  int? _frozenRows;
+  int? _frozenColumns;
   double? _defaultColumnWidth;
   double? _defaultRowHeight;
   Map<int, double> _columnWidths = {};
@@ -27,6 +29,8 @@ class Sheet {
             spanI_: oldSheetObject._spannedItems,
             maxRowsVal: oldSheetObject._maxRows,
             maxColumnsVal: oldSheetObject._maxColumns,
+            frozenRowsVal: oldSheetObject._frozenRows,
+            frozenColumnsVal: oldSheetObject._frozenColumns,
             columnWidthsVal: oldSheetObject._columnWidths,
             rowHeightsVal: oldSheetObject._rowHeights,
             columnAutoFitVal: oldSheetObject._columnAutoFit,
@@ -42,6 +46,8 @@ class Sheet {
       FastList<String>? spanI_,
       int? maxRowsVal,
       int? maxColumnsVal,
+      int? frozenRowsVal,
+      int? frozenColumnsVal,
       bool? isRTLVal,
       Map<int, double>? columnWidthsVal,
       Map<int, double>? rowHeightsVal,
@@ -71,6 +77,12 @@ class Sheet {
     }
     if (maxRowsVal != null) {
       _maxRows = maxRowsVal;
+    }
+    if (frozenRowsVal != null) {
+      _frozenRows = frozenRowsVal > 0 ? frozenRowsVal : null;
+    }
+    if (frozenColumnsVal != null) {
+      _frozenColumns = frozenColumnsVal > 0 ? frozenColumnsVal : null;
     }
     if (isRTLVal != null) {
       _isRTL = isRTLVal;
@@ -110,6 +122,26 @@ class Sheet {
   set isRTL(bool _u) {
     _isRTL = _u;
     _excel._rtlChangeLookup = sheetName;
+  }
+
+  /// Number of rows frozen at the top of the sheet.
+  ///
+  /// `null` (or `0`) means no frozen rows. Setting a value greater than 0
+  /// writes a `<pane>` element on save and is preserved when the file is
+  /// re-decoded.
+  int? get frozenRows => _frozenRows;
+
+  set frozenRows(int? value) {
+    _frozenRows = (value != null && value > 0) ? value : null;
+  }
+
+  /// Number of columns frozen on the left side of the sheet.
+  ///
+  /// `null` (or `0`) means no frozen columns.
+  int? get frozenColumns => _frozenColumns;
+
+  set frozenColumns(int? value) {
+    _frozenColumns = (value != null && value > 0) ? value : null;
   }
 
   String get sheetName => _sheet;

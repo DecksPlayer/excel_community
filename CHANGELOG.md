@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-06-29
+
+### Added
+- **Freeze Panes**: New `Sheet.frozenRows` and `Sheet.frozenColumns` setters/getters (nullable `int?`). Each sheet in a workbook can carry its own independent freeze combination (rows+cols, rows only, cols only, or none). Values are serialized as OOXML-compliant `<pane>` elements on save and fully restored on decode.
+- **Examples**: `example/excel_freeze_panes.dart` (single-sheet samples) and `example/excel_freeze_panes_multisheet.dart` (multi-sheet workbook with per-sheet freezes and round-trip assertions).
+- **Flutter example app**: New `Freeze Panes` and `Multi-Sheet Freeze Panes` sidebar sections, with matching helpers and code snippets.
+- **Tests**: Re-enabled `test/freeze_panes_test.dart` covering the four freeze configurations (4/4 passing).
+- **Documentation**: README "Features" and "Usage" sections now document the freeze-pane API.
+
+### Fixed
+- **`<sheetView>` writer**: Only the first sheet in the workbook carries `tabSelected="1"` (Excel requires exactly one active tab). `<selection>` entries and `activePane` are now chosen dynamically based on the actual split configuration, so Excel no longer shows the "Reparaciones / Recover as much as we can" dialog on multi-sheet workbooks.
+
 ## [2.1.0] - 2026-06-28
 
 ### Added
