@@ -1,11 +1,11 @@
 {
-    "name": "excel_flutter_example",
-    "short_name": "excel_flutter_example",
+    "name": "excel_community examples",
+    "short_name": "excel_community",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Interactive Flutter Web showcase of the excel_community package: a sidebar-driven gallery that demonstrates reading, writing, and styling XLSX files, along with charts, images, freeze panes, and other features of the library, each section including live code and a generated preview.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -13,6 +13,11 @@
   <img src='https://img.shields.io/pub/v/excel_community.svg'  
     alt='Pub Package' />
 </a>
+<!-- Official Documentation -->
+<a href='https://excelcommunity.decksplayer.com/'>  
+  <img src='https://img.shields.io/badge/Documentation-Official-blue.svg'  
+    alt='Official Documentation' />
+</a>
 <a href='https://opensource.org/licenses/MIT'>  
   <img src='https://img.shields.io/badge/License-MIT-red.svg'  
     alt='License: MIT' />
@@ -67,6 +72,7 @@ For more details on how to use `excel_community`, see the following detailed gui
 - 🌄 **[Working with Images Guide](doc/images.md)**: Embedding PNG, JPEG, SVG, WebP, and other image formats.
 - 🎨 **[Chart Color Strategy Guide](doc/chart_colors.md)**: Detailed description of colors, opacities, and accessibility options used in charts.
 - 🏗️ **[Architecture & Design Guide](doc/architecture.md)**: Overview of the clean code architecture implemented in the chart components.
+- 🌐 **[Official Documentation Site](https://excelcommunity.decksplayer.com/)**: Browse the official online docs for `excel_community`.
 
 ## If you find this tool useful, please drop a ⭐️
 
