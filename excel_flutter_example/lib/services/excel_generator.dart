@@ -7,6 +7,7 @@ import 'helpers/sheets_helper.dart';
 import 'helpers/protection_helper.dart';
 import 'helpers/full_demo_helper.dart';
 import 'helpers/multi_page_charts_helper.dart';
+import 'helpers/hidden_columns_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -39,6 +40,9 @@ class ExcelGenerator {
 
   static Future<String> generateMultiFreezePanes() =>
       generateMultiFreezePanesHelper();
+
+  static Future<String> generateHiddenColumns() =>
+      generateHiddenColumnsHelper();
 
   static Future<String> generateMultiPageCharts() =>
       generateMultiPageChartsHelper();

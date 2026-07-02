@@ -250,6 +250,20 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: multiFreezePanesSnippet,
       );
+    case SelectedSection.hiddenColumns:
+      return SectionDetail(
+        title: 'Hidden Columns & Rows',
+        description:
+            'Hide specific columns and rows in a worksheet to mask confidential details or keep internal formula inputs invisible. Column C (Base Salary) and Row 6 (Inactive employee) are hidden.',
+        icon: Icons.visibility_off,
+        themeColor: Colors.teal,
+        highlights: [
+          'Columns can be set to hidden using sheet.setColumnHidden(index, true)',
+          'Rows can be set to hidden using sheet.setRowHidden(index, true)',
+          'Values are preserved, but hidden from initial display in Excel',
+        ],
+        codeSnippet: hiddenColumnsSnippet,
+      );
     case SelectedSection.multiPageCharts:
       return SectionDetail(
         title: 'Charts on Multiple Sheets',

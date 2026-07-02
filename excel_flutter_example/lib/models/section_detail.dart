@@ -19,6 +19,7 @@ enum SelectedSection {
   cellLocking,
   freezePanes,
   multiFreezePanes,
+  hiddenColumns,
   multiPageCharts,
   allCharts,
   fullDemo,
