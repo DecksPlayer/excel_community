@@ -250,6 +250,34 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: multiFreezePanesSnippet,
       );
+    case SelectedSection.hiddenColumns:
+      return SectionDetail(
+        title: 'Hidden Columns & Rows',
+        description:
+            'Hide specific columns and rows in a worksheet to mask confidential details or keep internal formula inputs invisible. Column C (Base Salary) and Row 6 (Inactive employee) are hidden.',
+        icon: Icons.visibility_off,
+        themeColor: Colors.teal,
+        highlights: [
+          'Columns can be set to hidden using sheet.setColumnHidden(index, true)',
+          'Rows can be set to hidden using sheet.setRowHidden(index, true)',
+          'Values are preserved, but hidden from initial display in Excel',
+        ],
+        codeSnippet: hiddenColumnsSnippet,
+      );
+    case SelectedSection.multiPageCharts:
+      return SectionDetail(
+        title: 'Charts on Multiple Sheets',
+        description:
+            'One chart per worksheet — Sales (Column), Market Share (Pie), Trends (Line), Performance (Radar), Correlation (Scatter). Validates that charts render correctly on non-default sheets.',
+        icon: Icons.auto_graph,
+        themeColor: Colors.deepPurple,
+        highlights: [
+          '5 sheets, each with a distinct chart type',
+          'Each sheet owns an independent drawing + rels file',
+          'Charts on non-default sheets display correctly in Excel',
+        ],
+        codeSnippet: multiPageChartsSnippet,
+      );
     case SelectedSection.allCharts:
       return SectionDetail(
         title: 'All Charts Grid',

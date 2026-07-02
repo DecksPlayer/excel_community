@@ -181,6 +181,13 @@ class Sidebar extends StatelessWidget {
                 Icons.layers_outlined,
                 Colors.indigo,
               ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.hiddenColumns,
+                'Hidden Columns & Rows',
+                Icons.visibility_off_outlined,
+                Colors.teal,
+              ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 16, 12, 8),
                 child: Text(
@@ -191,6 +198,13 @@ class Sidebar extends StatelessWidget {
                     color: Color(0xFF64748B),
                   ),
                 ),
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.multiPageCharts,
+                'Charts on Multiple Sheets',
+                Icons.auto_graph,
+                Colors.deepPurple,
               ),
               _buildSidebarItem(
                 context,

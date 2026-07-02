@@ -21,6 +21,8 @@ class Sheet {
   final List<ExcelImage> _images = [];
   String? _drawingRId;
   SheetProtection sheetProtection = SheetProtection();
+  Set<int> _hiddenColumns = {};
+  Set<int> _hiddenRows = {};
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -38,7 +40,9 @@ class Sheet {
             headerFooter: oldSheetObject._headerFooter,
             charts: oldSheetObject._charts,
             images: oldSheetObject._images,
-            sheetProtection: oldSheetObject.sheetProtection);
+            sheetProtection: oldSheetObject.sheetProtection,
+            hiddenColumnsVal: oldSheetObject._hiddenColumns,
+            hiddenRowsVal: oldSheetObject._hiddenRows);
 
   Sheet._(this._excel, this._sheet,
       {Map<int, Map<int, Data>>? sh,
@@ -55,7 +59,9 @@ class Sheet {
       HeaderFooter? headerFooter,
       List<Chart>? charts,
       List<ExcelImage>? images,
-      SheetProtection? sheetProtection}) {
+      SheetProtection? sheetProtection,
+      Set<int>? hiddenColumnsVal,
+      Set<int>? hiddenRowsVal}) {
     this.sheetProtection = sheetProtection ?? SheetProtection();
     _headerFooter = headerFooter;
     if (charts != null) {
@@ -96,6 +102,12 @@ class Sheet {
     }
     if (columnAutoFitVal != null) {
       _columnAutoFit = Map<int, bool>.from(columnAutoFitVal);
+    }
+    if (hiddenColumnsVal != null) {
+      _hiddenColumns = Set<int>.from(hiddenColumnsVal);
+    }
+    if (hiddenRowsVal != null) {
+      _hiddenRows = Set<int>.from(hiddenRowsVal);
     }
 
     if (sh != null) {

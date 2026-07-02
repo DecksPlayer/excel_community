@@ -10,3 +10,4 @@ export 'snippets/basic.dart';
 export 'snippets/styling.dart';
 export 'snippets/charts.dart';
 export 'snippets/images.dart';
+export 'snippets/hidden_columns.dart';

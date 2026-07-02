@@ -102,12 +102,19 @@ class _WorksheetParser {
           final min = int.tryParse(_getAttr(event, 'min') ?? '');
           final maxVal = int.tryParse(_getAttr(event, 'max') ?? '');
           final width = double.tryParse(_getAttr(event, 'width') ?? '');
-          if (min != null && width != null) {
+          final hiddenVal = _getAttr(event, 'hidden');
+          final isHidden = hiddenVal == '1' || hiddenVal == 'true';
+          if (min != null) {
             final end = maxVal ?? min;
             for (int col = min; col <= end; col++) {
               final zeroBasedCol = col - 1;
               if (zeroBasedCol >= 0) {
-                sheetObject._columnWidths[zeroBasedCol] = width;
+                if (width != null) {
+                  sheetObject._columnWidths[zeroBasedCol] = width;
+                }
+                if (isHidden) {
+                  sheetObject._hiddenColumns.add(zeroBasedCol);
+                }
               }
             }
           }
@@ -116,8 +123,15 @@ class _WorksheetParser {
           if (rowNum != null) {
             currentWorksheetRowIndex = rowNum - 1;
             final height = double.tryParse(_getAttr(event, 'ht') ?? '');
-            if (height != null && currentWorksheetRowIndex >= 0) {
-              sheetObject._rowHeights[currentWorksheetRowIndex] = height;
+            final hiddenVal = _getAttr(event, 'hidden');
+            final isHidden = hiddenVal == '1' || hiddenVal == 'true';
+            if (currentWorksheetRowIndex >= 0) {
+              if (height != null) {
+                sheetObject._rowHeights[currentWorksheetRowIndex] = height;
+              }
+              if (isHidden) {
+                sheetObject._hiddenRows.add(currentWorksheetRowIndex);
+              }
             }
           }
         } else if (tagName == 'c' || tagName.endsWith(':c')) {

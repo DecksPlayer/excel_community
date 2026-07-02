@@ -100,4 +100,54 @@ extension SheetDimensions on Sheet {
   /// returns map of custom height rows
   ///
   Map<int, double> get getRowHeights => _rowHeights;
+
+  ///
+  /// Set Column Hidden
+  ///
+  void setColumnHidden(int columnIndex, bool hidden) {
+    _checkMaxColumn(columnIndex);
+    if (columnIndex < 0) return;
+    if (hidden) {
+      _hiddenColumns.add(columnIndex);
+    } else {
+      _hiddenColumns.remove(columnIndex);
+    }
+  }
+
+  ///
+  /// Check if Column is Hidden
+  ///
+  bool isColumnHidden(int columnIndex) {
+    return _hiddenColumns.contains(columnIndex);
+  }
+
+  ///
+  /// Set Row Hidden
+  ///
+  void setRowHidden(int rowIndex, bool hidden) {
+    _checkMaxRow(rowIndex);
+    if (rowIndex < 0) return;
+    if (hidden) {
+      _hiddenRows.add(rowIndex);
+    } else {
+      _hiddenRows.remove(rowIndex);
+    }
+  }
+
+  ///
+  /// Check if Row is Hidden
+  ///
+  bool isRowHidden(int rowIndex) {
+    return _hiddenRows.contains(rowIndex);
+  }
+
+  ///
+  /// returns set of hidden columns
+  ///
+  Set<int> get getHiddenColumns => _hiddenColumns;
+
+  ///
+  /// returns set of hidden rows
+  ///
+  Set<int> get getHiddenRows => _hiddenRows;
 }

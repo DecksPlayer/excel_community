@@ -308,14 +308,16 @@ class _WorksheetManager {
   String _buildColsXml(Sheet sheetObject) {
     final autoFits = sheetObject.getColumnAutoFits;
     final customWidths = sheetObject.getColumnWidths;
+    final hiddenCols = sheetObject.getHiddenColumns;
 
-    if (customWidths.isEmpty && autoFits.isEmpty) {
+    if (customWidths.isEmpty && autoFits.isEmpty && hiddenCols.isEmpty) {
       return '';
     }
 
     final columnCount = max(
-        autoFits.isEmpty ? 0 : autoFits.keys.reduce(max) + 1,
-        customWidths.isEmpty ? 0 : customWidths.keys.reduce(max) + 1);
+        max(autoFits.isEmpty ? 0 : autoFits.keys.reduce(max) + 1,
+            customWidths.isEmpty ? 0 : customWidths.keys.reduce(max) + 1),
+        hiddenCols.isEmpty ? 0 : hiddenCols.reduce(max) + 1);
 
     final buffer = StringBuffer();
     buffer.write('<cols>');
@@ -333,8 +335,13 @@ class _WorksheetManager {
           width = customWidths[index]!;
         }
       }
+      final isHidden = hiddenCols.contains(index);
       buffer.write(
-          '<col min="${index + 1}" max="${index + 1}" width="${width.toStringAsFixed(2)}" bestFit="1" customWidth="1"/>');
+          '<col min="${index + 1}" max="${index + 1}" width="${width.toStringAsFixed(2)}" bestFit="1" customWidth="1"');
+      if (isHidden) {
+        buffer.write(' hidden="1"');
+      }
+      buffer.write('/>');
     }
     buffer.write('</cols>');
     return buffer.toString();
@@ -342,6 +349,7 @@ class _WorksheetManager {
 
   String _buildSheetDataXml(String sheetName, Sheet sheetObject) {
     final customHeights = sheetObject.getRowHeights;
+    final hiddenRows = sheetObject.getHiddenRows;
     final buffer = StringBuffer();
     buffer.write('<sheetData>');
 
@@ -349,7 +357,8 @@ class _WorksheetManager {
 
     for (var rowIndex = 0; rowIndex < sheetObject._maxRows; rowIndex++) {
       final rowData = sheetObject._sheetData[rowIndex];
-      if (rowData == null || rowData.isEmpty) {
+      final isRowHidden = hiddenRows.contains(rowIndex);
+      if ((rowData == null || rowData.isEmpty) && !isRowHidden) {
         continue;
       }
 
@@ -358,43 +367,48 @@ class _WorksheetManager {
       if (height != null) {
         buffer.write(' ht="${height.toStringAsFixed(2)}" customHeight="1"');
       }
+      if (isRowHidden) {
+        buffer.write(' hidden="1"');
+      }
       buffer.write('>');
 
-      bool isSorted = true;
-      int lastCol = -1;
-      for (final colIndex in rowData.keys) {
-        if (colIndex < lastCol) {
-          isSorted = false;
-          break;
+      if (rowData != null && rowData.isNotEmpty) {
+        bool isSorted = true;
+        int lastCol = -1;
+        for (final colIndex in rowData.keys) {
+          if (colIndex < lastCol) {
+            isSorted = false;
+            break;
+          }
+          lastCol = colIndex;
         }
-        lastCol = colIndex;
-      }
 
-      if (isSorted) {
-        rowData.forEach((columnIndex, data) {
-          _buildCellXml(
-            buffer,
-            sheetName,
-            columnIndex,
-            rowIndex,
-            data.value,
-            data._cellStyle,
-            sheetStyleReferenced,
-          );
-        });
-      } else {
-        final sortedCols = rowData.keys.toList()..sort();
-        for (final columnIndex in sortedCols) {
-          final data = rowData[columnIndex]!;
-          _buildCellXml(
-            buffer,
-            sheetName,
-            columnIndex,
-            rowIndex,
-            data.value,
-            data._cellStyle,
-            sheetStyleReferenced,
-          );
+        if (isSorted) {
+          rowData.forEach((columnIndex, data) {
+            _buildCellXml(
+              buffer,
+              sheetName,
+              columnIndex,
+              rowIndex,
+              data.value,
+              data._cellStyle,
+              sheetStyleReferenced,
+            );
+          });
+        } else {
+          final sortedCols = rowData.keys.toList()..sort();
+          for (final columnIndex in sortedCols) {
+            final data = rowData[columnIndex]!;
+            _buildCellXml(
+              buffer,
+              sheetName,
+              columnIndex,
+              rowIndex,
+              data.value,
+              data._cellStyle,
+              sheetStyleReferenced,
+            );
+          }
         }
       }
       buffer.write('</row>');

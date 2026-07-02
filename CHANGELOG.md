@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-06-29
+
+### Fixed
+- **Multi-Sheet Freeze Panes**: Added hidden columns to the Staff Salaries and Executive Perks sheets, with corresponding data removed. Now only the Public Directory sheet is visible, while the other two remain hidden (but fully functional) in the generated XLSX file.
+
+- **Multi-Sheet Charts**: Fixed chart issue in multi-sheet workbooks.
+
 ## [2.1.1] - 2026-06-29
 
 ### Added
