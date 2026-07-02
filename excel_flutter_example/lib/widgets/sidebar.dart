@@ -194,6 +194,13 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.multiPageCharts,
+                'Charts on Multiple Sheets',
+                Icons.auto_graph,
+                Colors.deepPurple,
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.allCharts,
                 'All 8 Charts Grid',
                 Icons.grid_view,

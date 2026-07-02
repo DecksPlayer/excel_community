@@ -270,3 +270,108 @@ void generateAllCharts() {
   excel.save(fileName: 'all_charts_grid_demo.xlsx');
 }
 ''';
+
+// ---------------------------------------------------------------------------
+// Multi-page charts (one chart per sheet)
+// ---------------------------------------------------------------------------
+const String multiPageChartsSnippet = '''
+import 'package:excel_community/excel_community.dart';
+
+/// One chart per sheet — demonstrates that charts render correctly on
+/// non-default sheets (not just the first/default tab).
+void generateMultiPageCharts() {
+  final excel = Excel.createExcel();
+
+  // ── Sheet 1: Sales — Column Chart ────────────────────────────────────────
+  final salesSheet = excel['Sales'];
+  salesSheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Month"));
+  salesSheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Revenue"));
+  salesSheet.updateCell(CellIndex.indexByString("C1"), TextCellValue("Expenses"));
+  // ... populate rows ...
+
+  salesSheet.addChart(ColumnChart(
+    title: "Monthly Revenue vs Expenses",
+    series: [
+      ChartSeries(
+        name: "Revenue",
+        categoriesRange: r"Sales!\$A\$2:\$A\$7",
+        valuesRange: r"Sales!\$B\$2:\$B\$7",
+      ),
+      ChartSeries(
+        name: "Expenses",
+        categoriesRange: r"Sales!\$A\$2:\$A\$7",
+        valuesRange: r"Sales!\$C\$2:\$C\$7",
+      ),
+    ],
+    anchor: ChartAnchor.at(column: 5, row: 1, width: 10, height: 15),
+  ));
+
+  // ── Sheet 2: Market Share — Pie Chart ────────────────────────────────────
+  final marketSheet = excel['Market Share'];
+  // ... populate rows ...
+
+  marketSheet.addChart(PieChart(
+    title: "Global Market Share",
+    series: [
+      ChartSeries(
+        name: "Share",
+        categoriesRange: r"'Market Share'!\$A\$2:\$A\$6",
+        valuesRange: r"'Market Share'!\$B\$2:\$B\$6",
+      ),
+    ],
+    anchor: ChartAnchor.at(column: 4, row: 1, width: 10, height: 16),
+  ));
+
+  // ── Sheet 3: Trends — Line Chart ─────────────────────────────────────────
+  final trendsSheet = excel['Trends'];
+  // ... populate rows ...
+
+  trendsSheet.addChart(LineChart(
+    title: "Product Sales Trend",
+    series: [
+      ChartSeries(
+        name: "Product A",
+        categoriesRange: r"Trends!\$A\$2:\$A\$7",
+        valuesRange: r"Trends!\$B\$2:\$B\$7",
+      ),
+    ],
+    anchor: ChartAnchor.at(column: 6, row: 1, width: 11, height: 15),
+  ));
+
+  // ── Sheet 4: Performance — Radar Chart ───────────────────────────────────
+  final perfSheet = excel['Performance'];
+  // ... populate rows ...
+
+  perfSheet.addChart(RadarChart(
+    title: "Team Performance Comparison",
+    filled: true,
+    series: [
+      ChartSeries(
+        name: "Team Alpha",
+        categoriesRange: r"Performance!\$A\$2:\$A\$7",
+        valuesRange: r"Performance!\$B\$2:\$B\$7",
+      ),
+    ],
+    anchor: ChartAnchor.at(column: 4, row: 1, width: 10, height: 15),
+  ));
+
+  // ── Sheet 5: Correlation — Scatter Chart ─────────────────────────────────
+  final corrSheet = excel['Correlation'];
+  // ... populate rows ...
+
+  corrSheet.addChart(ScatterChart(
+    title: "Ad Spend vs Revenue",
+    series: [
+      ChartSeries(
+        name: "Revenue",
+        categoriesRange: r"Correlation!\$A\$2:\$A\$8",
+        valuesRange: r"Correlation!\$B\$2:\$B\$8",
+      ),
+    ],
+    anchor: ChartAnchor.at(column: 4, row: 1, width: 11, height: 15),
+  ));
+
+  excel.save(fileName: "multi_page_charts.xlsx");
+}
+''';
+

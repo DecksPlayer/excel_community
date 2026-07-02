@@ -250,6 +250,20 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: multiFreezePanesSnippet,
       );
+    case SelectedSection.multiPageCharts:
+      return SectionDetail(
+        title: 'Charts on Multiple Sheets',
+        description:
+            'One chart per worksheet — Sales (Column), Market Share (Pie), Trends (Line), Performance (Radar), Correlation (Scatter). Validates that charts render correctly on non-default sheets.',
+        icon: Icons.auto_graph,
+        themeColor: Colors.deepPurple,
+        highlights: [
+          '5 sheets, each with a distinct chart type',
+          'Each sheet owns an independent drawing + rels file',
+          'Charts on non-default sheets display correctly in Excel',
+        ],
+        codeSnippet: multiPageChartsSnippet,
+      );
     case SelectedSection.allCharts:
       return SectionDetail(
         title: 'All Charts Grid',

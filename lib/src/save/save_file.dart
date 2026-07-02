@@ -33,6 +33,17 @@ class Save {
       _styleManager.processStylesFile();
     }
 
+    // Clear stale drawing references from the template for sheets that have no
+    // charts and no images. The default _newSheet template already has a
+    // drawing1.xml and an xl/worksheets/_rels/sheet1.xml.rels pointing to it,
+    // which would cause unrelated sheets to incorrectly reference drawings
+    // meant for other sheets.
+    _excel._sheetMap.forEach((_, sheetObject) {
+      if (sheetObject.charts.isEmpty && sheetObject.images.isEmpty) {
+        sheetObject._drawingRId = null;
+      }
+    });
+
     _chartManager.processCharts();
     _imageManager.processImages();
 
