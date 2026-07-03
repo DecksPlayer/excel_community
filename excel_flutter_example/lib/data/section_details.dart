@@ -194,6 +194,21 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: multiSheetsSnippet,
       );
+    case SelectedSection.mergedCells:
+      return SectionDetail(
+        title: 'Merged Cells (Multi-Sheet)',
+        description:
+            'Merge rows and columns dynamically across multiple worksheets while applying custom cell styles, alignment, and formatting.',
+        icon: Icons.merge_type_outlined,
+        themeColor: Colors.indigo,
+        highlights: [
+          'Merge multiple columns or rows using sheet.merge(start, end)',
+          'Customize text alignment (Horizontal/Vertical) inside merged ranges',
+          'Add custom borders, font styles, and background fills to merged headers',
+          'Ensure values are stored correctly at the top-left origin cell',
+        ],
+        codeSnippet: mergedCellsSnippet,
+      );
     case SelectedSection.pivotTemplate:
       return SectionDetail(
         title: 'Templates & Pivot Tables',

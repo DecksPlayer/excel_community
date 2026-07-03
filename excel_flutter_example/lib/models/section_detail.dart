@@ -20,6 +20,7 @@ enum SelectedSection {
   freezePanes,
   multiFreezePanes,
   hiddenColumns,
+  mergedCells,
   multiPageCharts,
   allCharts,
   fullDemo,

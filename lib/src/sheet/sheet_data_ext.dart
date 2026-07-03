@@ -437,16 +437,13 @@ extension SheetDataExt on Sheet {
     insertRowIterables(row, targetRow);
   }
 
-  ///
-  /// If `sheet` does not exist then it will be automatically created.
-  ///
-  /// Adds the [row] iterables in the given rowIndex = [rowIndex] in [sheet]
+  /// Adds the [row] iterables in the given rowIndex = [rowIndex]
   ///
   /// [startingColumn] tells from where we should start putting the [row] iterables
   ///
-  /// [overwriteMergedCells] when set to [true] will over-write mergedCell and does not jumps to next unqiue cell.
+  /// [overwriteMergedCells] when set to `true` will over-write mergedCell and does not jumps to next unqiue cell.
   ///
-  /// [overwriteMergedCells] when set to [false] puts the cell value to next unique cell available by putting the value in merged cells only once and jumps to next unique cell.
+  /// [overwriteMergedCells] when set to `false` puts the cell value to next unique cell available by putting the value in merged cells only once and jumps to next unique cell.
   ///
   void insertRowIterables(List<CellValue?> row, int rowIndex,
       {int startingColumn = 0, bool overwriteMergedCells = true}) {
