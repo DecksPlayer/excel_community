@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.3] - 2026-07-02
+
+### Added
+- **Hidden Columns & Rows**: New `Sheet.setColumnHidden(index, hidden)`, `Sheet.isColumnHidden(index)`, `Sheet.setRowHidden(index, hidden)`, and `Sheet.isRowHidden(index)` methods to toggle and query visibility of columns/rows. Full serialization to OOXML `<col hidden="1">` and `<row hidden="1">` on save, and parsing from XLSX on decode.
+- **Flutter example app**: New `Hidden Columns & Rows` sidebar demo displaying a multi-sheet spreadsheet where some sheets contain hidden elements and others are fully visible.
+
+### Fixed
+- **Cleaned Template**: Removed stale empty drawing (`xl/drawings/drawing1.xml`) and its worksheet relationship from the base sheet template base64 string inside `constants.dart`. This ensures newly created worksheets (such as `Sheet2`) that have charts do not bleed/render their charts onto the first sheet (`Sheet1`) of the workbook, whilst preserving pre-existing charts when editing loaded files.
+
 ## [2.1.2] - 2026-06-29
 
 ### Fixed

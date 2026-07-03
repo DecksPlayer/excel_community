@@ -544,6 +544,39 @@ The Flutter example app (`excel_flutter_example/`) exposes the same behavior und
 
 </details>
 
+<details>
+<summary><h3>🙈 Hidden Columns & Rows</h3></summary>
+
+You can hide specific columns and rows in a worksheet to keep formula inputs clean, protect internal identifiers, or mask confidential details (like salaries or private allowances). `excel_community` provides simple methods to toggle and query visibility:
+
+- `sheet.setColumnHidden(int columnIndex, bool hidden)` — hide or show a column by index (0-based).
+- `sheet.isColumnHidden(int columnIndex)` — check if a column is hidden.
+- `sheet.setRowHidden(int rowIndex, bool hidden)` — hide or show a row by index (0-based).
+- `sheet.isRowHidden(int rowIndex)` — check if a row is hidden.
+
+Hidden settings are correctly saved to OOXML and fully preserved during decoding (round-trip verified).
+
+```dart
+var excel = Excel.createExcel();
+var sheet = excel['Payroll'];
+
+sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Name"));
+sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Salary (Confidential)"));
+sheet.updateCell(CellIndex.indexByString("C1"), TextCellValue("Role"));
+
+// Hide Column B (index 1)
+sheet.setColumnHidden(1, true);
+assert(sheet.isColumnHidden(1) == true);
+
+// Hide Row 3 (index 2)
+sheet.setRowHidden(2, true);
+assert(sheet.isRowHidden(2) == true);
+
+excel.save(fileName: 'hidden_columns_demo.xlsx');
+```
+
+</details>
+
 ### Make sheet RTL
 
 ```dart
