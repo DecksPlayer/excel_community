@@ -155,6 +155,13 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.mergedCells,
+                'Merged Cells (Multi-Sheet)',
+                Icons.merge_type_outlined,
+                Colors.indigo,
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.pivotTemplate,
                 'Templates & Pivot Tables',
                 Icons.content_paste_go_outlined,

@@ -128,6 +128,9 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.hiddenColumns:
           resultStatus = await ExcelGenerator.generateHiddenColumns();
           break;
+        case SelectedSection.mergedCells:
+          resultStatus = await ExcelGenerator.generateMergedCells();
+          break;
         case SelectedSection.multiPageCharts:
           resultStatus = await ExcelGenerator.generateMultiPageCharts();
           break;

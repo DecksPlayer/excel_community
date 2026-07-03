@@ -7,7 +7,7 @@ part of '../../excel_community.dart';
 ///   - Relationship resolution ([_parseRelations])
 ///   - Shared strings ([_parseSharedStrings])
 ///   - Workbook content iteration ([_parseContent])
-///   - Merged-cell processing ([_parseMergedCells])
+///   - Merged-cell processing (delegated to [_WorksheetParser])
 ///   - New-sheet creation ([_createSheet])
 ///
 /// Styles parsing is delegated to [_StylesParser].
