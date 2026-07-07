@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.1.6] - 2026-07-06
+### Fixed
+- **SST parsing**: Fixed the SST parsing logic to correctly read the shared strings from the SST stream.
+
+## [2.1.5] - 2026-07-06
+
+### Added
+- **Legacy XLS File Support**: Added read-only support for parsing legacy `.xls` (Excel 97-2003) workbooks using a custom, clean-room OLE2 and BIFF8 parser implemented from scratch in pure Dart. It decodes sheet names, row/column dimensions, and cell values (`TextCellValue`, `IntCellValue`, `DoubleCellValue`), with transparent fallback inside `Excel.decodeBytes` and `Excel.decodeBuffer` using signature magic bytes detection.
+
 ## [2.1.4] - 2026-07-03
 - **Improve documentation**
 

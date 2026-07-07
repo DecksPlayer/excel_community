@@ -39,7 +39,6 @@ class CfbFile {
     sectorSize = 1 << view.getUint16(30, Endian.little);
     miniSectorSize = 1 << view.getUint16(32, Endian.little);
 
-    final numFatSectors = view.getUint32(44, Endian.little);
     final dirStartSector = view.getUint32(48, Endian.little);
     final miniFatStartSector = view.getUint32(60, Endian.little);
     final numMiniFatSectors = view.getUint32(64, Endian.little);
@@ -343,7 +342,7 @@ class BiffParser {
 
   List<String> _parseSst(List<_Record> records, int sstRecordIndex) {
     final stream = _SstStream(records, sstRecordIndex);
-    int totalStrings = stream.readUint32();
+    stream.readUint32();
     int uniqueStrings = stream.readUint32();
 
     List<String> strings = [];
