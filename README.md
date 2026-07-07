@@ -36,11 +36,12 @@
 </a>
 
 
-### [Excel Community](https://www.pub.dev/packages/excel_community) is a community-maintained fork of the [excel](https://github.com/justkawal/excel) library. It provides a robust and high-performance way to read, create, and update XLSX files.
+### [Excel Community](https://www.pub.dev/packages/excel_community) is a community-maintained fork of the [excel](https://github.com/justkawal/excel) library. It provides a robust and high-performance way to read, create, and update XLSX files, as well as parse legacy XLS files.
 
 ## Features
 
-- ✅ **Read & Write XLSX**: Full support for reading and writing Excel files
+- ✅ **Read & Write XLSX**: Full support for reading and writing Excel files in modern `.xlsx` format
+- ✅ **Read Legacy XLS**: Read-only support for old `.xls` (Excel 97-2003) workbooks using a custom, zero-dependency parser
 - ✅ **Multiple Data Types**: Text, Numbers, Formulas, Dates, Times, Booleans
 - ✅ **Cell Styling**: Fonts (Bold, Italic, Underline, Strikethrough), Colors, Borders, Alignment, Number Formats
 - ✅ **Charts**: Column, Bar, Line, Area, Pie, Doughnut, Scatter, and Radar charts
@@ -113,7 +114,10 @@ For more details on how to use `excel_community`, see the following detailed gui
 <details open><summary><h2>📖 Usage</h2></summary>
 
 <details open>
-<summary><h3>📄 Read XLSX File</h3></summary>
+<summary><h3>📄 Read XLSX / XLS File</h3></summary>
+
+> [!NOTE]
+> The same `Excel.decodeBytes(bytes)` and `Excel.decodeBuffer(stream)` methods automatically detect the format using magic signature bytes and parse both modern `.xlsx` and legacy `.xls` (Excel 97-2003) files transparently.
 
 ```dart
 var file = 'Path_to_pre_existing_Excel_File/excel_file.xlsx';
@@ -163,7 +167,7 @@ for (var table in excel.tables.keys) {
 </details>
 
 <details>
-<summary><h3>🌐 Read XLSX in Flutter Web</h3></summary>
+<summary><h3>🌐 Read XLSX / XLS in Flutter Web</h3></summary>
 
 Use `FilePicker` to pick files in Flutter Web. [FilePicker](https://pub.dev/packages/file_picker.git)
 
@@ -195,7 +199,7 @@ if (pickedFile != null) {
 </details>
 
 <details>
-<summary><h3>📂 Read XLSX from Flutter's Asset Folder</h3></summary>
+<summary><h3>📂 Read XLSX / XLS from Flutter's Asset Folder</h3></summary>
 
 ```dart
 import 'package:flutter/services.dart' show ByteData, rootBundle;
