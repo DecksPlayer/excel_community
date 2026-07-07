@@ -13,6 +13,7 @@ import 'package:xml/xml_events.dart' as xml_events;
 import 'src/web_helper/client_save_excel.dart'
     if (dart.library.js_interop) 'src/web_helper/web_save_excel_browser.dart'
     as helper;
+import 'src/xls_parser/excel_xls.dart';
 
 /// main directory
 part 'src/excel.dart';

@@ -903,32 +903,22 @@ void main() {
   });
 
   group(".xls file handling", () {
-    test("Exception when opening old .xls file", () {
+    test("Parses old .xls file successfully", () {
       final file = './test/test_resources/oldXLSFile.xls';
       final bytes = File(file).readAsBytesSync();
-      try {
-        Excel.decodeBytes(bytes);
-      } catch (e) {
-        expect(e, isA<UnsupportedError>());
-        expect(
-            e.toString(),
-            equals(
-                'Unsupported operation: Excel format unsupported. Only .xlsx files are supported'));
-      }
+      final excel = Excel.decodeBytes(bytes);
+      expect(excel, isNotNull);
+      expect(excel.tables.isNotEmpty, isTrue);
+      expect(excel.tables.keys.first, isNotEmpty);
     });
 
-    test("Exception when opening new .xls file", () {
+    test("Parses new .xls file successfully", () {
       final file = './test/test_resources/newXLSFile.xls';
       final bytes = File(file).readAsBytesSync();
-      try {
-        Excel.decodeBytes(bytes);
-      } catch (e) {
-        expect(e, isA<UnsupportedError>());
-        expect(
-            e.toString(),
-            equals(
-                'Unsupported operation: Excel format unsupported. Only .xlsx files are supported'));
-      }
+      final excel = Excel.decodeBytes(bytes);
+      expect(excel, isNotNull);
+      expect(excel.tables.isNotEmpty, isTrue);
+      expect(excel.tables.keys.first, isNotEmpty);
     });
 
     test('Sheet Remove and Rename Operations', () {

@@ -84,19 +84,56 @@ class Excel {
 
   /// Decodes an Excel file from a list of bytes.
   factory Excel.decodeBytes(List<int> data) {
+    if (data.length >= 8 &&
+        data[0] == 0xD0 &&
+        data[1] == 0xCF &&
+        data[2] == 0x11 &&
+        data[3] == 0xE0 &&
+        data[4] == 0xA1 &&
+        data[5] == 0xB1 &&
+        data[6] == 0x1A &&
+        data[7] == 0xE1) {
+      return decodeXlsBytes(data);
+    }
+
     final Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(data);
     } catch (e) {
       throw UnsupportedError(
-          'Excel format unsupported. Only .xlsx files are supported');
+          'Excel format unsupported. Only .xlsx and .xls files are supported');
     }
     return _newExcel(archive);
   }
 
   /// Decodes an Excel file from an [InputStream].
   factory Excel.decodeBuffer(InputStream input) {
-    return _newExcel(ZipDecoder().decodeStream(input));
+    if (input.length >= 8) {
+      final pos = input.position;
+      final magicObj = input.readBytes(8);
+      final magic = magicObj.toUint8List();
+      input.position = pos;
+      if (magic[0] == 0xD0 &&
+          magic[1] == 0xCF &&
+          magic[2] == 0x11 &&
+          magic[3] == 0xE0 &&
+          magic[4] == 0xA1 &&
+          magic[5] == 0xB1 &&
+          magic[6] == 0x1A &&
+          magic[7] == 0xE1) {
+        final bytesObj = input.readBytes(input.length);
+        final bytes = bytesObj.toUint8List();
+        input.position = pos;
+        return decodeXlsBytes(bytes);
+      }
+    }
+
+    try {
+      return _newExcel(ZipDecoder().decodeStream(input));
+    } catch (e) {
+      throw UnsupportedError(
+          'Excel format unsupported. Only .xlsx and .xls files are supported');
+    }
   }
 
   ///
