@@ -19,8 +19,8 @@ class ExcelGenerator {
   static Future<String> generateExcelWithChart(ChartType type) =>
       generateExcelWithChartHelper(type);
 
-  static Future<String> generateUnderlineStyles() =>
-      generateUnderlineStylesHelper();
+  static Future<String> generateFontsStyles() =>
+      generateFontsStylesHelper();
 
   static Future<String> generateNumberFormats() =>
       generateNumberFormatsHelper();

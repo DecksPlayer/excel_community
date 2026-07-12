@@ -134,10 +134,10 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
-                SelectedSection.textStyles,
-                'Text Underlines & Fills',
-                Icons.format_underlined,
-                Colors.deepPurple,
+                SelectedSection.fontsStyles,
+                'Fonts & Styles',
+                Icons.font_download_outlined,
+                Colors.indigo,
               ),
               _buildSidebarItem(
                 context,

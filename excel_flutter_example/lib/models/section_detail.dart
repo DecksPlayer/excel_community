@@ -12,7 +12,7 @@ enum SelectedSection {
   barChart,
   scatterChart,
   imageEmbedding,
-  textStyles,
+  fontsStyles,
   numberFormats,
   multiSheets,
   pivotTemplate,

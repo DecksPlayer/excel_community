@@ -366,37 +366,48 @@ class SpreadsheetPreview extends StatelessWidget {
           child: Text('Image placed at B5:', style: TextStyle(fontSize: 6)),
         );
       }
-    } else if (selectedSection == SelectedSection.textStyles) {
-      if (rowIndex == 0 && colIndex == 0) {
+    } else if (selectedSection == SelectedSection.fontsStyles) {
+      if (rowIndex == 0) {
         return Container(
-          color: Colors.blue.shade50,
+          color: Colors.indigo.shade50,
           alignment: Alignment.center,
-          child: const Text('Title', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+          child: Text(
+            colIndex == 0
+                ? 'Font'
+                : colIndex == 1
+                    ? 'Enum Mapping'
+                    : colIndex == 2
+                        ? 'Code'
+                        : colIndex == 3
+                            ? 'Sample'
+                            : '',
+            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.indigo),
+          ),
         );
       }
-      if (rowIndex == 2 && colIndex == 1) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Normal', style: TextStyle(fontSize: 7)),
-        );
+      if (rowIndex == 1) {
+        if (colIndex == 0) return const Center(child: Text('Calibri', style: TextStyle(fontSize: 7)));
+        if (colIndex == 1) return const Center(child: Text('Calibri', style: TextStyle(fontSize: 6)));
+        if (colIndex == 2) return const Center(child: Text("fontFamily: 'Calibri'", style: TextStyle(fontSize: 5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Calibri')));
       }
-      if (rowIndex == 3 && colIndex == 1) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Underline', style: TextStyle(fontSize: 7, decoration: TextDecoration.underline)),
-        );
+      if (rowIndex == 2) {
+        if (colIndex == 0) return const Center(child: Text('Arial', style: TextStyle(fontSize: 7)));
+        if (colIndex == 1) return const Center(child: Text('Arial', style: TextStyle(fontSize: 6)));
+        if (colIndex == 2) return const Center(child: Text('FontFamily.Arial', style: TextStyle(fontSize: 5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Arial')));
       }
-      if (rowIndex == 4 && colIndex == 1) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Double', style: TextStyle(fontSize: 7, decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.double)),
-        );
+      if (rowIndex == 3) {
+        if (colIndex == 0) return const Center(child: Text('Comic Sans', style: TextStyle(fontSize: 6)));
+        if (colIndex == 1) return const Center(child: Text('Comic_Sans_MS', style: TextStyle(fontSize: 5)));
+        if (colIndex == 2) return const Center(child: Text('FontFamily.Comic_Sans_MS', style: TextStyle(fontSize: 4.5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Comic Sans MS')));
       }
-      if (rowIndex == 6 && colIndex == 0) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Strikethrough', style: TextStyle(fontSize: 7, decoration: TextDecoration.lineThrough, color: Colors.red)),
-        );
+      if (rowIndex == 4) {
+        if (colIndex == 0) return const Center(child: Text('Courier New', style: TextStyle(fontSize: 6)));
+        if (colIndex == 1) return const Center(child: Text('Courier_New', style: TextStyle(fontSize: 5)));
+        if (colIndex == 2) return const Center(child: Text('FontFamily.Courier_New', style: TextStyle(fontSize: 4.5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Courier New')));
       }
     } else if (selectedSection == SelectedSection.numberFormats) {
       if (rowIndex == 0) {
@@ -432,7 +443,7 @@ class SpreadsheetPreview extends StatelessWidget {
 
   Widget _buildMockOverlay(BuildContext context, double colWidth, double rowHeight) {
     if (selectedSection == SelectedSection.simpleExcel ||
-        selectedSection == SelectedSection.textStyles ||
+        selectedSection == SelectedSection.fontsStyles ||
         selectedSection == SelectedSection.numberFormats) {
       return const SizedBox.shrink();
     }

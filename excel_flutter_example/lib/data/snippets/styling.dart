@@ -1,35 +1,5 @@
-// Styling snippets: text styles (bold, italic, underline, colors) and
-// number formats (currency, custom patterns).
+// Styling snippets: number formats (currency, custom patterns).
 library;
-
-// ---------------------------------------------------------------------------
-// Text styles
-// ---------------------------------------------------------------------------
-const String textStylesSnippet = '''
-import 'package:excel_community/excel_community.dart';
-
-void generateTextStyles() {
-  var excel = Excel.createExcel();
-  var sheet = excel['Styles Demo'];
-
-  // Define CellStyle configurations
-  var cellStyle = CellStyle(
-    bold: true,
-    italic: true,
-    underline: Underline.Double, // Double underline
-    strikethrough: true,        // Strikethrough line
-    fontSize: 12,
-    fontColorHex: ExcelColor.fromHexString('#FF0000'),       // Red text
-    backgroundColorHex: ExcelColor.fromHexString('#CCCCCC'), // Grey fill
-  );
-
-  var cell = sheet.cell(CellIndex.indexByString("B5"));
-  cell.value = TextCellValue("Styled Text Example");
-  cell.cellStyle = cellStyle;
-
-  excel.save(fileName: 'text_styles_demo.xlsx');
-}
-''';
 
 // ---------------------------------------------------------------------------
 // Number formats
