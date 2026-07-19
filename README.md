@@ -47,6 +47,7 @@
 - ✅ **Charts**: Column, Bar, Line, Area, Pie, Doughnut, Scatter, and Radar charts
 - ✅ **Images**: Embed PNG, JPEG, BMP, GIF, TIFF, WMF, EMF, SVG, WebP and ICO images
 - ✅ **Pivot Tables**: Create dynamic pivot tables programmatically with row/column fields and various aggregation functions (Sum, Count, Average, Max, Min, etc.)
+- ✅ **Cell Comments**: Attach rich descriptions or review notes to specific cells, displaying red triangle markers in Excel (read & write)
 - ✅ **Cell Operations**: Merge cells, insert/delete rows and columns
 - ✅ **Sheet Management**: Create, copy, rename, delete sheets
 - ✅ **Freeze Panes**: Lock rows and/or columns so headers and key columns stay visible while scrolling (single sheet or multi-sheet workbooks)
@@ -578,6 +579,33 @@ sheet.setRowHidden(2, true);
 assert(sheet.isRowHidden(2) == true);
 
 excel.save(fileName: 'hidden_columns_demo.xlsx');
+```
+
+</details>
+
+<details>
+<summary><h3>💬 Cell Comments</h3></summary>
+
+Add descriptive text notes or review comments to any cell in a worksheet. These comments are compatible with Microsoft Excel, Google Sheets, and other modern spreadsheet readers, appearing as a red indicator triangle in the corner of the cell.
+
+* **Set a comment**: Set the comment text using `cell.comment = 'Your comment'`.
+* **Read a comment**: Get the comment text using `cell.comment`.
+
+```dart
+var excel = Excel.createExcel();
+var sheet = excel['Sheet1'];
+
+var cell = sheet.cell(CellIndex.indexByString("B2"));
+cell.value = TextCellValue("Widget A");
+
+// Set a comment on cell B2
+cell.comment = "This product has a 10% discount this month.";
+
+// Read comment back
+String? text = cell.comment;
+print("Cell B2 comment: $text");
+
+excel.save(fileName: 'cell_comments.xlsx');
 ```
 
 </details>
