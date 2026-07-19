@@ -288,12 +288,32 @@ Future<String> generatePivotTemplateHelper() async {
   sheet.updateCell(CellIndex.indexByString("A4"), TextCellValue("East Region"));
   sheet.updateCell(CellIndex.indexByString("B4"), IntCellValue(51000));
 
+  // Create target sheet for Pivot Table
+  var pivotSheet = excel['Pivot Report'];
+
+  // Create Pivot Table programmatically
+  final pivotTable = PivotTable(
+    name: 'PivotTable1',
+    sourceSheet: 'Sales Data',
+    sourceRange: 'A1:B4',
+    targetCell: CellIndex.indexByString('A3'),
+    rows: ['Region'],
+    values: [
+      PivotTableValue(
+        field: 'Amount',
+        function: PivotValueFunction.sum,
+      ),
+    ],
+  );
+
+  pivotSheet.addPivotTable(pivotTable);
+
   if (kIsWeb) {
     final bytes = excel.save(fileName: 'sales_report_pivot.xlsx');
     if (bytes != null && bytes.isNotEmpty) {
-      return '✅ Template data updated successfully!\n'
+      return '✅ Pivot Table programmatically generated successfully!\n'
           'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
-          'Download started. (In a real app, loading a template with pre-configured Pivot Tables preserves them entirely)';
+          'Download started.';
     }
     throw Exception('Failed to generate Excel file for Web.');
   } else {
@@ -312,7 +332,7 @@ Future<String> generatePivotTemplateHelper() async {
     if (outputFile != null) {
       final file = File(outputFile);
       await file.writeAsBytes(bytes);
-      return '✅ Template data saved successfully!\n'
+      return '✅ Pivot Table programmatically saved successfully!\n'
           'Location: $outputFile';
     }
     return 'Save cancelled.';

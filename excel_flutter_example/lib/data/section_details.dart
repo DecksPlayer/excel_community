@@ -153,19 +153,22 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: imageEmbeddingSnippet,
       );
-    case SelectedSection.textStyles:
+    case SelectedSection.fontsStyles:
       return SectionDetail(
-        title: 'Text Styles & Underlines',
+        title: 'Fonts & Styles Wiki',
         description:
-            'Format fonts, sizes, italic/bold, colors, backgrounds, strikethrough, and underlines.',
-        icon: Icons.format_underlined,
-        themeColor: Colors.deepPurple,
+            'A guide on applying custom fonts and styles to workbook cells. You can pass any font family string directly (e.g. "Trebuchet MS", "Verdana", "Times New Roman") or reference the FontFamily enum which maps to 180+ standard cross-platform fonts.',
+        icon: Icons.font_download_outlined,
+        themeColor: Colors.indigo,
         highlights: [
-          'Underline options: Underline.None, Underline.Single, Underline.Double',
-          'Font family selection (Arial, Calibri, Comic Sans, etc.)',
-          'Text strikethrough styling and color preservation',
+          'Direct string font: CellStyle(fontFamily: "Times New Roman")',
+          'Enum mapped font: CellStyle(fontFamily: getFontFamily(FontFamily.Arial))',
+          '180+ Mapped Fonts: Calibri, Arial, Consolas, Courier New, Georgia, Impact, Lucida Console, Comic Sans MS, Monaco, etc.',
+          'Font Sizes: Set custom sizes in points from 8pt to 24pt and beyond',
+          'Font Decorations: Bold, Italic, Strikethrough, Underline (Single/Double)',
+          'Complete Cell Styling: Copy and mix styles with cell background fills, text colors, and borders',
         ],
-        codeSnippet: textStylesSnippet,
+        codeSnippet: fontsStylesSnippet,
       );
     case SelectedSection.numberFormats:
       return SectionDetail(
@@ -320,6 +323,20 @@ SectionDetail getSectionDetail(SelectedSection section) {
           'Anchors column charts automatically inside a styled spreadsheet',
         ],
         codeSnippet: fullDemoSnippet,
+      );
+    case SelectedSection.cellComments:
+      return SectionDetail(
+        title: 'Cell Comments',
+        description:
+            'Attach rich descriptions or notes to specific cells using cell comments. These show up as red indicator triangles in Microsoft Excel and other compatible spreadsheet readers.',
+        icon: Icons.comment_outlined,
+        themeColor: Colors.teal,
+        highlights: [
+          'Add custom text comments to any cell using cell.comment = "..."',
+          'Compatible with Microsoft Excel, Google Sheets and other readers',
+          'Supports retrieving existing comments via cell.comment',
+        ],
+        codeSnippet: cellCommentsSnippet,
       );
   }
 }

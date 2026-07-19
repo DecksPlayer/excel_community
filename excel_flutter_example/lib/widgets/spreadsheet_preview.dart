@@ -366,37 +366,48 @@ class SpreadsheetPreview extends StatelessWidget {
           child: Text('Image placed at B5:', style: TextStyle(fontSize: 6)),
         );
       }
-    } else if (selectedSection == SelectedSection.textStyles) {
-      if (rowIndex == 0 && colIndex == 0) {
+    } else if (selectedSection == SelectedSection.fontsStyles) {
+      if (rowIndex == 0) {
         return Container(
-          color: Colors.blue.shade50,
+          color: Colors.indigo.shade50,
           alignment: Alignment.center,
-          child: const Text('Title', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+          child: Text(
+            colIndex == 0
+                ? 'Font'
+                : colIndex == 1
+                    ? 'Enum Mapping'
+                    : colIndex == 2
+                        ? 'Code'
+                        : colIndex == 3
+                            ? 'Sample'
+                            : '',
+            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.indigo),
+          ),
         );
       }
-      if (rowIndex == 2 && colIndex == 1) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Normal', style: TextStyle(fontSize: 7)),
-        );
+      if (rowIndex == 1) {
+        if (colIndex == 0) return const Center(child: Text('Calibri', style: TextStyle(fontSize: 7)));
+        if (colIndex == 1) return const Center(child: Text('Calibri', style: TextStyle(fontSize: 6)));
+        if (colIndex == 2) return const Center(child: Text("fontFamily: 'Calibri'", style: TextStyle(fontSize: 5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Calibri')));
       }
-      if (rowIndex == 3 && colIndex == 1) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Underline', style: TextStyle(fontSize: 7, decoration: TextDecoration.underline)),
-        );
+      if (rowIndex == 2) {
+        if (colIndex == 0) return const Center(child: Text('Arial', style: TextStyle(fontSize: 7)));
+        if (colIndex == 1) return const Center(child: Text('Arial', style: TextStyle(fontSize: 6)));
+        if (colIndex == 2) return const Center(child: Text('FontFamily.Arial', style: TextStyle(fontSize: 5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Arial')));
       }
-      if (rowIndex == 4 && colIndex == 1) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Double', style: TextStyle(fontSize: 7, decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.double)),
-        );
+      if (rowIndex == 3) {
+        if (colIndex == 0) return const Center(child: Text('Comic Sans', style: TextStyle(fontSize: 6)));
+        if (colIndex == 1) return const Center(child: Text('Comic_Sans_MS', style: TextStyle(fontSize: 5)));
+        if (colIndex == 2) return const Center(child: Text('FontFamily.Comic_Sans_MS', style: TextStyle(fontSize: 4.5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Comic Sans MS')));
       }
-      if (rowIndex == 6 && colIndex == 0) {
-        return Container(
-          alignment: Alignment.center,
-          child: const Text('Strikethrough', style: TextStyle(fontSize: 7, decoration: TextDecoration.lineThrough, color: Colors.red)),
-        );
+      if (rowIndex == 4) {
+        if (colIndex == 0) return const Center(child: Text('Courier New', style: TextStyle(fontSize: 6)));
+        if (colIndex == 1) return const Center(child: Text('Courier_New', style: TextStyle(fontSize: 5)));
+        if (colIndex == 2) return const Center(child: Text('FontFamily.Courier_New', style: TextStyle(fontSize: 4.5)));
+        if (colIndex == 3) return const Center(child: Text('Sample Text', style: TextStyle(fontSize: 7, fontFamily: 'Courier New')));
       }
     } else if (selectedSection == SelectedSection.numberFormats) {
       if (rowIndex == 0) {
@@ -411,6 +422,65 @@ class SpreadsheetPreview extends StatelessWidget {
         if (colIndex == 1) return const Padding(padding: EdgeInsets.only(left: 2), child: Text('Demo fmt', style: TextStyle(fontSize: 6)));
         if (colIndex == 2) return const Center(child: Text('1234.5', style: TextStyle(fontSize: 7)));
         if (colIndex == 3) return Container(color: Colors.green.shade50, child: const Center(child: Text('\$1,234.50', style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold))));
+      }
+    } else if (selectedSection == SelectedSection.cellComments) {
+      if (rowIndex == 0) {
+        return Container(
+          color: Colors.teal.shade50,
+          alignment: Alignment.center,
+          child: Text(
+            colIndex == 0
+                ? 'Code'
+                : colIndex == 1
+                    ? 'Name'
+                    : colIndex == 2
+                        ? 'Stock'
+                        : colIndex == 3
+                            ? 'Price'
+                            : colIndex == 4
+                                ? 'Status'
+                                : '',
+            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.teal),
+          ),
+        );
+      }
+      if (rowIndex > 0 && rowIndex < 5) {
+        final val = rowIndex == 1
+            ? ["P1001", "Widget A", "120", "15.50", "Active"]
+            : rowIndex == 2
+                ? ["P1002", "Gadget B", "45", "89.99", "Restocking"]
+                : rowIndex == 3
+                    ? ["P1003", "Device C", "8", "249.00", "Low Stock"]
+                    : ["P1004", "Widget D", "200", "5.25", "Discontinuing"];
+
+        if (colIndex < val.length) {
+          final text = val[colIndex];
+          final textWidget = Center(child: Text(text, style: const TextStyle(fontSize: 7)));
+
+          // Check for comments
+          if (rowIndex == 1 && colIndex == 1) {
+            return CommentedCell(
+              comment: "Top selling item this quarter. Restocked weekly.",
+              child: textWidget,
+            );
+          } else if (rowIndex == 2 && colIndex == 4) {
+            return CommentedCell(
+              comment: "Shipment delayed due to customs. Expected delivery next Friday.",
+              child: textWidget,
+            );
+          } else if (rowIndex == 3 && colIndex == 2) {
+            return CommentedCell(
+              comment: "Reorder point reached! Minimum threshold is 10 units.",
+              child: textWidget,
+            );
+          } else if (rowIndex == 4 && colIndex == 4) {
+            return CommentedCell(
+              comment: "Replaced by Widget E starting next fiscal period.",
+              child: textWidget,
+            );
+          }
+          return textWidget;
+        }
       }
     } else {
       if (rowIndex == 0) {
@@ -432,8 +502,9 @@ class SpreadsheetPreview extends StatelessWidget {
 
   Widget _buildMockOverlay(BuildContext context, double colWidth, double rowHeight) {
     if (selectedSection == SelectedSection.simpleExcel ||
-        selectedSection == SelectedSection.textStyles ||
-        selectedSection == SelectedSection.numberFormats) {
+        selectedSection == SelectedSection.fontsStyles ||
+        selectedSection == SelectedSection.numberFormats ||
+        selectedSection == SelectedSection.cellComments) {
       return const SizedBox.shrink();
     }
 
@@ -529,3 +600,56 @@ class SpreadsheetPreview extends StatelessWidget {
     );
   }
 }
+
+class CommentedCell extends StatelessWidget {
+  final Widget child;
+  final String comment;
+
+  const CommentedCell({
+    super.key,
+    required this.child,
+    required this.comment,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: comment,
+      padding: const EdgeInsets.all(6),
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      showDuration: const Duration(seconds: 3),
+      child: Stack(
+        children: [
+          child,
+          Positioned(
+            top: 0,
+            right: 0,
+            child: CustomPaint(
+              size: const Size(6, 6),
+              painter: TrianglePainter(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TrianglePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, 0)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+

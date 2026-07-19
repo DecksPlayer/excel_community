@@ -11,6 +11,7 @@ import 'widgets/header_card.dart';
 import 'widgets/about_view.dart';
 import 'widgets/code_view_card.dart';
 import 'widgets/preview_card.dart';
+import 'widgets/fonts_styles_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -104,8 +105,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ChartType.scatter,
           );
           break;
-        case SelectedSection.textStyles:
-          resultStatus = await ExcelGenerator.generateUnderlineStyles();
+        case SelectedSection.fontsStyles:
+          resultStatus = await ExcelGenerator.generateFontsStyles();
           break;
         case SelectedSection.numberFormats:
           resultStatus = await ExcelGenerator.generateNumberFormats();
@@ -139,6 +140,9 @@ class _MyHomePageState extends State<MyHomePage> {
           break;
         case SelectedSection.fullDemo:
           resultStatus = await ExcelGenerator.generateFullDemo();
+          break;
+        case SelectedSection.cellComments:
+          resultStatus = await ExcelGenerator.generateCellComments();
           break;
       }
       setState(() {
@@ -230,6 +234,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   if (_selectedSection == SelectedSection.about)
                     const AboutView()
+                  else if (_selectedSection == SelectedSection.fontsStyles)
+                    FontsStylesView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
                   else ...[
                     HeaderCard(
                       detail: detail,

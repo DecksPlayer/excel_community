@@ -177,6 +177,11 @@ class _WorksheetParser {
           if (rId != null) {
             sheetObject._drawingRId = rId;
           }
+        } else if (tagName == 'legacyDrawing' || tagName.endsWith(':legacyDrawing')) {
+          final rId = _getAttr(event, 'id');
+          if (rId != null) {
+            sheetObject._legacyDrawingRId = rId;
+          }
         } else if (tagName == 'sheetProtection' ||
             tagName.endsWith(':sheetProtection')) {
           sheetObject.sheetProtection = SheetProtection(

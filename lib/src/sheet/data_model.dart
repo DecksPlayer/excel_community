@@ -8,6 +8,7 @@ class Data extends Equatable {
   String _sheetName;
   int _rowIndex;
   int _columnIndex;
+  String? _comment;
 
   ///
   ///It will clone the object by changing the `this` reference of previous DataObject and putting `new this` reference, with copying the values too
@@ -19,6 +20,7 @@ class Data extends Equatable {
           dataObject.columnIndex,
           value: dataObject._value,
           cellStyleVal: dataObject._cellStyle,
+          commentVal: dataObject._comment,
         );
 
   ///
@@ -32,12 +34,14 @@ class Data extends Equatable {
     NumFormat? numberFormat,
     CellStyle? cellStyleVal,
     bool isFormulaVal = false,
+    String? commentVal,
   })  : _sheet = sheet,
         _value = value,
         _cellStyle = cellStyleVal,
         _sheetName = sheet.sheetName,
         _rowIndex = row,
-        _columnIndex = column;
+        _columnIndex = column,
+        _comment = commentVal;
 
   /// returns the newData object when called from Sheet Class
   static Data newData(Sheet sheet, int row, int column) {
@@ -103,6 +107,14 @@ class Data extends Equatable {
     _cellStyle = style;
   }
 
+  /// returns the cell comment
+  String? get comment => _comment;
+
+  /// sets the cell comment
+  set comment(String? val) {
+    _comment = val;
+  }
+
   @override
   List<Object?> get props => [
         _value,
@@ -110,5 +122,6 @@ class Data extends Equatable {
         _rowIndex,
         _cellStyle,
         _sheetName,
+        _comment,
       ];
 }

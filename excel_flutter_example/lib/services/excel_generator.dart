@@ -9,6 +9,7 @@ import 'helpers/full_demo_helper.dart';
 import 'helpers/multi_page_charts_helper.dart';
 import 'helpers/hidden_columns_helper.dart';
 import 'helpers/merged_cells_helper.dart';
+import 'helpers/cell_comments_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -19,8 +20,8 @@ class ExcelGenerator {
   static Future<String> generateExcelWithChart(ChartType type) =>
       generateExcelWithChartHelper(type);
 
-  static Future<String> generateUnderlineStyles() =>
-      generateUnderlineStylesHelper();
+  static Future<String> generateFontsStyles() =>
+      generateFontsStylesHelper();
 
   static Future<String> generateNumberFormats() =>
       generateNumberFormatsHelper();
@@ -50,4 +51,7 @@ class ExcelGenerator {
 
   static Future<String> generateMergedCells() =>
       generateMergedCellsHelper();
+
+  static Future<String> generateCellComments() =>
+      generateCellCommentsHelper();
 }

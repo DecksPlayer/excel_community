@@ -46,6 +46,8 @@
 - ✅ **Cell Styling**: Fonts (Bold, Italic, Underline, Strikethrough), Colors, Borders, Alignment, Number Formats
 - ✅ **Charts**: Column, Bar, Line, Area, Pie, Doughnut, Scatter, and Radar charts
 - ✅ **Images**: Embed PNG, JPEG, BMP, GIF, TIFF, WMF, EMF, SVG, WebP and ICO images
+- ✅ **Pivot Tables**: Create dynamic pivot tables programmatically with row/column fields and various aggregation functions (Sum, Count, Average, Max, Min, etc.)
+- ✅ **Cell Comments**: Attach rich descriptions or review notes to specific cells, displaying red triangle markers in Excel (read & write)
 - ✅ **Cell Operations**: Merge cells, insert/delete rows and columns
 - ✅ **Sheet Management**: Create, copy, rename, delete sheets
 - ✅ **Freeze Panes**: Lock rows and/or columns so headers and key columns stay visible while scrolling (single sheet or multi-sheet workbooks)
@@ -577,6 +579,33 @@ sheet.setRowHidden(2, true);
 assert(sheet.isRowHidden(2) == true);
 
 excel.save(fileName: 'hidden_columns_demo.xlsx');
+```
+
+</details>
+
+<details>
+<summary><h3>💬 Cell Comments</h3></summary>
+
+Add descriptive text notes or review comments to any cell in a worksheet. These comments are compatible with Microsoft Excel, Google Sheets, and other modern spreadsheet readers, appearing as a red indicator triangle in the corner of the cell.
+
+* **Set a comment**: Set the comment text using `cell.comment = 'Your comment'`.
+* **Read a comment**: Get the comment text using `cell.comment`.
+
+```dart
+var excel = Excel.createExcel();
+var sheet = excel['Sheet1'];
+
+var cell = sheet.cell(CellIndex.indexByString("B2"));
+cell.value = TextCellValue("Widget A");
+
+// Set a comment on cell B2
+cell.comment = "This product has a 10% discount this month.";
+
+// Read comment back
+String? text = cell.comment;
+print("Cell B2 comment: $text");
+
+excel.save(fileName: 'cell_comments.xlsx');
 ```
 
 </details>
@@ -1249,6 +1278,93 @@ For more details about chart colors and customization, see the [CHART_COLORS_GUI
 - **Chart Title**: The title parameter is optional but recommended for clarity
 - **Legend**: Set `showLegend: false` to hide the chart legend
 - **Microsoft Excel Compatibility** *(v1.2.0+)*: Chart XML is fully compliant with the OOXML spec. Series names use the correct `<c:tx><c:v>` structure and element ordering inside `<c:chart>` follows the required CT_Chart sequence, ensuring charts open without errors in Microsoft Excel and Excel 365.
+
+</details>
+
+<details open>
+<summary><h2>🔄 Pivot Tables (Tablas Dinámicas)</h2></summary>
+
+Excel Community supports programmatically creating dynamic Pivot Tables in your worksheets. Pivot Tables allow you to summarize, analyze, explore, and present summary data from a larger dataset.
+
+### Basic Pivot Table Example
+
+```dart
+// Create an Excel file and add source data
+var excel = Excel.createExcel();
+var sheet = excel['Sales Data'];
+excel.delete('Sheet1');
+
+// Add headers
+sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Region"));
+sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Product"));
+sheet.updateCell(CellIndex.indexByString("C1"), TextCellValue("Amount"));
+
+// Add data rows
+final data = [
+  ['North', 'Apples', 100],
+  ['North', 'Oranges', 150],
+  ['South', 'Apples', 200],
+  ['South', 'Oranges', 120],
+  ['North', 'Apples', 80],
+];
+
+for (var i = 0; i < data.length; i++) {
+  sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i + 1), TextCellValue(data[i][0] as String));
+  sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i + 1), TextCellValue(data[i][1] as String));
+  sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: i + 1), IntCellValue(data[i][2] as int));
+}
+
+// Create a new sheet for the pivot report
+var reportSheet = excel['Pivot Report'];
+
+// Define the pivot table
+final pivotTable = PivotTable(
+  name: 'PivotTable1',
+  sourceSheet: 'Sales Data',
+  sourceRange: 'A1:C6', // Source data range (including headers)
+  targetCell: CellIndex.indexByString('A3'), // Top-left position on the target sheet
+  rows: ['Region'], // Row fields
+  columns: ['Product'], // Column fields
+  values: [
+    PivotTableValue(
+      field: 'Amount',
+      function: PivotValueFunction.sum,
+      customName: 'Total Sales', // Optional custom header name
+    ),
+  ],
+);
+
+// Add pivot table to sheet
+reportSheet.addPivotTable(pivotTable);
+
+// Save the file
+var bytes = excel.save();
+```
+
+### Supported Aggregation Functions
+
+The `PivotValueFunction` enum provides the following data aggregation functions:
+
+| Function | Description |
+|---|---|
+| `PivotValueFunction.sum` | Sums all numeric values in the field (Default) |
+| `PivotValueFunction.count` | Counts all non-blank cells (both numeric and text) |
+| `PivotValueFunction.average` | Calculates the average of numeric values |
+| `PivotValueFunction.max` | Finds the maximum value |
+| `PivotValueFunction.min` | Finds the minimum value |
+| `PivotValueFunction.product` | Multiplies all numeric values |
+| `PivotValueFunction.countNums` | Counts only cells containing numeric values |
+| `PivotValueFunction.stdDev` | Estimates standard deviation of a sample |
+| `PivotValueFunction.stdDevp` | Calculates standard deviation of an entire population |
+| `PivotValueFunction.varVal` | Estimates variance of a sample |
+| `PivotValueFunction.varp` | Calculates variance of an entire population |
+
+### Key Details & Customization
+
+- **Fields**: Row and column names specified in `rows` and `columns` must match the header names in your source sheet exactly (e.g. `'Region'`, `'Product'`).
+- **Source Range**: Ensure `sourceRange` fully covers the headers and all data rows (e.g. `'A1:C6'`).
+- **Values**: You can define multiple values in the `values` list to calculate multiple summaries (e.g. both `sum` and `average` for a field, or summaries of different fields).
+- **Target Cell**: The `targetCell` indicates where the top-left of the pivot table will be rendered on the target sheet. Make sure you don't overwrite existing data in that area.
 
 </details>
 

@@ -247,13 +247,33 @@ class BiffParser {
       }
 
       if (sheetStartIndex != -1) {
+        final notes = <(int, int)>[];
+        final commentTexts = <String>[];
+
         for (int i = sheetStartIndex + 1; i < records.length; i++) {
           final rec = records[i];
           if (rec.type == 0x000A) {
             break;
           }
 
-          if (rec.type == 0x00FD) { // LABELSST
+          if (rec.type == 0x001C) { // NOTE
+            if (rec.data.length >= 4) {
+              final view = ByteData.sublistView(Uint8List.fromList(rec.data));
+              int r = view.getUint16(0, Endian.little);
+              int c = view.getUint16(2, Endian.little);
+              notes.add((r, c));
+            }
+          } else if (rec.type == 0x01B6) { // TXO
+            if (rec.data.length >= 12) {
+              final view = ByteData.sublistView(Uint8List.fromList(rec.data));
+              int cchText = view.getUint16(10, Endian.little);
+              if (i + 1 < records.length && records[i + 1].type == 0x003C) {
+                final nextRec = records[i + 1];
+                final commentText = _parseBiffString(nextRec.data, cchText);
+                commentTexts.add(commentText);
+              }
+            }
+          } else if (rec.type == 0x00FD) { // LABELSST
             final view = ByteData.sublistView(Uint8List.fromList(rec.data));
             int r = view.getUint16(0, Endian.little);
             int c = view.getUint16(2, Endian.little);
@@ -312,6 +332,15 @@ class BiffParser {
                 );
               }
             }
+          }
+        }
+
+        final minCount = notes.length < commentTexts.length ? notes.length : commentTexts.length;
+        for (int k = 0; k < minCount; k++) {
+          final coord = notes[k];
+          final text = commentTexts[k];
+          if (text.isNotEmpty) {
+            sheet.cell(CellIndex.indexByColumnRow(columnIndex: coord.$2, rowIndex: coord.$1)).comment = text;
           }
         }
       }
@@ -411,6 +440,27 @@ class BiffParser {
       double val = bd.getFloat64(0, Endian.little);
       return isX100 ? (val / 100.0) : val;
     }
+  }
+
+  String _parseBiffString(List<int> data, int charCount) {
+    if (data.isEmpty) return "";
+    final flags = data[0];
+    final isUtf16 = (flags & 0x01) != 0;
+    final bytes = data.sublist(1);
+    final sb = StringBuffer();
+    if (isUtf16) {
+      for (int i = 0; i < charCount * 2; i += 2) {
+        if (i + 1 < bytes.length) {
+          sb.writeCharCode(bytes[i] | (bytes[i + 1] << 8));
+        }
+      }
+    } else {
+      final limit = charCount < bytes.length ? charCount : bytes.length;
+      for (int i = 0; i < limit; i++) {
+        sb.writeCharCode(bytes[i]);
+      }
+    }
+    return sb.toString();
   }
 }
 

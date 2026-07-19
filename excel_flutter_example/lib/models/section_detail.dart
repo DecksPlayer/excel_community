@@ -12,7 +12,7 @@ enum SelectedSection {
   barChart,
   scatterChart,
   imageEmbedding,
-  textStyles,
+  fontsStyles,
   numberFormats,
   multiSheets,
   pivotTemplate,
@@ -24,6 +24,7 @@ enum SelectedSection {
   multiPageCharts,
   allCharts,
   fullDemo,
+  cellComments,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

@@ -134,10 +134,10 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
-                SelectedSection.textStyles,
-                'Text Underlines & Fills',
-                Icons.format_underlined,
-                Colors.deepPurple,
+                SelectedSection.fontsStyles,
+                'Fonts & Styles',
+                Icons.font_download_outlined,
+                Colors.indigo,
               ),
               _buildSidebarItem(
                 context,
@@ -159,6 +159,13 @@ class Sidebar extends StatelessWidget {
                 'Merged Cells (Multi-Sheet)',
                 Icons.merge_type_outlined,
                 Colors.indigo,
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.cellComments,
+                'Cell Comments',
+                Icons.comment_outlined,
+                Colors.teal,
               ),
               _buildSidebarItem(
                 context,

@@ -151,48 +151,7 @@ class AboutView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        GridView.count(
-          crossAxisCount: MediaQuery.of(context).size.width >= 1200 ? 4 : 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.3,
-          children: [
-            _buildPillarCard(
-              context,
-              icon: Icons.code_rounded,
-              title: '100% Pure Dart',
-              description:
-                  'No local Excel installations, third-party bindings, or native bridges needed. Runs on all OS platforms.',
-              color: Colors.blue,
-            ),
-            _buildPillarCard(
-              context,
-              icon: Icons.bar_chart_rounded,
-              title: '8 Chart Types',
-              description:
-                  'Generates Column, Bar, Line, Area, Pie, Doughnut, Radar, and Scatter charts conforming to open spreadsheet standards.',
-              color: Colors.green,
-            ),
-            _buildPillarCard(
-              context,
-              icon: Icons.style_rounded,
-              title: 'Style System',
-              description:
-                  'Complete control over custom text sizes, bold/italic, double underlines, cell borders, and hex coloring.',
-              color: Colors.purple,
-            ),
-            _buildPillarCard(
-              context,
-              icon: Icons.layers_rounded,
-              title: 'Wasm & Web Ready',
-              description:
-                  'Optimized compilation paths that avoid file-system bottlenecks, allowing instant in-browser spreadsheet generation.',
-              color: Colors.teal,
-            ),
-          ],
-        ),
+        _buildFeaturesGrid(context),
         const SizedBox(height: 32),
         Card(
           elevation: 0,
@@ -260,6 +219,97 @@ class AboutView extends StatelessWidget {
       ],
     );
   }
+  Widget _buildFeaturesGrid(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    final card1 = _buildPillarCard(
+      context,
+      icon: Icons.code_rounded,
+      title: '100% Pure Dart',
+      description:
+          'No local Excel installations, third-party bindings, or native bridges needed. Runs on all OS platforms.',
+      color: Colors.blue,
+    );
+    final card2 = _buildPillarCard(
+      context,
+      icon: Icons.bar_chart_rounded,
+      title: '8 Chart Types',
+      description:
+          'Generates Column, Bar, Line, Area, Pie, Doughnut, Radar, and Scatter charts conforming to open spreadsheet standards.',
+      color: Colors.green,
+    );
+    final card3 = _buildPillarCard(
+      context,
+      icon: Icons.style_rounded,
+      title: 'Style System',
+      description:
+          'Complete control over custom text sizes, bold/italic, double underlines, cell borders, and hex coloring.',
+      color: Colors.purple,
+    );
+    final card4 = _buildPillarCard(
+      context,
+      icon: Icons.layers_rounded,
+      title: 'Wasm & Web Ready',
+      description:
+          'Optimized compilation paths that avoid file-system bottlenecks, allowing instant in-browser spreadsheet generation.',
+      color: Colors.teal,
+    );
+
+    if (width >= 1200) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: card1),
+            const SizedBox(width: 16),
+            Expanded(child: card2),
+            const SizedBox(width: 16),
+            Expanded(child: card3),
+            const SizedBox(width: 16),
+            Expanded(child: card4),
+          ],
+        ),
+      );
+    } else if (width >= 640) {
+      return Column(
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: card1),
+                const SizedBox(width: 16),
+                Expanded(child: card2),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: card3),
+                const SizedBox(width: 16),
+                Expanded(child: card4),
+              ],
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Column(
+        children: [
+          card1,
+          const SizedBox(height: 16),
+          card2,
+          const SizedBox(height: 16),
+          card3,
+          const SizedBox(height: 16),
+          card4,
+        ],
+      );
+    }
+  }
 
   Widget _buildPillarCard(
     BuildContext context, {
@@ -279,7 +329,7 @@ class AboutView extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
@@ -299,14 +349,12 @@ class AboutView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Expanded(
-              child: Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF64748B),
-                  height: 1.4,
-                ),
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF64748B),
+                height: 1.4,
               ),
             ),
           ],
