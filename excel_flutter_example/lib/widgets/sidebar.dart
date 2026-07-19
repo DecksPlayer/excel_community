@@ -162,6 +162,13 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.cellComments,
+                'Cell Comments',
+                Icons.comment_outlined,
+                Colors.teal,
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.pivotTemplate,
                 'Templates & Pivot Tables',
                 Icons.content_paste_go_outlined,

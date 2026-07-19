@@ -33,6 +33,7 @@ class Parser {
     _StylesParser(_excel).parse(_excel._stylesTarget);
     _parseSharedStrings();
     _parseContent();
+    _parseComments();
   }
 
   // ---------------------------------------------------------------------------
@@ -327,5 +328,67 @@ class Parser {
       _WorksheetParser(_excel, _worksheetTargets).parseTable(
           _excel._xmlFiles['xl/workbook.xml']!.findAllElements('sheet').last);
     }
+  }
+
+  void _parseComments() {
+    _excel._sheetMap.forEach((sheetName, sheetObject) {
+      final sheetId = _excel._xmlSheetId[sheetName];
+      if (sheetId == null) return;
+      final sheetFileName = sheetId.split('/').last; // e.g. sheet1.xml
+      final sheetRelsPath = 'xl/worksheets/_rels/$sheetFileName.rels';
+
+      final relsFile = _excel._archive.findFile(sheetRelsPath);
+      if (relsFile == null) return;
+
+      relsFile.decompress();
+      final relsDoc = XmlDocument.parse(utf8.decode(relsFile.content));
+
+      String? commentsPath;
+      for (final rel in relsDoc.findAllElements('Relationship')) {
+        final type = rel.getAttribute('Type') ?? '';
+        if (type ==
+            'http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments') {
+          final target = rel.getAttribute('Target') ?? '';
+          commentsPath = target;
+          break;
+        }
+      }
+
+      if (commentsPath == null) return;
+
+      if (commentsPath.startsWith('../')) {
+        commentsPath = 'xl/' + commentsPath.substring(3);
+      } else if (commentsPath.startsWith('/')) {
+        commentsPath = commentsPath.substring(1);
+      } else if (!commentsPath.startsWith('xl/')) {
+        commentsPath = 'xl/worksheets/$commentsPath';
+      }
+
+      final commentsFile = _excel._archive.findFile(commentsPath);
+      if (commentsFile == null) return;
+
+      commentsFile.decompress();
+      final commentsDoc = XmlDocument.parse(utf8.decode(commentsFile.content));
+
+      for (final commentNode in commentsDoc.findAllElements('comment')) {
+        final ref = commentNode.getAttribute('ref');
+        if (ref == null) continue;
+
+        final textElements = commentNode.findElements('text');
+        if (textElements.isEmpty) continue;
+        final textElement = textElements.first;
+
+        final commentText = textElement.descendants
+            .whereType<XmlText>()
+            .map((node) => node.value)
+            .join('');
+
+        if (commentText.isNotEmpty) {
+          final cellIndex = CellIndex.indexByString(ref);
+          final cell = sheetObject.cell(cellIndex);
+          cell.comment = commentText;
+        }
+      }
+    });
   }
 }

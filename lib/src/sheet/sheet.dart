@@ -22,6 +22,7 @@ class Sheet {
   final List<PivotTable> _pivotTables = [];
   final List<String> _pivotTableRIds = [];
   String? _drawingRId;
+  String? _legacyDrawingRId;
   SheetProtection sheetProtection = SheetProtection();
   Set<int> _hiddenColumns = {};
   Set<int> _hiddenRows = {};
@@ -46,7 +47,9 @@ class Sheet {
             pivotTableRIds: oldSheetObject._pivotTableRIds,
             sheetProtection: oldSheetObject.sheetProtection,
             hiddenColumnsVal: oldSheetObject._hiddenColumns,
-            hiddenRowsVal: oldSheetObject._hiddenRows);
+            hiddenRowsVal: oldSheetObject._hiddenRows,
+            drawingRId: oldSheetObject._drawingRId,
+            legacyDrawingRId: oldSheetObject._legacyDrawingRId);
 
   Sheet._(this._excel, this._sheet,
       {Map<int, Map<int, Data>>? sh,
@@ -67,7 +70,11 @@ class Sheet {
       List<String>? pivotTableRIds,
       SheetProtection? sheetProtection,
       Set<int>? hiddenColumnsVal,
-      Set<int>? hiddenRowsVal}) {
+      Set<int>? hiddenRowsVal,
+      String? drawingRId,
+      String? legacyDrawingRId}) {
+    _drawingRId = drawingRId;
+    _legacyDrawingRId = legacyDrawingRId;
     this.sheetProtection = sheetProtection ?? SheetProtection();
     _headerFooter = headerFooter;
     if (charts != null) {

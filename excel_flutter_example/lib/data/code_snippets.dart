@@ -13,3 +13,5 @@ export 'snippets/charts.dart';
 export 'snippets/images.dart';
 export 'snippets/hidden_columns.dart';
 export 'snippets/merged_cells.dart';
+export 'snippets/cell_comments.dart';
+

@@ -14,6 +14,7 @@ class Save {
   late final _StyleManager _styleManager;
   late final _WorksheetManager _worksheetManager;
   late final _WorkbookManager _workbookManager;
+  late final _CommentManager _commentManager;
 
   Save._(this._excel, this.parser) {
     _chartManager = _ChartManager(_excel, this);
@@ -22,6 +23,7 @@ class Save {
     _styleManager = _StyleManager(_excel, this);
     _worksheetManager = _WorksheetManager(_excel, this);
     _workbookManager = _WorkbookManager(_excel);
+    _commentManager = _CommentManager(_excel, this);
   }
 
   List<int>? _save() {
@@ -38,6 +40,7 @@ class Save {
     _chartManager.processCharts();
     _imageManager.processImages();
     _pivotTableManager.processPivotTables();
+    _commentManager.processComments();
 
     _worksheetManager.setSheetElements();
 

@@ -324,5 +324,19 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: fullDemoSnippet,
       );
+    case SelectedSection.cellComments:
+      return SectionDetail(
+        title: 'Cell Comments',
+        description:
+            'Attach rich descriptions or notes to specific cells using cell comments. These show up as red indicator triangles in Microsoft Excel and other compatible spreadsheet readers.',
+        icon: Icons.comment_outlined,
+        themeColor: Colors.teal,
+        highlights: [
+          'Add custom text comments to any cell using cell.comment = "..."',
+          'Compatible with Microsoft Excel, Google Sheets and other readers',
+          'Supports retrieving existing comments via cell.comment',
+        ],
+        codeSnippet: cellCommentsSnippet,
+      );
   }
 }

@@ -24,6 +24,7 @@ enum SelectedSection {
   multiPageCharts,
   allCharts,
   fullDemo,
+  cellComments,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

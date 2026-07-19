@@ -191,7 +191,13 @@ class _WorksheetManager {
     }
     printedTags.add('drawing');
 
-    writeOriginal('legacyDrawing');
+    if (sheetObject._legacyDrawingRId != null) {
+      out.write('<legacyDrawing r:id="${sheetObject._legacyDrawingRId}"/>');
+    } else {
+      writeOriginal('legacyDrawing');
+    }
+    printedTags.add('legacyDrawing');
+
     writeOriginal('legacyDrawingHF');
     writeOriginal('picture');
     writeOriginal('oleObjects');

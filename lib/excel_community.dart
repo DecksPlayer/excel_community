@@ -69,6 +69,7 @@ part 'src/utilities/chart_builders/chart_style_builder_factory.dart';
 /// Save
 part 'src/save/save_file.dart';
 part 'src/save/charts/chart_manager.dart';
+part 'src/save/comments/comment_manager.dart';
 part 'src/save/images/image_manager.dart';
 part 'src/save/pivot_table/pivot_table_manager.dart';
 part 'src/save/styles/style_manager.dart';

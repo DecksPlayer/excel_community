@@ -141,6 +141,9 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.fullDemo:
           resultStatus = await ExcelGenerator.generateFullDemo();
           break;
+        case SelectedSection.cellComments:
+          resultStatus = await ExcelGenerator.generateCellComments();
+          break;
       }
       setState(() {
         _status = resultStatus;
