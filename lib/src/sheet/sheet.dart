@@ -19,6 +19,8 @@ class Sheet {
   HeaderFooter? _headerFooter;
   final List<Chart> _charts = [];
   final List<ExcelImage> _images = [];
+  final List<PivotTable> _pivotTables = [];
+  final List<String> _pivotTableRIds = [];
   String? _drawingRId;
   SheetProtection sheetProtection = SheetProtection();
   Set<int> _hiddenColumns = {};
@@ -40,6 +42,8 @@ class Sheet {
             headerFooter: oldSheetObject._headerFooter,
             charts: oldSheetObject._charts,
             images: oldSheetObject._images,
+            pivotTables: oldSheetObject._pivotTables,
+            pivotTableRIds: oldSheetObject._pivotTableRIds,
             sheetProtection: oldSheetObject.sheetProtection,
             hiddenColumnsVal: oldSheetObject._hiddenColumns,
             hiddenRowsVal: oldSheetObject._hiddenRows);
@@ -59,6 +63,8 @@ class Sheet {
       HeaderFooter? headerFooter,
       List<Chart>? charts,
       List<ExcelImage>? images,
+      List<PivotTable>? pivotTables,
+      List<String>? pivotTableRIds,
       SheetProtection? sheetProtection,
       Set<int>? hiddenColumnsVal,
       Set<int>? hiddenRowsVal}) {
@@ -69,6 +75,12 @@ class Sheet {
     }
     if (images != null) {
       _images.addAll(images);
+    }
+    if (pivotTables != null) {
+      _pivotTables.addAll(pivotTables);
+    }
+    if (pivotTableRIds != null) {
+      _pivotTableRIds.addAll(pivotTableRIds);
     }
 
     if (spanL_ != null) {
@@ -363,5 +375,11 @@ class Sheet {
   void protect(String password) {
     sheetProtection = SheetProtection(sheet: true);
     sheetProtection.setPassword(password);
+  }
+
+  List<PivotTable> get pivotTables => _pivotTables;
+
+  void addPivotTable(PivotTable pivotTable) {
+    _pivotTables.add(pivotTable);
   }
 }

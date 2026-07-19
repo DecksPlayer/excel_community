@@ -133,10 +133,8 @@ class _PivotTableManager {
   int _countExistingPivotTables() {
     final keys = <String>{};
     keys.addAll(_excel._xmlFiles.keys);
-    if (_excel._archive != null) {
-      for (final f in _excel._archive.files) {
-        keys.add(f.name);
-      }
+    for (final f in _excel._archive.files) {
+      keys.add(f.name);
     }
     return keys
         .where((k) =>
@@ -149,10 +147,8 @@ class _PivotTableManager {
   int _countExistingPivotCaches() {
     final keys = <String>{};
     keys.addAll(_excel._xmlFiles.keys);
-    if (_excel._archive != null) {
-      for (final f in _excel._archive.files) {
-        keys.add(f.name);
-      }
+    for (final f in _excel._archive.files) {
+      keys.add(f.name);
     }
     return keys
         .where((k) =>
@@ -190,8 +186,8 @@ class _PivotTableManager {
 
     final startCell = pt.targetCell.cellId;
     final endColIdx =
-        pt.targetCell.columnIndex + max(1, pt.columns.length + pt.values.length);
-    final endRowIdx = pt.targetCell.rowIndex + max(2, pt.rows.length + 10);
+        (pt.targetCell.columnIndex + max(1, pt.columns.length + pt.values.length)).toInt();
+    final endRowIdx = (pt.targetCell.rowIndex + max(2, pt.rows.length + 10)).toInt();
     final endCell = getCellId(endColIdx, endRowIdx);
 
     builder.element('pivotTableDefinition',
@@ -202,6 +198,7 @@ class _PivotTableManager {
           'name': pt.name,
           'cacheId': cacheId.toString(),
           'dataOnRows': '0',
+          'dataCaption': 'Values',
           'applyWidthHeightFormats': '1',
           'applyNumberFormats': '1',
           'applyBorderFormats': '1',
@@ -217,9 +214,9 @@ class _PivotTableManager {
         }, nest: () {
       builder.element('location', attributes: {
         'ref': '$startCell:$endCell',
-        'leftShift': '0',
-        'topShift': '0',
-        'fitWidth': '1',
+        'firstHeaderRow': '1',
+        'firstDataRow': '2',
+        'firstDataCol': '1',
       });
 
       builder.element('pivotFields',
@@ -233,7 +230,7 @@ class _PivotTableManager {
           if (isRow) {
             builder.element('pivotField', attributes: {
               'axis': 'axisRow',
-              'showAllItems': '0',
+              'showAll': '0',
             }, nest: () {
               builder.element('items', attributes: {'count': '1'}, nest: () {
                 builder.element('item', attributes: {'t': 'default'});
@@ -242,7 +239,7 @@ class _PivotTableManager {
           } else if (isCol) {
             builder.element('pivotField', attributes: {
               'axis': 'axisCol',
-              'showAllItems': '0',
+              'showAll': '0',
             }, nest: () {
               builder.element('items', attributes: {'count': '1'}, nest: () {
                 builder.element('item', attributes: {'t': 'default'});
@@ -251,11 +248,11 @@ class _PivotTableManager {
           } else if (isVal) {
             builder.element('pivotField', attributes: {
               'dataField': '1',
-              'showAllItems': '0',
+              'showAll': '0',
             });
           } else {
             builder.element('pivotField', attributes: {
-              'showAllItems': '0',
+              'showAll': '0',
             });
           }
         }
@@ -271,11 +268,11 @@ class _PivotTableManager {
             }
           }
         });
-
-        builder.element('rowItems', attributes: {'count': '1'}, nest: () {
-          builder.element('i');
-        });
       }
+
+      builder.element('rowItems', attributes: {'count': '1'}, nest: () {
+        builder.element('i');
+      });
 
       if (pt.columns.isNotEmpty) {
         builder.element('colFields',
@@ -287,11 +284,11 @@ class _PivotTableManager {
             }
           }
         });
-
-        builder.element('colItems', attributes: {'count': '1'}, nest: () {
-          builder.element('i');
-        });
       }
+
+      builder.element('colItems', attributes: {'count': '1'}, nest: () {
+        builder.element('i');
+      });
 
       if (pt.values.isNotEmpty) {
         builder.element('dataFields',
@@ -301,10 +298,12 @@ class _PivotTableManager {
             if (idx != -1) {
               final name = val.customName ??
                   _defaultDataFieldName(val.field, val.function);
+              final subtotalVal =
+                  val.function == PivotValueFunction.varVal ? 'var' : val.function.name;
               builder.element('dataField', attributes: {
                 'name': name,
                 'fld': idx.toString(),
-                'subtotal': val.function.name,
+                'subtotal': subtotalVal,
                 'baseField': '0',
                 'baseItem': '0',
               });

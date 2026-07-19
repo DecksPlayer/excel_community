@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.1.8] - 2026-07-12
+### Added
+- **Pivot Table** Add Official support and usage instructions for Pivot Tables.
+
 ## [2.1.7] - 2026-07-09
+### Added
  - **Show Icon** show excel community logo.
  - **Chage Tags** update tags to excel_community.
 ## [2.1.6] - 2026-07-06

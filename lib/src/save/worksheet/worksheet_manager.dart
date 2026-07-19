@@ -59,6 +59,7 @@ class _WorksheetManager {
       'mergeCells',
       'headerFooter',
       'drawing',
+      'pivotTableParts',
     };
 
     for (final event in events) {
@@ -196,6 +197,18 @@ class _WorksheetManager {
     writeOriginal('oleObjects');
     writeOriginal('drawingHF');
     writeOriginal('webPublishItems');
+
+    // 9b. pivotTableParts
+    if (sheetObject.pivotTables.isNotEmpty && sheetObject._pivotTableRIds.isNotEmpty) {
+      out.write('<pivotTableParts count="${sheetObject._pivotTableRIds.length}">');
+      for (final rId in sheetObject._pivotTableRIds) {
+        out.write('<pivotTablePart r:id="$rId"/>');
+      }
+      out.write('</pivotTableParts>');
+    } else {
+      writeOriginal('pivotTableParts');
+    }
+    printedTags.add('pivotTableParts');
 
     // 10. extLst
     writeOriginal('extLst');
