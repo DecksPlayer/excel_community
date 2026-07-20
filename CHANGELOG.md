@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.2.0] - 2026-07-20
+### Added
+- **Conditional Formatting (`<conditionalFormatting>`)**: Native OpenXML/SpreadsheetML support for Conditional Formatting rules and Differential Styles (`<dxfs>`).
+  - Support for numeric ranges (`cellIs`), text matching (`containsText`, `notContains`, `beginsWith`, `endsWith`), custom formula expressions (`expression`), and duplicate/unique values (`duplicateValues`, `uniqueValues`).
+  - Multi-sheet support with worksheet-wide unique rule priority sequencing.
+  - Round-trip preservation when reading, saving, and editing `.xlsx` files.
+- **Example & Flutter App Integration**: Added standalone CLI example (`example/excel_conditional_formatting.dart`), documentation snippet, and a new interactive section in the Flutter demo app (`excel_flutter_example`).
+
 ## [2.1.9] - 2026-07-19
 ### Added
 - **Cell Comments**: Added support and usage instructions for Cell Comments.
