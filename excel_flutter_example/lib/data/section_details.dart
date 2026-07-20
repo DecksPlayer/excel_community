@@ -338,5 +338,20 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: cellCommentsSnippet,
       );
+    case SelectedSection.conditionalFormatting:
+      return SectionDetail(
+        title: 'Conditional Formatting (Multi-Sheet)',
+        description:
+            'Automatically highlight cells with custom background and font colors based on numeric ranges, text matches, duplicate entries, or custom formula expressions across multiple worksheets.',
+        icon: Icons.palette_outlined,
+        themeColor: Colors.deepOrange,
+        highlights: [
+          'Sheet 1 (Semester 1): Numeric range (Pass > 70 / Fail <= 50) & Text matching (Passed)',
+          'Sheet 2 (Semester 2): Duplicate values highlighting & Custom expression formulas (Score > 90)',
+          'Multi-sheet support: Independent <conditionalFormatting> rules per worksheet',
+          'Full OpenXML <conditionalFormatting> and <dxfs> compliance',
+        ],
+        codeSnippet: conditionalFormattingSnippet,
+      );
   }
 }

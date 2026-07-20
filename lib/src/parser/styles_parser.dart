@@ -31,6 +31,7 @@ class _StylesParser {
       _parseBorders(document);
       _parseNumFmts(document);
       _parseCellXfs(document, fontList);
+      _parseDxfs(document);
     } else {
       _damagedExcel(text: 'styles');
     }
@@ -323,5 +324,52 @@ class _StylesParser {
     }
 
     return fontStyle;
+  }
+
+  void _parseDxfs(XmlDocument document) {
+    _excel._dxfList = <DifferentialStyle>[];
+    final dxfsElement = document.findAllElements('dxfs').firstOrNull;
+    if (dxfsElement == null) return;
+
+    for (final dxf in dxfsElement.findElements('dxf')) {
+      ExcelColor? backgroundColor;
+      ExcelColor? fontColor;
+      bool? bold;
+      bool? italic;
+      bool? strikethrough;
+      Underline? underline;
+
+      final fontElement = dxf.findElements('font').firstOrNull;
+      if (fontElement != null) {
+        final fontStyle = _parseFontStyle(fontElement);
+        fontColor = fontStyle._fontColorHex != null ? fontStyle.fontColor : null;
+        bold = fontStyle.isBold ? true : null;
+        italic = fontStyle.isItalic ? true : null;
+        strikethrough = fontStyle.isStrikethrough ? true : null;
+        underline = fontStyle.underline != Underline.None ? fontStyle.underline : null;
+      }
+
+      final fillElement = dxf.findElements('fill').firstOrNull;
+      if (fillElement != null) {
+        final patternFill = fillElement.findElements('patternFill').firstOrNull;
+        if (patternFill != null) {
+          final fgColor = patternFill.findElements('fgColor').firstOrNull;
+          final bgColor = patternFill.findElements('bgColor').firstOrNull;
+          final rgb = fgColor?.getAttribute('rgb') ?? bgColor?.getAttribute('rgb');
+          if (rgb != null && rgb.isNotEmpty) {
+            backgroundColor = rgb.excelColor;
+          }
+        }
+      }
+
+      _excel._dxfList.add(DifferentialStyle(
+        backgroundColor: backgroundColor,
+        fontColor: fontColor,
+        bold: bold,
+        italic: italic,
+        strikethrough: strikethrough,
+        underline: underline,
+      ));
+    }
   }
 }

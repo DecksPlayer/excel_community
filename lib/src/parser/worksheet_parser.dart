@@ -322,7 +322,61 @@ class _WorksheetParser {
       }
     }
 
+    _parseConditionalFormatting(sheetObject, contentString);
     normalizeTable(sheetObject);
+  }
+
+  void _parseConditionalFormatting(Sheet sheetObject, String contentString) {
+    if (!contentString.contains('conditionalFormatting')) return;
+    try {
+      final doc = XmlDocument.parse(contentString);
+      final cfElements = doc.findAllElements('conditionalFormatting');
+      for (final cf in cfElements) {
+        final sqref = cf.getAttribute('sqref');
+        if (sqref == null || sqref.isEmpty) continue;
+
+        final rules = <ConditionalFormattingRule>[];
+        for (final ruleNode in cf.findElements('cfRule')) {
+          final typeStr = ruleNode.getAttribute('type') ?? 'cellIs';
+          final type = ConditionalFormattingType.fromValue(typeStr);
+
+          final opStr = ruleNode.getAttribute('operator');
+          final operator = ConditionalFormattingOperator.fromValue(opStr);
+
+          final priority =
+              int.tryParse(ruleNode.getAttribute('priority') ?? '') ?? 1;
+          final text = ruleNode.getAttribute('text');
+
+          final dxfIdStr = ruleNode.getAttribute('dxfId');
+          DifferentialStyle style = const DifferentialStyle();
+          if (dxfIdStr != null) {
+            final dxfId = int.tryParse(dxfIdStr);
+            if (dxfId != null && dxfId >= 0 && dxfId < _excel._dxfList.length) {
+              style = _excel._dxfList[dxfId];
+            }
+          }
+
+          final formulae = ruleNode
+              .findElements('formula')
+              .map((e) => e.innerText)
+              .toList();
+
+          rules.add(ConditionalFormattingRule(
+            type: type,
+            operator: operator,
+            formulae: formulae,
+            style: style,
+            priority: priority,
+            text: text,
+          ));
+        }
+
+        if (rules.isNotEmpty) {
+          sheetObject._conditionalFormattings
+              .add(ConditionalFormattingGroup(sqref: sqref, rules: rules));
+        }
+      }
+    } catch (_) {}
   }
 
   // ---------------------------------------------------------------------------

@@ -144,6 +144,9 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.cellComments:
           resultStatus = await ExcelGenerator.generateCellComments();
           break;
+        case SelectedSection.conditionalFormatting:
+          resultStatus = await ExcelGenerator.generateConditionalFormatting();
+          break;
       }
       setState(() {
         _status = resultStatus;

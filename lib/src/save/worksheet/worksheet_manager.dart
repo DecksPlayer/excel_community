@@ -57,6 +57,7 @@ class _WorksheetManager {
       'sheetData',
       'sheetProtection',
       'mergeCells',
+      'conditionalFormatting',
       'headerFooter',
       'drawing',
       'pivotTableParts',
@@ -171,7 +172,9 @@ class _WorksheetManager {
     printedTags.add('mergeCells');
 
     // Write subsequent common elements
-    writeOriginal('conditionalFormatting');
+    out.write(_buildConditionalFormattingXml(sheetObject));
+    printedTags.add('conditionalFormatting');
+
     writeOriginal('dataValidations');
     writeOriginal('hyperlinks');
     writeOriginal('printOptions');
@@ -567,5 +570,94 @@ class _WorksheetManager {
 
   int _checkPosition(List<dynamic> list, dynamic element) {
     return list.indexOf(element);
+  }
+
+  String _buildConditionalFormattingXml(Sheet sheetObject) {
+    if (sheetObject._conditionalFormattings.isEmpty) {
+      return '';
+    }
+
+    final sb = StringBuffer();
+    int globalPriority = 1;
+
+    for (final group in sheetObject._conditionalFormattings) {
+      sb.write('<conditionalFormatting sqref="${group.sqref}">');
+      for (final rule in group.rules) {
+        final priority = globalPriority++;
+
+        sb.write('<cfRule type="${rule.type.value}"');
+
+        final dxfId = _getDxfId(rule.style);
+        if (dxfId != -1) {
+          sb.write(' dxfId="$dxfId"');
+        }
+
+        sb.write(' priority="$priority"');
+
+        if (rule.operator != null) {
+          sb.write(' operator="${rule.operator!.value}"');
+        }
+
+        if (rule.text != null && rule.text!.isNotEmpty) {
+          sb.write(' text="${_escapeXml(rule.text!)}"');
+        }
+
+        sb.write('>');
+
+        final formulae = _buildRuleFormulae(group.sqref, rule);
+        for (final formula in formulae) {
+          sb.write('<formula>${_escapeXml(formula)}</formula>');
+        }
+
+        sb.write('</cfRule>');
+      }
+      sb.write('</conditionalFormatting>');
+    }
+
+    return sb.toString();
+  }
+
+  List<String> _buildRuleFormulae(
+      String sqref, ConditionalFormattingRule rule) {
+    if (rule.formulae.isNotEmpty) {
+      return rule.formulae;
+    }
+    final firstCell = sqref.split(RegExp(r'[\s:]')).first;
+    if (rule.type == ConditionalFormattingType.containsText ||
+        rule.operator == ConditionalFormattingOperator.containsText) {
+      if (rule.text != null && rule.text!.isNotEmpty) {
+        return ['NOT(ISERROR(SEARCH("${rule.text}",$firstCell)))'];
+      }
+    } else if (rule.type == ConditionalFormattingType.notContains ||
+        rule.operator == ConditionalFormattingOperator.notContains) {
+      if (rule.text != null && rule.text!.isNotEmpty) {
+        return ['ISERROR(SEARCH("${rule.text}",$firstCell))'];
+      }
+    } else if (rule.type == ConditionalFormattingType.beginsWith ||
+        rule.operator == ConditionalFormattingOperator.beginsWith) {
+      if (rule.text != null && rule.text!.isNotEmpty) {
+        return ['LEFT($firstCell,LEN("${rule.text}"))="${rule.text}"'];
+      }
+    } else if (rule.type == ConditionalFormattingType.endsWith ||
+        rule.operator == ConditionalFormattingOperator.endsWith) {
+      if (rule.text != null && rule.text!.isNotEmpty) {
+        return ['RIGHT($firstCell,LEN("${rule.text}"))="${rule.text}"'];
+      }
+    }
+    return rule.formulae;
+  }
+
+  int _getDxfId(DifferentialStyle style) {
+    if (style.isEmpty) return -1;
+    return _excel._dxfList.indexOf(style);
+  }
+
+  String _escapeXml(String text) {
+    return text
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&apos;');
   }
 }

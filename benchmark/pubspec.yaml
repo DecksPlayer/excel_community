@@ -10,4 +10,4 @@ dependencies:
   benchmark_harness: ^2.3.1
   excel_community:
     path: ../
-  excel_plus: ^0.0.4
+  excel_plus: ^2.7.2

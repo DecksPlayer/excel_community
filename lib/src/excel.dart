@@ -43,6 +43,7 @@ class Excel {
   final List<int> _numFmtIds = [];
   final NumFormatMaintainer _numFormats = NumFormatMaintainer();
   List<_BorderSet> _borderSetList = [];
+  List<DifferentialStyle> _dxfList = [];
 
   _SharedStringsMaintainer _sharedStrings = _SharedStringsMaintainer._();
 

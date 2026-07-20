@@ -19,6 +19,12 @@ class _StyleManager {
     _save._innerCellStyle.clear();
     _save._innerCellStyle.addAll(resources.innerCellStyle);
 
+    for (final dxf in resources.innerDxfList) {
+      if (!_excel._dxfList.contains(dxf)) {
+        _excel._dxfList.add(dxf);
+      }
+    }
+
     final styleDoc = _excel._xmlFiles['xl/styles.xml']!;
 
     // 2. Build individual sections using builders
@@ -46,5 +52,6 @@ class _StyleManager {
     );
 
     _builders.buildNumFmts(styleDoc);
+    _builders.buildDxfs(styleDoc, resources.innerDxfList);
   }
 }

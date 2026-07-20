@@ -5,6 +5,7 @@ class _StyleResources {
   final List<String> innerPatternFill = [];
   final List<_FontStyle> innerFontStyle = [];
   final List<_BorderSet> innerBorderSet = [];
+  final List<DifferentialStyle> innerDxfList = [];
 }
 
 class _StyleResourceCollector {
@@ -40,6 +41,19 @@ class _StyleResourceCollector {
           }
         });
       });
+
+      // Gather differential styles from conditional formatting rules
+      for (final group in sheet._conditionalFormattings) {
+        for (final rule in group.rules) {
+          final dxf = rule.style;
+          if (!dxf.isEmpty) {
+            if (!_excel._dxfList.contains(dxf) &&
+                !resources.innerDxfList.contains(dxf)) {
+              resources.innerDxfList.add(dxf);
+            }
+          }
+        }
+      }
     });
 
     // 2. Extract unique fonts, fills, and borders from collected CellStyles

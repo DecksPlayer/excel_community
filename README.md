@@ -44,6 +44,7 @@
 - ✅ **Read Legacy XLS**: Read-only support for old `.xls` (Excel 97-2003) workbooks using a custom, zero-dependency parser
 - ✅ **Multiple Data Types**: Text, Numbers, Formulas, Dates, Times, Booleans
 - ✅ **Cell Styling**: Fonts (Bold, Italic, Underline, Strikethrough), Colors, Borders, Alignment, Number Formats
+- ✅ **Conditional Formatting**: Dynamic cell highlighting (numeric ranges, text match, custom formulas, duplicate values) with custom fills & fonts
 - ✅ **Charts**: Column, Bar, Line, Area, Pie, Doughnut, Scatter, and Radar charts
 - ✅ **Images**: Embed PNG, JPEG, BMP, GIF, TIFF, WMF, EMF, SVG, WebP and ICO images
 - ✅ **Pivot Tables**: Create dynamic pivot tables programmatically with row/column fields and various aggregation functions (Sum, Count, Average, Max, Min, etc.)
@@ -82,23 +83,23 @@ For more details on how to use `excel_community`, see the following detailed gui
 ## Performance & Benchmarks
 <details open>
 
-`excel_community` is highly optimized for large-scale operations. Below is a cold-start scaling comparison (measuring Build + Encode time on a fresh Dart VM) and an isolated active-process benchmark (1,000,000 cells) against the original `excel` package (v4.0.6) and `excel_plus` (v0.0.5).
+`excel_community` is highly optimized for large-scale operations. Below is a cold-start scaling comparison (measuring Build + Encode time on a fresh Dart VM) and an isolated active-process benchmark (1,000,000 cells) against the original `excel` package (v4.0.6) and `excel_plus` (v2.7.2).
 
 ### 1. Cold-Start Scaling Benchmark (Build + Encode)
 
 | Workload | Library | Build | Encode | Total | File Size | Speedup vs Original | Speedup vs Plus | Speedup vs Community |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **5.57 s** | **26.45 s** | **32.02 s** | 34.7 MB | **>3.75x** | **1.71x** | **1.00x** |
-| | excel_plus | 15.86 s | 39.02 s | 54.88 s | 34.7 MB | >2.19x | 1.00x | 0.58x |
+| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **5.76 s** | **28.71 s** | **34.48 s** | 34.7 MB | **>3.48x** | **1.33x** | **1.00x** |
+| | excel_plus | 14.42 s | 31.30 s | 45.72 s | 34.7 MB | >2.62x | 1.00x | 0.75x |
 | | excel_original | Timeout | Timeout | Timeout (>2m) | — | 1.00x | — | — |
 | | | | | | | | | |
-| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **392 ms** | **699 ms** | **1,091 ms** | 661.6 KB | **2.88x** | **1.36x** | **1.00x** |
-| | excel_plus | 570 ms | 918 ms | 1,488 ms | 661.4 KB | 2.11x | 1.00x | 0.73x |
-| | excel_original | 548 ms | 2,589 ms | 3,137 ms | 695.2 KB | 1.00x | 0.47x | 0.35x |
+| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **426 ms** | 757 ms | **1,183 ms** | 661.6 KB | **2.70x** | **1.06x** | **1.00x** |
+| | excel_plus | 516 ms | **741 ms** | 1,257 ms | 660.9 KB | 2.54x | 1.00x | 0.94x |
+| | excel_original | 548 ms | 2,643 ms | 3,191 ms | 695.2 KB | 1.00x | 0.39x | 0.37x |
 | | | | | | | | | |
-| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 364 ms | **236 ms** | **600 ms** | 62.5 KB | **1.55x** | **1.05x** | **1.00x** |
-| | excel_plus | **344 ms** | 288 ms | 632 ms | 62.3 KB | 1.47x | 1.00x | 0.95x |
-| | excel_original | 291 ms | 636 ms | 927 ms | 70.5 KB | 1.00x | 0.68x | 0.65x |
+| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 349 ms | 284 ms | 633 ms | 61.8 KB | **1.98x** | 0.86x | **1.00x** |
+| | excel_plus | **323 ms** | **221 ms** | **544 ms** | 61.7 KB | 2.30x | **1.00x** | 1.16x |
+| | excel_original | 452 ms | 800 ms | 1,252 ms | 70.5 KB | 1.00x | 0.43x | 0.51x |
 
 ### 2. Isolated Benchmark (1,000,000 Cells)
 *20,000 rows × 50 columns workload in an active process (measuring all phases and Peak RSS memory):*
@@ -358,6 +359,70 @@ sheetObject.removeRow(80);
 | locked             | boolean value indicating if the cell should be locked (read-only) when sheet protection is active, default is `true`                     |
 | hidden             | boolean value indicating if the cell formulas should be hidden when sheet protection is active, default is `false`                        |
 | numberFormat       | a subtype of ```NumFormat``` to style the CellValue displayed, use default formats such as ```NumFormat.standard_34``` or create your own using ```CustomNumericNumFormat('#,##0.00 \\m\\²')``` ```CustomDateTimeNumFormat('m/d/yy h:mm')```  ```CustomTimeNumFormat('mm:ss')``` |
+
+</details>
+
+<details>
+<summary><h3>🎨 Conditional Formatting</h3></summary>
+
+Automatically highlight cells dynamically based on numeric ranges, text matching, or custom formulas (with support for multiple worksheets):
+
+```dart
+final excel = Excel.createExcel();
+
+// Sheet 1: Semester 1 (Numeric Range & Text Match Rules)
+excel.rename('Sheet1', 'Semester 1');
+final sheet1 = excel['Semester 1'];
+
+// Rule 1: Pass (> 70) -> Solid Green Background (#2E7D32) & White Text (#FFFFFF)
+final passRule = ConditionalFormattingRule.cellIs(
+  operator: ConditionalFormattingOperator.greaterThan,
+  formulae: ['70'],
+  backgroundColor: ExcelColor.fromHexString('2E7D32'),
+  fontColor: ExcelColor.fromHexString('FFFFFF'),
+  bold: true,
+);
+
+// Rule 2: Fail (<= 50) -> Solid Red Background (#D32F2F) & White Text (#FFFFFF)
+final failRule = ConditionalFormattingRule.cellIs(
+  operator: ConditionalFormattingOperator.lessThanOrEqual,
+  formulae: ['50'],
+  backgroundColor: ExcelColor.fromHexString('D32F2F'),
+  fontColor: ExcelColor.fromHexString('FFFFFF'),
+  bold: true,
+);
+
+sheet1.addConditionalFormatting('B2:B10', [passRule, failRule]);
+
+// Rule 3: Text Rule -> Highlight cells containing 'Passed' with Blue Background (#1976D2)
+final passedRule = ConditionalFormattingRule.containsText(
+  text: 'Passed',
+  backgroundColor: ExcelColor.fromHexString('1976D2'),
+  fontColor: ExcelColor.fromHexString('FFFFFF'),
+  bold: true,
+);
+sheet1.addConditionalFormattingRule('C2:C10', passedRule);
+
+// Sheet 2: Semester 2 (Duplicate Values & Custom Expression Rules)
+final sheet2 = excel['Semester 2'];
+
+// Rule 1: Highlight duplicate subject names in Orange (#E65100)
+final duplicateRule = ConditionalFormattingRule.duplicateValues(
+  backgroundColor: ExcelColor.fromHexString('E65100'),
+  fontColor: ExcelColor.fromHexString('FFFFFF'),
+  bold: true,
+);
+sheet2.addConditionalFormattingRule('A2:A10', duplicateRule);
+
+// Rule 2: Custom Expression formula (Score > 90) -> Gold Background (#FBC02D)
+final topScoreRule = ConditionalFormattingRule.expression(
+  formula: 'B2>90',
+  backgroundColor: ExcelColor.fromHexString('FBC02D'),
+  fontColor: ExcelColor.fromHexString('000000'),
+  bold: true,
+);
+sheet2.addConditionalFormattingRule('B2:B10', topScoreRule);
+```
 
 </details>
 
