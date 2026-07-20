@@ -327,4 +327,93 @@ class _StyleXmlBuilders {
       numFmtsElement.setAttribute('count', count.toString());
     }
   }
+
+  void buildDxfs(
+    XmlDocument styleSheetDoc, [
+    List<DifferentialStyle>? innerDxfList,
+  ]) {
+    if (_excel._dxfList.isEmpty) return;
+
+    final styleSheet = styleSheetDoc.findElements('styleSheet').first;
+    var dxfsElement = styleSheet
+        .findAllElements('dxfs')
+        .whereType<XmlElement>()
+        .firstOrNull;
+
+    if (dxfsElement == null) {
+      dxfsElement = XmlElement(XmlName.parts('dxfs'));
+      int insertIndex = styleSheet.children.length;
+      final tableStylesIdx = styleSheet.children.indexWhere((node) =>
+          node is XmlElement &&
+          (node.name.local == 'tableStyles' || node.name.local == 'extLst'));
+      if (tableStylesIdx != -1) {
+        insertIndex = tableStylesIdx;
+      }
+      styleSheet.children.insert(insertIndex, dxfsElement);
+    }
+
+    dxfsElement.children.clear();
+    dxfsElement.setAttribute('count', '${_excel._dxfList.length}');
+
+    for (final dxf in _excel._dxfList) {
+      final dxfElement = XmlElement(XmlName.parts('dxf'));
+
+      final fontChildren = <XmlElement>[];
+      if (dxf.bold != null) {
+        fontChildren.add(XmlElement(XmlName.parts('b'), [
+          if (!dxf.bold!) XmlAttribute(XmlName.parts('val'), 'false'),
+        ]));
+      }
+      if (dxf.italic != null) {
+        fontChildren.add(XmlElement(XmlName.parts('i'), [
+          if (!dxf.italic!) XmlAttribute(XmlName.parts('val'), 'false'),
+        ]));
+      }
+      if (dxf.strikethrough != null) {
+        fontChildren.add(XmlElement(XmlName.parts('strike'), [
+          if (!dxf.strikethrough!) XmlAttribute(XmlName.parts('val'), 'false'),
+        ]));
+      }
+      if (dxf.underline != null && dxf.underline != Underline.None) {
+        final val = dxf.underline == Underline.Double ? 'double' : 'single';
+        fontChildren.add(XmlElement(XmlName.parts('u'), [
+          XmlAttribute(XmlName.parts('val'), val),
+        ]));
+      }
+      if (dxf.fontColor != null) {
+        fontChildren.add(XmlElement(XmlName.parts('color'), [
+          XmlAttribute(XmlName.parts('rgb'), _cleanHex(dxf.fontColor!.colorHex)),
+        ]));
+      }
+
+      if (fontChildren.isNotEmpty) {
+        dxfElement.children.add(XmlElement(XmlName.parts('font'), [], fontChildren));
+      }
+
+      if (dxf.backgroundColor != null) {
+        final hex = _cleanHex(dxf.backgroundColor!.colorHex);
+        final patternFill = XmlElement(XmlName.parts('patternFill'), [
+          XmlAttribute(XmlName.parts('patternType'), 'solid'),
+        ], [
+          XmlElement(XmlName.parts('fgColor'), [
+            XmlAttribute(XmlName.parts('rgb'), hex),
+          ]),
+          XmlElement(XmlName.parts('bgColor'), [
+            XmlAttribute(XmlName.parts('rgb'), hex),
+          ]),
+        ]);
+        dxfElement.children.add(XmlElement(XmlName.parts('fill'), [], [patternFill]));
+      }
+
+      dxfsElement.children.add(dxfElement);
+    }
+  }
+
+  String _cleanHex(String hex) {
+    var clean = hex.replaceAll('#', '').trim().toUpperCase();
+    if (clean.length == 6) {
+      clean = 'FF$clean';
+    }
+    return clean;
+  }
 }

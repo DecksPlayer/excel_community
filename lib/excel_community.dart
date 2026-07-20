@@ -106,3 +106,4 @@ part 'src/sheet/cell_style.dart';
 part 'src/sheet/font_style.dart';
 part 'src/sheet/header_footer.dart';
 part 'src/sheet/border_style.dart';
+part 'src/sheet/conditional_formatting.dart';

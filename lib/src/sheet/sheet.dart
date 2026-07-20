@@ -26,6 +26,7 @@ class Sheet {
   SheetProtection sheetProtection = SheetProtection();
   Set<int> _hiddenColumns = {};
   Set<int> _hiddenRows = {};
+  final List<ConditionalFormattingGroup> _conditionalFormattings = [];
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -48,6 +49,7 @@ class Sheet {
             sheetProtection: oldSheetObject.sheetProtection,
             hiddenColumnsVal: oldSheetObject._hiddenColumns,
             hiddenRowsVal: oldSheetObject._hiddenRows,
+            conditionalFormattingsVal: oldSheetObject._conditionalFormattings,
             drawingRId: oldSheetObject._drawingRId,
             legacyDrawingRId: oldSheetObject._legacyDrawingRId);
 
@@ -71,12 +73,16 @@ class Sheet {
       SheetProtection? sheetProtection,
       Set<int>? hiddenColumnsVal,
       Set<int>? hiddenRowsVal,
+      List<ConditionalFormattingGroup>? conditionalFormattingsVal,
       String? drawingRId,
       String? legacyDrawingRId}) {
     _drawingRId = drawingRId;
     _legacyDrawingRId = legacyDrawingRId;
     this.sheetProtection = sheetProtection ?? SheetProtection();
     _headerFooter = headerFooter;
+    if (conditionalFormattingsVal != null) {
+      _conditionalFormattings.addAll(conditionalFormattingsVal);
+    }
     if (charts != null) {
       _charts.addAll(charts);
     }
@@ -388,5 +394,29 @@ class Sheet {
 
   void addPivotTable(PivotTable pivotTable) {
     _pivotTables.add(pivotTable);
+  }
+
+  /// Returns an unmodifiable list of conditional formatting groups defined for this sheet.
+  List<ConditionalFormattingGroup> get conditionalFormattings =>
+      List.unmodifiable(_conditionalFormattings);
+
+  /// Adds a single conditional formatting rule for the given cell range [sqref] (e.g. "A1:A10").
+  void addConditionalFormattingRule(
+      String sqref, ConditionalFormattingRule rule) {
+    addConditionalFormatting(sqref, [rule]);
+  }
+
+  /// Adds a list of conditional formatting rules for the given cell range [sqref] (e.g. "A1:A10").
+  void addConditionalFormatting(
+      String sqref, List<ConditionalFormattingRule> rules) {
+    if (rules.isEmpty) return;
+    _conditionalFormattings
+        .add(ConditionalFormattingGroup(sqref: sqref, rules: rules));
+    _excel._styleChanges = true;
+  }
+
+  /// Clears all conditional formatting rules from this sheet.
+  void clearConditionalFormatting() {
+    _conditionalFormattings.clear();
   }
 }

@@ -169,6 +169,13 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.conditionalFormatting,
+                'Conditional Formatting',
+                Icons.palette_outlined,
+                Colors.deepOrange,
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.pivotTemplate,
                 'Templates & Pivot Tables',
                 Icons.content_paste_go_outlined,
