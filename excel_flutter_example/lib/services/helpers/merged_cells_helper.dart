@@ -12,18 +12,25 @@ Future<String> generateMergedCellsHelper() async {
   // ---------------------------------------------------------
   var roadmapSheet = excel['Project Roadmap'];
 
-  // A1:F2 Merged Header
+  // A1:F2 Merged Header with outer borders using setMergedCellStyle
   roadmapSheet.merge(CellIndex.indexByString("A1"), CellIndex.indexByString("F2"));
   roadmapSheet.updateCell(
     CellIndex.indexByString("A1"),
     TextCellValue("Global Corporate Project Roadmap"),
-    cellStyle: CellStyle(
+  );
+  roadmapSheet.setMergedCellStyle(
+    CellIndex.indexByString("A1"),
+    CellStyle(
       bold: true,
       fontSize: 16,
       fontColorHex: ExcelColor.white,
       backgroundColorHex: ExcelColor.blue800,
       horizontalAlign: HorizontalAlign.Center,
       verticalAlign: VerticalAlign.Center,
+      topBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.blue900),
+      bottomBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.blue900),
+      leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.blue900),
+      rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.blue900),
     ),
   );
 
@@ -41,17 +48,24 @@ Future<String> generateMergedCellsHelper() async {
     );
   }
 
-  // Row Merging in Column A (Phases spanning rows)
+  // Row Merging in Column A (Phases spanning rows) with setMergedCellStyle
   roadmapSheet.merge(CellIndex.indexByString("A5"), CellIndex.indexByString("A7"));
   roadmapSheet.updateCell(
     CellIndex.indexByString("A5"),
     TextCellValue("Phase 1:\nPlanning"),
-    cellStyle: CellStyle(
+  );
+  roadmapSheet.setMergedCellStyle(
+    CellIndex.indexByString("A5"),
+    CellStyle(
       bold: true,
       horizontalAlign: HorizontalAlign.Center,
       verticalAlign: VerticalAlign.Center,
       textWrapping: TextWrapping.WrapText,
       backgroundColorHex: ExcelColor.blue50,
+      topBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
+      bottomBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
+      leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
+      rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
     ),
   );
 
@@ -59,12 +73,19 @@ Future<String> generateMergedCellsHelper() async {
   roadmapSheet.updateCell(
     CellIndex.indexByString("A8"),
     TextCellValue("Phase 2:\nExecution"),
-    cellStyle: CellStyle(
+  );
+  roadmapSheet.setMergedCellStyle(
+    CellIndex.indexByString("A8"),
+    CellStyle(
       bold: true,
       horizontalAlign: HorizontalAlign.Center,
       verticalAlign: VerticalAlign.Center,
       textWrapping: TextWrapping.WrapText,
       backgroundColorHex: ExcelColor.amber50,
+      topBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
+      bottomBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
+      leftBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
+      rightBorder: Border(borderStyle: BorderStyle.Thin, borderColorHex: ExcelColor.grey400),
     ),
   );
 
