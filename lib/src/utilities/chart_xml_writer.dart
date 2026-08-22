@@ -166,7 +166,8 @@ class ChartXmlWriter {
   }
 
   void _buildPlotArea(XmlBuilder builder, Chart chart) {
-    final bool hasAxes = chart is! PieChart && chart is! DoughnutChart;
+    final bool hasAxes =
+        chart is! PieChart && chart is! DoughnutChart && chart is! OfPieChart;
 
     builder.element('c:plotArea', nest: () {
       builder.element('c:layout');
@@ -181,6 +182,10 @@ class ChartXmlWriter {
     builder.element('c:${chart.chartTagName}', nest: () {
       _buildChartTypeProperties(builder, chart);
       _buildAllSeries(builder, chart);
+      // Data labels (c:dLbls) must appear after all series per OOXML CT_BarChart etc.
+      if (chart.dataLabels != null && chart.dataLabels!.isEnabled) {
+        _buildDataLabels(builder, chart.dataLabels!, chart);
+      }
       if (hasAxes) {
         _buildAxesIds(builder);
       }
@@ -223,7 +228,37 @@ class ChartXmlWriter {
   }
 
   void _buildSeriesData(XmlBuilder builder, Chart chart, ChartSeries series) {
-    if (chart is ScatterChart) {
+    if (chart is BubbleChart) {
+      builder.element('c:xVal', nest: () {
+        builder.element('c:numRef', nest: () {
+          builder.element('c:f',
+              nest: () => builder.text(series.categoriesRange));
+          if (series.xValues != null && series.xValues!.isNotEmpty) {
+            _buildNumCache(builder, series.xValues!);
+          }
+        });
+      });
+      builder.element('c:yVal', nest: () {
+        builder.element('c:numRef', nest: () {
+          builder.element('c:f', nest: () => builder.text(series.valuesRange));
+          if (series.values != null && series.values!.isNotEmpty) {
+            _buildNumCache(builder, series.values!);
+          }
+        });
+      });
+      builder.element('c:bubbleSize', nest: () {
+        builder.element('c:numRef', nest: () {
+          builder.element('c:f',
+              nest: () =>
+                  builder.text(series.bubbleSizeRange ?? series.valuesRange));
+          if (series.bubbleSizes != null && series.bubbleSizes!.isNotEmpty) {
+            _buildNumCache(builder, series.bubbleSizes!);
+          } else if (series.values != null && series.values!.isNotEmpty) {
+            _buildNumCache(builder, series.values!);
+          }
+        });
+      });
+    } else if (chart is ScatterChart) {
       builder.element('c:xVal', nest: () {
         builder.element('c:numRef', nest: () {
           builder.element('c:f',
@@ -292,8 +327,90 @@ class ChartXmlWriter {
     builder.element('c:axId', attributes: {'val': '10000002'});
   }
 
+  // ========================================================================
+  // PRIVATE: Data Labels
+  // ========================================================================
+
+  /// Emits a `<c:dLbls>` element that controls data labels for the whole
+  /// chart.  Each label component maps 1-to-1 to an OOXML boolean child:
+  ///
+  /// | [ChartDataLabels] field | OOXML element |
+  /// |---|---|
+  /// | value          | `<c:showVal>`      |
+  /// | categoryName   | `<c:showCatName>`  |
+  /// | seriesName     | `<c:showSerName>`  |
+  /// | percentage     | `<c:showPercent>`  |
+  ///
+  /// `showLegendKey` and `showLeaderLines` are always written with their
+  /// default values so Excel does not repair the file.
+  void _buildDataLabels(
+      XmlBuilder builder, ChartDataLabels labels, Chart chart) {
+    builder.element('c:dLbls', nest: () {
+      // Per OOXML §21.2.2.49 the separator comes before the show* flags.
+      if (labels.separator != ', ') {
+        builder.element('c:separator',
+            nest: () => builder.text(labels.separator));
+      }
+      builder.element('c:showLegendKey', attributes: {'val': '0'});
+      builder.element('c:showVal',
+          attributes: {'val': labels.value ? '1' : '0'});
+      builder.element('c:showCatName',
+          attributes: {'val': labels.categoryName ? '1' : '0'});
+      builder.element('c:showSerName',
+          attributes: {'val': labels.seriesName ? '1' : '0'});
+      builder.element('c:showPercent',
+          attributes: {'val': labels.percentage ? '1' : '0'});
+      // showBubbleSize is required for bubble charts; harmless on others.
+      builder.element('c:showBubbleSize', attributes: {'val': '0'});
+      if (labels.labelPosition != null) {
+        builder.element('c:dLblPos',
+            attributes: {'val': labels.labelPosition!});
+      }
+      // Leader lines are useful for pie / doughnut only but valid everywhere.
+      final isRound =
+          chart is PieChart || chart is DoughnutChart;
+      builder.element('c:showLeaderLines',
+          attributes: {'val': isRound ? '1' : '0'});
+    });
+  }
+
+  /// Parses a `<c:dLbls>` XML element back into a [ChartDataLabels] object
+  /// so that round-tripping an opened file preserves label settings.
+  static ChartDataLabels? parseDataLabelsFromXml(XmlElement? dLblsNode) {
+    if (dLblsNode == null) return null;
+
+    bool boolAttr(String tag) {
+      final el = dLblsNode.findElements(tag).firstOrNull;
+      if (el == null) return false;
+      final val = el.getAttribute('val');
+      return val == '1' || val == 'true';
+    }
+
+    final showVal = boolAttr('c:showVal');
+    final showCat = boolAttr('c:showCatName');
+    final showSer = boolAttr('c:showSerName');
+    final showPct = boolAttr('c:showPercent');
+
+    if (!showVal && !showCat && !showSer && !showPct) return null;
+
+    final sepEl = dLblsNode.findElements('c:separator').firstOrNull;
+    final sep = sepEl?.innerText ?? ', ';
+
+    final posEl = dLblsNode.findElements('c:dLblPos').firstOrNull;
+    final pos = posEl?.getAttribute('val');
+
+    return ChartDataLabels(
+      value: showVal,
+      categoryName: showCat,
+      seriesName: showSer,
+      percentage: showPct,
+      separator: sep,
+      labelPosition: pos,
+    );
+  }
+
   void _buildAxes(XmlBuilder builder, Chart chart) {
-    if (chart is ScatterChart) {
+    if (chart is ScatterChart || chart is BubbleChart) {
       _buildValueAxis(builder, id: '10000001', pos: 'b', crossAx: '10000002');
       _buildValueAxis(builder, id: '10000002', pos: 'l', crossAx: '10000001');
     } else {

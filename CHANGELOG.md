@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.3.0] - 2026-08-22
+### Added
+- **New Standard Chart Types**:
+  - **`BubbleChart` (`<c:bubbleChart>`)**: 3-dimensional data comparison plotting X, Y, and Bubble Size with configurable `bubbleScale` and `showNegativeBubbles`.
+  - **`StockChart` (`<c:stockChart>`)**: Financial stock price fluctuations (High-Low-Close, Open-High-Low-Close) with `showHighLowLines` and `showUpDownBars`.
+  - **`OfPieChart` (`<c:ofPieChart>`)**: Pie-of-Pie and Bar-of-Pie secondary breakdown charts with configurable `ofPieType` (`pie`/`bar`), `splitType` (`position`/`value`/`percent`), and `secondPieSize`.
+- **Chart Grouping & Subtypes (`ChartGrouping`)**:
+  - Added `grouping` parameter (`clustered`, `stacked`, `percentStacked`) to `ColumnChart`, `BarChart`, `AreaChart`, and `LineChart`.
+  - Added `showMarkers` and `smooth` (spline curves) to `LineChart`.
+  - Added `showLines`, `showMarkers`, and `smooth` (spline curves) to `ScatterChart`.
+- **Chart Data Labels (`ChartDataLabels`)**: Every chart type now accepts an optional `dataLabels` parameter that renders labels on each data point. Supported components: `value`, `categoryName`, `seriesName`, and `percentage` (pie / doughnut). Custom `separator` and `labelPosition` are also supported. The XML round-trip is preserved (labels written to `<c:dLbls>` are re-read via `ChartXmlWriter.parseDataLabelsFromXml`).
+- **Chart Color & Style Customization (`ChartSeriesStyle`, `ChartFillType`)**: Per-series visual customization for all chart types via `ChartSeries.style`.
+  - **Fills**: Support for solid fills (`ChartFillType.solid`), customizable transparency with `fillAlpha` (`ChartFillType.transparent`), and border-only no-fill (`ChartFillType.none`).
+  - **Borders**: Customizable `borderColor`, `borderAlpha`, and `borderWidth` in EMUs.
+- **Flutter Example & Documentation**:
+  - Added interactive sections in `excel_flutter_example` for **Bubble, Stock & Stacked Charts**, **Chart Data Labels**, and **Chart Color Customization**.
+  - Updated `README.md` with complete documentation, parameter tables, and worked examples for all 11 chart types.
+
+## [2.2.1] - 2026-08-09
+### Fixed
+- **Merge Cells**: Fix merge cells parsing and saving.
 ## [2.2.0] - 2026-07-20
 ### Added
 - **Conditional Formatting (`<conditionalFormatting>`)**: Native OpenXML/SpreadsheetML support for Conditional Formatting rules and Differential Styles (`<dxfs>`).

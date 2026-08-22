@@ -85,9 +85,20 @@ class _ChartManager {
             return 0;
           }).toList();
 
-          // Fix #4: para ScatterChart resolver xValues (categoriesRange es eje X numérico)
-          if (chart is ScatterChart) {
+          // Para ScatterChart y BubbleChart resolver xValues (categoriesRange es eje X numérico)
+          if (chart is ScatterChart || chart is BubbleChart) {
             series.xValues = catData.map((e) {
+              if (e is IntCellValue) return e.value as num;
+              if (e is DoubleCellValue) return e.value as num;
+              if (e is TextCellValue) return num.tryParse(e.toString()) ?? 0;
+              return 0 as num;
+            }).toList();
+          }
+
+          // Para BubbleChart resolver bubbleSizes si se especificó bubbleSizeRange
+          if (chart is BubbleChart && series.bubbleSizeRange != null) {
+            final sizeData = _resolveChartRange(series.bubbleSizeRange!);
+            series.bubbleSizes = sizeData.map((e) {
               if (e is IntCellValue) return e.value as num;
               if (e is DoubleCellValue) return e.value as num;
               if (e is TextCellValue) return num.tryParse(e.toString()) ?? 0;

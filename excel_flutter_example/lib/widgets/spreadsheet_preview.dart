@@ -482,6 +482,98 @@ class SpreadsheetPreview extends StatelessWidget {
           return textWidget;
         }
       }
+    } else if (selectedSection == SelectedSection.mergedCells) {
+      if (rowIndex == 0 || rowIndex == 1) {
+        if (colIndex == 0) {
+          return Container(
+            color: Colors.indigo.shade800,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 4),
+            child: const Text(
+              'Global Corporate Project Roadmap',
+              style: TextStyle(
+                fontSize: 6.5,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.visible,
+              softWrap: false,
+            ),
+          );
+        }
+        return Container(color: Colors.indigo.shade800);
+      }
+      if (rowIndex == 3) {
+        final h = ["Phase", "Task Name", "Start", "End", "Owner", "Status"];
+        return Container(
+          color: Colors.grey.shade300,
+          alignment: Alignment.center,
+          child: Text(
+            colIndex < h.length ? h[colIndex] : '',
+            style: const TextStyle(fontSize: 6, fontWeight: FontWeight.bold),
+          ),
+        );
+      }
+      if (rowIndex >= 4 && rowIndex <= 6) {
+        if (colIndex == 0) {
+          if (rowIndex == 5) {
+            return Container(
+              color: Colors.blue.shade50,
+              alignment: Alignment.center,
+              child: const Text(
+                'Phase 1:\nPlanning',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 5.5, fontWeight: FontWeight.bold, color: Colors.indigo),
+              ),
+            );
+          }
+          return Container(color: Colors.blue.shade50);
+        }
+        final p1 = [
+          ["Req. Gathering", "07/01", "07/05", "Alice", "Done"],
+          ["Arch Setup", "07/06", "07/10", "Bob", "Done"],
+          ["Design Specs", "07/11", "07/15", "Charlie", "In Prog"],
+        ];
+        final rowData = p1[rowIndex - 4];
+        if (colIndex - 1 < rowData.length) {
+          return Center(
+            child: Text(
+              rowData[colIndex - 1],
+              style: const TextStyle(fontSize: 6),
+            ),
+          );
+        }
+      }
+      if (rowIndex >= 7 && rowIndex <= 9) {
+        if (colIndex == 0) {
+          if (rowIndex == 8) {
+            return Container(
+              color: Colors.amber.shade50,
+              alignment: Alignment.center,
+              child: const Text(
+                'Phase 2:\nExecution',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 5.5, fontWeight: FontWeight.bold, color: Colors.deepOrange),
+              ),
+            );
+          }
+          return Container(color: Colors.amber.shade50);
+        }
+        final p2 = [
+          ["Frontend Dev", "07/16", "08/15", "David", "Planned"],
+          ["Backend API", "07/16", "08/20", "Evan", "Planned"],
+          ["Testing & QA", "08/21", "08/31", "Alice", "Planned"],
+        ];
+        final rowData = p2[rowIndex - 7];
+        if (colIndex - 1 < rowData.length) {
+          return Center(
+            child: Text(
+              rowData[colIndex - 1],
+              style: const TextStyle(fontSize: 6),
+            ),
+          );
+        }
+      }
     } else {
       if (rowIndex == 0) {
         if (colIndex == 0) return Container(color: Colors.blue.shade50, child: const Center(child: Text('Label', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold))));
@@ -504,7 +596,8 @@ class SpreadsheetPreview extends StatelessWidget {
     if (selectedSection == SelectedSection.simpleExcel ||
         selectedSection == SelectedSection.fontsStyles ||
         selectedSection == SelectedSection.numberFormats ||
-        selectedSection == SelectedSection.cellComments) {
+        selectedSection == SelectedSection.cellComments ||
+        selectedSection == SelectedSection.mergedCells) {
       return const SizedBox.shrink();
     }
 

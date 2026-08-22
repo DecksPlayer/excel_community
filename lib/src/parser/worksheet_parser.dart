@@ -241,7 +241,10 @@ class _WorksheetParser {
             );
             if (!sheetObject._spanList.contains(spanObj)) {
               sheetObject._spanList.add(spanObj);
-              // Clear merged cells from in-memory sheetData
+              // Clear merged cells from in-memory sheetData (keeps origin cell).
+              // Non-origin cell style references are preserved in
+              // _cellStyleReferenced so the writer can emit style-only <c>
+              // elements for them (needed to preserve borders, etc.).
               for (var col = spanObj.columnSpanStart;
                   col <= spanObj.columnSpanEnd;
                   col++) {

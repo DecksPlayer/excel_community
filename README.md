@@ -44,9 +44,7 @@
 - ✅ **Read Legacy XLS**: Read-only support for old `.xls` (Excel 97-2003) workbooks using a custom, zero-dependency parser
 - ✅ **Multiple Data Types**: Text, Numbers, Formulas, Dates, Times, Booleans
 - ✅ **Cell Styling**: Fonts (Bold, Italic, Underline, Strikethrough), Colors, Borders, Alignment, Number Formats
-- ✅ **Conditional Formatting**: Dynamic cell highlighting (numeric ranges, text match, custom formulas, duplicate values) with custom fills & fonts
-- ✅ **Charts**: Column, Bar, Line, Area, Pie, Doughnut, Scatter, and Radar charts
-- ✅ **Images**: Embed PNG, JPEG, BMP, GIF, TIFF, WMF, EMF, SVG, WebP and ICO images
+- 📊 **Charts**: 11 chart types (Column, Bar, Line, Area, Pie, Doughnut, Scatter, Radar, Bubble, Stock, Of-Pie), with Stacked/100% Stacked groupings, custom colors/transparencies (`ChartSeriesStyle`), and data labels (`ChartDataLabels`)
 - ✅ **Pivot Tables**: Create dynamic pivot tables programmatically with row/column fields and various aggregation functions (Sum, Count, Average, Max, Min, etc.)
 - ✅ **Cell Comments**: Attach rich descriptions or review notes to specific cells, displaying red triangle markers in Excel (read & write)
 - ✅ **Cell Operations**: Merge cells, insert/delete rows and columns
@@ -83,35 +81,42 @@ For more details on how to use `excel_community`, see the following detailed gui
 ## Performance & Benchmarks
 <details open>
 
-`excel_community` is highly optimized for large-scale operations. Below is a cold-start scaling comparison (measuring Build + Encode time on a fresh Dart VM) and an isolated active-process benchmark (1,000,000 cells) against the original `excel` package (v4.0.6) and `excel_plus` (v2.7.2).
+`excel_community` is highly optimized for large-scale spreadsheet creation, high-throughput encoding, and massive cell manipulation. Below are benchmark measurements comparing `excel_community`, `excel_plus` (v2.14.3), and the original `excel` package (v4.0.6) on the Dart VM.
 
-### 1. Cold-Start Scaling Benchmark (Build + Encode)
+### 1. Isolated Full Lifecycle Benchmark (1,000,000 Cells)
+*20,000 rows × 50 columns continuous workload measuring Create, Encode, Decode (forcing full worksheet read), and Peak RSS memory:*
 
-| Workload | Library | Build | Encode | Total | File Size | Speedup vs Original | Speedup vs Plus | Speedup vs Community |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **5.76 s** | **28.71 s** | **34.48 s** | 34.7 MB | **>3.48x** | **1.33x** | **1.00x** |
-| | excel_plus | 14.42 s | 31.30 s | 45.72 s | 34.7 MB | >2.62x | 1.00x | 0.75x |
-| | excel_original | Timeout | Timeout | Timeout (>2m) | — | 1.00x | — | — |
-| | | | | | | | | |
-| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **426 ms** | 757 ms | **1,183 ms** | 661.6 KB | **2.70x** | **1.06x** | **1.00x** |
-| | excel_plus | 516 ms | **741 ms** | 1,257 ms | 660.9 KB | 2.54x | 1.00x | 0.94x |
-| | excel_original | 548 ms | 2,643 ms | 3,191 ms | 695.2 KB | 1.00x | 0.39x | 0.37x |
-| | | | | | | | | |
-| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 349 ms | 284 ms | 633 ms | 61.8 KB | **1.98x** | 0.86x | **1.00x** |
-| | excel_plus | **323 ms** | **221 ms** | **544 ms** | 61.7 KB | 2.30x | **1.00x** | 1.16x |
-| | excel_original | 452 ms | 800 ms | 1,252 ms | 70.5 KB | 1.00x | 0.43x | 0.51x |
+| Library | Create | Encode | Decode (Full Read) | Total Time | Peak RSS | File Size | Create Speedup | Encode Speedup |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **excel_community** (Ours) | **1,288 ms** | **2,102 ms** | 25,175 ms | 28,565 ms | 1,752 MB | 7.08 MB | **1.77x vs Plus** <br> **1.48x vs Original** | **2.68x vs Plus** <br> **11.13x vs Original** |
+| excel_plus (v2.14.3) | 2,279 ms | 5,642 ms | **9,818 ms** | **17,739 ms** | **770 MB** | 7.08 MB | 1.00x | 1.00x |
+| excel_original (v4.0.6) | 1,907 ms | 23,404 ms | 28,340 ms | 53,650 ms | 2,552 MB | 7.04 MB | 1.19x | 0.24x |
 
-### 2. Isolated Benchmark (1,000,000 Cells)
-*20,000 rows × 50 columns workload in an active process (measuring all phases and Peak RSS memory):*
+### 2. Scaling Comparison (10k, 100k, and 5M Cells)
 
-| Library | Create | Encode | Decode | Total Time | Peak RSS | File Size | Speedup vs Original | Speedup vs Plus | Speedup vs Community |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **excel_community** (Ours) | **959 ms** | **2,167 ms** | 24,263 ms | 27,388 ms | 1,695 MB | 7.08 MB | **1.96x** | **0.65x** | **1.00x** |
-| excel_plus | 2,350 ms | 5,762 ms | **9,657 ms** | **17,768 ms** | **726 MB** | 7.08 MB | 3.02x | 1.00x | 1.54x |
-| excel_original (v4.0.6) | 1,907 ms | 23,404 ms | 28,340 ms | 53,650 ms | 2,552 MB | 7.04 MB | 1.00x | 0.33x | 0.51x |
+| Workload | Library | Create (ms) | Encode (ms) | Total Time | File Size | Encode Speedup vs Original | Encode Speedup vs Plus |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **3,119** | **14,173** | **17,292** | 33.1 MB | **5.95x** | **1.55x** |
+| | excel_plus | 9,618 | 22,030 | 31,648 | 33.1 MB | 3.83x | 1.00x |
+| | excel_original | 10,510 | 84,300 | 94,810 | 33.9 MB | 1.00x | 0.26x |
+| | | | | | | | |
+| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **416** | **714** | 1,130 | 588.8 KB | **3.70x** | **1.06x** |
+| | excel_plus | 368 | 754 | 1,122 | 588.8 KB | 3.51x | 1.00x |
+| | excel_original | 548 | 2,643 | 3,191 | 695.2 KB | 1.00x | 0.29x |
+| | | | | | | | |
+| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 350 | 206 | 556 | 60.5 KB | **3.88x** | 0.96x |
+| | excel_plus | **309** | **198** | **507** | 60.5 KB | 4.04x | **1.00x** |
+| | excel_original | 452 | 800 | 1,252 | 70.5 KB | 1.00x | 0.25x |
 
-> [!TIP]
-> **Eager vs. Lazy Parsing**: `excel_community` eagerly parses sheets on load to guarantee direct $O(1)$ cell updates and stable identities, whereas `excel_plus` loads cells lazily. While lazy loading makes the initial decode faster, `excel_community` delivers unmatched performance for workloads requiring heavy read/write cell manipulations and ultra-fast encoding.
+### 💡 Key Architectural Insights
+
+1. **Ultra-Fast XML Encoding**:
+   - `excel_community` features an optimized streaming XML serializer that encodes 1,000,000 cells in **2.1 seconds** (**2.68x faster than `excel_plus`** and **11.13x faster than `excel` original**).
+2. **Eager vs. Lazy Parsing Trade-offs**:
+   - `excel_community` uses **eager parsing** upon file load, instantiating all cell coordinate models upfront. This guarantees direct $O(1)$ cell lookups and mutations with stable identities.
+   - `excel_plus` uses **lazy parsing**, delaying cell object creation until individual cells are accessed, which gives a faster initial cold decode but adds runtime overhead during intensive cell updates.
+3. **Memory Optimization**:
+   - `excel_community` reduces peak RSS memory by **1.46x** compared to `excel` original (1,752 MB vs 2,552 MB for 1M cells) by eliminating redundant style maps and optimizing cell coordinate indexing.
 </details>
 
 <details open><summary><h2>📖 Usage</h2></summary>
@@ -983,14 +988,17 @@ Excel Community supports creating various types of charts in your Excel files. E
 
 ### Available Chart Types
 
-- 📈 **ColumnChart** - Vertical bar charts
-- 📉 **BarChart** - Horizontal bar charts  
-- 📊 **LineChart** - Line charts with markers
-- 🏞️ **AreaChart** - Area charts with fill
-- 🍰 **PieChart** - Pie charts
+- 📈 **ColumnChart** - Vertical bar charts (Clustered, Stacked, 100% Stacked)
+- 📉 **BarChart** - Horizontal bar charts (Clustered, Stacked, 100% Stacked)
+- 📊 **LineChart** - Line charts with markers (Clustered, Stacked, 100% Stacked, Smooth curves)
+- 🏞️ **AreaChart** - Area charts with transparency (Standard, Stacked, 100% Stacked)
+- 🍰 **PieChart** - Pie / circular distribution charts
 - 🍩 **DoughnutChart** - Doughnut charts (pie with center hole)
-- ✨ **ScatterChart** - Scatter/XY charts
-- 🕸️ **RadarChart** - Radar/spider charts (with filled option)
+- 🥧 **OfPieChart** - Pie-of-Pie and Bar-of-Pie secondary breakdown charts
+- ✨ **ScatterChart** - Scatter / XY correlation charts (with optional lines and smooth curves)
+- 🫧 **BubbleChart** - 3-dimensional bubble charts (X, Y, and Bubble Size)
+- 📈 **StockChart** - Financial stock charts (High-Low-Close, Open-High-Low-Close) with high/low lines and up/down bars
+- 🕸️ **RadarChart** - Radar / spider charts (marker or filled area)
 
 <details open>
 <summary><h3>📝 Basic Chart Example</h3></summary>
@@ -1074,6 +1082,192 @@ var chart = ColumnChart(
 
 sheet.addChart(chart);
 ```
+
+</details>
+
+<details open>
+<summary><h3>🏷️ Chart Data Labels</h3></summary>
+
+Add labels directly on each data point using `ChartDataLabels`. Works on all 8 chart types. Every component is independent — combine them freely.
+
+| Field | What it shows |
+|---|---|
+| `value: true` | The numeric value of the data point |
+| `categoryName: true` | The X-axis / category label |
+| `seriesName: true` | The series name |
+| `percentage: true` | Percentage of total (pie / doughnut only) |
+| `separator` | String inserted between multiple components (default `", "`) |
+| `labelPosition` | OOXML position hint: `'outEnd'`, `'ctr'`, `'inEnd'`, `'t'`, `'b'`, `'bestFit'`, etc. |
+
+**Column chart — value labels above each bar:**
+
+```dart
+var chart = ColumnChart(
+  title: 'Monthly Revenue vs Expenses',
+  dataLabels: ChartDataLabels(
+    value: true,
+    labelPosition: 'outEnd', // label sits above the bar tip
+  ),
+  series: [
+    ChartSeries(
+      name: 'Revenue',
+      categoriesRange: r"Sheet1!$A$2:$A$7",
+      valuesRange: r"Sheet1!$B$2:$B$7",
+    ),
+  ],
+  anchor: ChartAnchor.at(column: 5, row: 1, width: 11, height: 15),
+);
+sheet.addChart(chart);
+```
+
+**Pie chart — percentage + value with newline separator:**
+
+```dart
+var chart = PieChart(
+  title: 'Market Share',
+  dataLabels: ChartDataLabels(
+    value: true,
+    percentage: true,  // pie / doughnut only
+    separator: '\n',   // each component on its own line
+  ),
+  series: [
+    ChartSeries(
+      name: 'Share',
+      categoriesRange: r"Sheet1!$A$2:$A$6",
+      valuesRange: r"Sheet1!$B$2:$B$6",
+    ),
+  ],
+  anchor: ChartAnchor.at(column: 4, row: 1, width: 11, height: 16),
+);
+sheet.addChart(chart);
+```
+
+**Line chart — category name + value:**
+
+```dart
+var chart = LineChart(
+  title: 'Units Sold by Quarter',
+  dataLabels: ChartDataLabels(
+    value: true,
+    categoryName: true, // prints the X-axis label on each point
+    separator: ' — ',
+  ),
+  series: [
+    ChartSeries(
+      name: 'Units',
+      categoriesRange: r"Sheet1!$A$2:$A$7",
+      valuesRange: r"Sheet1!$B$2:$B$7",
+    ),
+  ],
+  anchor: ChartAnchor.at(column: 4, row: 1, width: 12, height: 15),
+);
+sheet.addChart(chart);
+```
+
+> **Note:** `dataLabels` defaults to `null` — existing charts are unaffected. `ChartDataLabels()` with all flags `false` also emits no labels.
+
+</details>
+
+<details open>
+<summary><h3>🎨 Chart Color Customization</h3></summary>
+
+Control the visual appearance of every series individually via `ChartSeriesStyle` on `ChartSeries.style`. When omitted, the automatic palette is used unchanged.
+
+#### `ChartFillType` options
+
+| Value | Fill rendered |
+|---|---|
+| `ChartFillType.solid` | 100 % opaque fill (any hex color) |
+| `ChartFillType.transparent` | Solid fill with configurable `fillAlpha` (0–100 %) |
+| `ChartFillType.none` | No fill — only the border line is drawn |
+
+**Solid custom colors — Column chart:**
+
+```dart
+ColumnChart(
+  title: 'Revenue vs Cost',
+  series: [
+    ChartSeries(
+      name: 'Revenue',
+      categoriesRange: r"Sheet1!$A$2:$A$7",
+      valuesRange: r"Sheet1!$B$2:$B$7",
+      style: ChartSeriesStyle(
+        fillColor: ExcelColor.fromHexString('2E86AB'), // steel blue
+        fillType: ChartFillType.solid,
+      ),
+    ),
+    ChartSeries(
+      name: 'Cost',
+      categoriesRange: r"Sheet1!$A$2:$A$7",
+      valuesRange: r"Sheet1!$C$2:$C$7",
+      style: ChartSeriesStyle(
+        fillColor: ExcelColor.fromHexString('E84855'), // crimson
+        fillType: ChartFillType.solid,
+      ),
+    ),
+  ],
+  anchor: ChartAnchor.at(column: 5, row: 1, width: 11, height: 15),
+)
+```
+
+**Transparent fill (40 %) + custom border — Column chart:**
+
+```dart
+ChartSeries(
+  name: 'Revenue',
+  categoriesRange: r"Sheet1!$A$2:$A$7",
+  valuesRange: r"Sheet1!$B$2:$B$7",
+  style: ChartSeriesStyle(
+    fillColor: ExcelColor.fromHexString('2E86AB'),
+    fillType: ChartFillType.transparent,
+    fillAlpha: 40,                          // 40 % opacity
+    borderColor: ExcelColor.fromHexString('1A5276'),
+    borderAlpha: 100,
+  ),
+)
+```
+
+**No fill — line-only (Line chart):**
+
+```dart
+ChartSeries(
+  name: 'Revenue',
+  categoriesRange: r"Sheet1!$A$2:$A$7",
+  valuesRange: r"Sheet1!$B$2:$B$7",
+  style: ChartSeriesStyle(
+    fillColor: ExcelColor.fromHexString('F39C12'), // orange — used for the line
+    fillType: ChartFillType.none,
+    borderColor: ExcelColor.fromHexString('F39C12'),
+    borderWidth: '28575',                   // 2.25 pt thick line
+  ),
+)
+```
+
+**Layered transparency — Area chart:**
+
+```dart
+AreaChart(
+  title: 'Revenue vs Cost (Transparent)',
+  series: [
+    ChartSeries(
+      name: 'Revenue',
+      categoriesRange: r"Sheet1!$A$2:$A$7",
+      valuesRange: r"Sheet1!$B$2:$B$7",
+      style: ChartSeriesStyle(
+        fillColor: ExcelColor.fromHexString('1ABC9C'), // emerald
+        fillType: ChartFillType.transparent,
+        fillAlpha: 55,
+        borderColor: ExcelColor.fromHexString('148F77'),
+        borderAlpha: 90,
+        borderWidth: '28575',
+      ),
+    ),
+  ],
+  anchor: ChartAnchor.at(column: 5, row: 1, width: 11, height: 15),
+)
+```
+
+> **Tip:** Mix `ChartFillType.transparent` with contrasting `borderColor` to create professional layered charts where overlapping series remain readable.
 
 </details>
 
@@ -1255,6 +1449,105 @@ var chart = RadarChart(
   ],
   anchor: ChartAnchor.at(column: 5, row: 1),
   filled: true,  // Set to false for lines only
+);
+
+sheet.addChart(chart);
+```
+
+</details>
+
+<details>
+<summary><h3>🫧 Bubble Chart (3D: X, Y, Size)</h3></summary>
+
+Bubble charts compare sets of three numeric values: X coordinate, Y coordinate, and Bubble Size.
+
+```dart
+var chart = BubbleChart(
+  title: "Risk vs Return vs Market Cap",
+  series: [
+    ChartSeries(
+      name: "Equities",
+      categoriesRange: r"Sheet1!$A$2:$A$6", // X values (numeric)
+      valuesRange: r"Sheet1!$B$2:$B$6",     // Y values (numeric)
+      bubbleSizeRange: r"Sheet1!$C$2:$C$6", // Bubble sizes (numeric)
+    ),
+  ],
+  anchor: ChartAnchor.at(column: 5, row: 1, width: 12, height: 15),
+  bubbleScale: 100, // Percentage scaling (default: 100)
+);
+
+sheet.addChart(chart);
+```
+
+</details>
+
+<details>
+<summary><h3>📈 Stock Chart (HLC / OHLC)</h3></summary>
+
+Stock charts display financial price movements with High-Low vertical lines and Up-Down direction bars.
+
+```dart
+var chart = StockChart(
+  title: "Weekly Stock Performance",
+  series: [
+    ChartSeries(name: "High", categoriesRange: r"Sheet1!$A$2:$A$6", valuesRange: r"Sheet1!$B$2:$B$6"),
+    ChartSeries(name: "Low", categoriesRange: r"Sheet1!$A$2:$A$6", valuesRange: r"Sheet1!$C$2:$C$6"),
+    ChartSeries(name: "Close", categoriesRange: r"Sheet1!$A$2:$A$6", valuesRange: r"Sheet1!$D$2:$D$6"),
+  ],
+  anchor: ChartAnchor.at(column: 5, row: 1, width: 12, height: 15),
+  showHighLowLines: true,
+  showUpDownBars: true,
+);
+
+sheet.addChart(chart);
+```
+
+</details>
+
+<details>
+<summary><h3>🥧 Of-Pie Chart (Pie of Pie / Bar of Pie)</h3></summary>
+
+Pie of Pie and Bar of Pie charts pull out smaller slices into a secondary pie or stacked bar chart to make small proportions easier to distinguish.
+
+```dart
+var chart = OfPieChart(
+  title: "Market Share Breakdown",
+  series: [
+    ChartSeries(
+      name: "Share",
+      categoriesRange: r"Sheet1!$A$2:$A$8",
+      valuesRange: r"Sheet1!$B$2:$B$8",
+    ),
+  ],
+  anchor: ChartAnchor.at(column: 5, row: 1, width: 12, height: 15),
+  ofPieType: OfPieType.pie, // or OfPieType.bar
+  splitType: OfPieSplitType.position,
+  splitPosition: 3, // Moves last 3 small items to the secondary chart
+  secondPieSize: 75, // Size percentage of the secondary chart
+);
+
+sheet.addChart(chart);
+```
+
+</details>
+
+<details>
+<summary><h3>📚 Chart Grouping (Stacked & 100% Stacked)</h3></summary>
+
+`ColumnChart`, `BarChart`, `AreaChart`, and `LineChart` support `grouping`:
+- `ChartGrouping.clustered` (default side-by-side)
+- `ChartGrouping.stacked` (cumulative sum)
+- `ChartGrouping.percentStacked` (100% proportional comparison)
+
+```dart
+var chart = ColumnChart(
+  title: "Monthly Revenue & Cost (Stacked)",
+  series: [
+    ChartSeries(name: "Revenue", categoriesRange: r"Sheet1!$A$2:$A$7", valuesRange: r"Sheet1!$B$2:$B$7"),
+    ChartSeries(name: "Cost", categoriesRange: r"Sheet1!$A$2:$A$7", valuesRange: r"Sheet1!$C$2:$C$7"),
+  ],
+  anchor: ChartAnchor.at(column: 5, row: 1, width: 12, height: 15),
+  grouping: ChartGrouping.stacked, // or ChartGrouping.percentStacked
 );
 
 sheet.addChart(chart);

@@ -116,6 +116,27 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.chartDataLabels,
+                'Chart Data Labels',
+                Icons.label_outline,
+                Colors.lightBlue,
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.chartColors,
+                'Chart Color Customization',
+                Icons.palette,
+                Colors.deepPurple,
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.newCharts,
+                'Bubble, Stock & Stacked',
+                Icons.bubble_chart,
+                Colors.teal,
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.imageEmbedding,
                 'Image Embedding',
                 Icons.image_outlined,

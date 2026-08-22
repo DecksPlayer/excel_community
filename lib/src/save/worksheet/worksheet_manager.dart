@@ -377,12 +377,51 @@ class _WorksheetManager {
 
     final sheetStyleReferenced = _excel._cellStyleReferenced[sheetName];
 
-    for (var rowIndex = 0; rowIndex < sheetObject._maxRows; rowIndex++) {
+    // Build a row -> col -> styleIndex map for non-origin merged cells that
+    // carry a style but were removed from _sheetData during parsing.
+    // This preserves borders and other styles on those cells when saving.
+    final Map<int, Map<int, int>> mergedNonOriginStyles = {};
+    if (sheetStyleReferenced != null && sheetObject._spanList.isNotEmpty) {
+      for (final span in sheetObject._spanList) {
+        if (span == null) continue;
+        for (var col = span.columnSpanStart;
+            col <= span.columnSpanEnd;
+            col++) {
+          for (var row = span.rowSpanStart;
+              row <= span.rowSpanEnd;
+              row++) {
+            final isOrigin =
+                col == span.columnSpanStart && row == span.rowSpanStart;
+            if (isOrigin) continue;
+            // Only emit if there is a preserved style ref and the cell is
+            // absent from _sheetData (i.e. it was removed during parsing).
+            final cellRef = getCellId(col, row);
+            final styleIdx = sheetStyleReferenced[cellRef];
+            if (styleIdx != null &&
+                sheetObject._sheetData[row]?[col] == null) {
+              mergedNonOriginStyles
+                  .putIfAbsent(row, () => {})[col] = styleIdx;
+            }
+          }
+        }
+      }
+    }
+
+    // Collect all rows that need writing: rows with data, hidden rows, and
+    // rows that only have non-origin merged-cell style entries.
+    final Set<int> rowsToWrite = {};
+    for (var i = 0; i < sheetObject._maxRows; i++) {
+      final rowData = sheetObject._sheetData[i];
+      if ((rowData != null && rowData.isNotEmpty) ||
+          hiddenRows.contains(i) ||
+          mergedNonOriginStyles.containsKey(i)) {
+        rowsToWrite.add(i);
+      }
+    }
+
+    for (final rowIndex in rowsToWrite.toList()..sort()) {
       final rowData = sheetObject._sheetData[rowIndex];
       final isRowHidden = hiddenRows.contains(rowIndex);
-      if ((rowData == null || rowData.isEmpty) && !isRowHidden) {
-        continue;
-      }
 
       double? height = customHeights[rowIndex];
       buffer.write('<row r="${rowIndex + 1}"');
@@ -394,45 +433,50 @@ class _WorksheetManager {
       }
       buffer.write('>');
 
-      if (rowData != null && rowData.isNotEmpty) {
-        bool isSorted = true;
-        int lastCol = -1;
-        for (final colIndex in rowData.keys) {
-          if (colIndex < lastCol) {
-            isSorted = false;
-            break;
-          }
-          lastCol = colIndex;
-        }
+      // Merge regular cells and non-origin style-only cells into a sorted map.
+      final Map<int, _MergedCellEntry> colEntries = {};
 
-        if (isSorted) {
-          rowData.forEach((columnIndex, data) {
-            _buildCellXml(
-              buffer,
-              sheetName,
-              columnIndex,
-              rowIndex,
-              data.value,
-              data._cellStyle,
-              sheetStyleReferenced,
-            );
-          });
-        } else {
-          final sortedCols = rowData.keys.toList()..sort();
-          for (final columnIndex in sortedCols) {
-            final data = rowData[columnIndex]!;
-            _buildCellXml(
-              buffer,
-              sheetName,
-              columnIndex,
-              rowIndex,
-              data.value,
-              data._cellStyle,
-              sheetStyleReferenced,
-            );
+      if (rowData != null && rowData.isNotEmpty) {
+        rowData.forEach((columnIndex, data) {
+          colEntries[columnIndex] = _MergedCellEntry(data: data);
+        });
+      }
+
+      final nonOriginRow = mergedNonOriginStyles[rowIndex];
+      if (nonOriginRow != null) {
+        nonOriginRow.forEach((col, styleIdx) {
+          if (!colEntries.containsKey(col)) {
+            colEntries[col] = _MergedCellEntry(styleOnlyIndex: styleIdx);
           }
+        });
+      }
+
+      final sortedCols = colEntries.keys.toList()..sort();
+      for (final columnIndex in sortedCols) {
+        final entry = colEntries[columnIndex]!;
+        if (entry.data != null) {
+          _buildCellXml(
+            buffer,
+            sheetName,
+            columnIndex,
+            rowIndex,
+            entry.data!.value,
+            entry.data!._cellStyle,
+            sheetStyleReferenced,
+          );
+        } else {
+          // Style-only <c> element for a non-origin merged cell.
+          buffer.write('<c r="');
+          if (columnIndex < 16384) {
+            buffer.write(_columnLetterList[columnIndex]);
+          } else {
+            buffer.write(_numericToLetters(columnIndex + 1));
+          }
+          buffer.write(rowIndex + 1);
+          buffer.write('" s="${entry.styleOnlyIndex}"/>');
         }
       }
+
       buffer.write('</row>');
     }
     buffer.write('</sheetData>');
@@ -660,4 +704,16 @@ class _WorksheetManager {
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&apos;');
   }
+}
+
+/// Represents either a regular [Data] cell or a style-only entry for a
+/// non-origin merged cell (i.e. one that was removed from [Sheet._sheetData]
+/// during parsing but whose style index was preserved in _cellStyleReferenced).
+class _MergedCellEntry {
+  final Data? data;
+
+  /// The original `s="N"` style index to write when [data] is null.
+  final int? styleOnlyIndex;
+
+  _MergedCellEntry({this.data, this.styleOnlyIndex});
 }

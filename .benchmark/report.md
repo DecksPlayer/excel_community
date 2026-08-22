@@ -30,9 +30,9 @@ Ejecuta una carga de trabajo continua de **1,000,000 de celdas** (20,000 filas �
 
 | Librería | Creación | Codificación | Decodificación | Tiempo Total | Pico RSS (Memoria) | Tamaño de Archivo | Aceleración vs Original | Aceleración vs Plus | Aceleración vs Community |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **excel_community** (Ours) | **959 ms** | **2,167 ms** | 24,263 ms | 27,388 ms | 1,695 MB | 7.08 MB | **1.96x** | **0.65x** | **1.00x** |
-| excel_plus | 2,350 ms | 5,762 ms | **9,657 ms** | **17,768 ms** | **726 MB** | 7.08 MB | 3.02x | 1.00x | 1.54x |
-| excel_original (v4.0.6) | 1,907 ms | 23,404 ms | 28,340 ms | 53,650 ms | 2,552 MB | 7.04 MB | 1.00x | 0.33x | 0.51x |
+| **excel_community** (Ours) | **1,288 ms** | **2,102 ms** | 25,175 ms | 28,565 ms | 1,752 MB | 7.08 MB | **1.88x** | **0.62x** | **1.00x** |
+| excel_plus (v2.14.3) | 2,279 ms | 5,642 ms | **9,818 ms** | **17,739 ms** | **770 MB** | 7.08 MB | 3.02x | 1.00x | 1.61x |
+| excel_original (v4.0.6) | 1,907 ms | 23,404 ms | 28,340 ms | 53,650 ms | 2,552 MB | 7.04 MB | 1.00x | 0.33x | 0.53x |
 
 ### Decisiones de Arquitectura e Insights Clave
 

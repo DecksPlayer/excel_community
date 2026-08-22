@@ -1,9 +1,6 @@
 part of '../../../excel_community.dart';
 
 /// Factory to get the appropriate style builder for a chart type
-///
-/// Implements the Factory pattern to create the right builder
-/// based on the chart type, following SOLID principles.
 class ChartStyleBuilderFactory {
   /// Returns the appropriate builder for the given chart type
   static ChartStyleBuilder getBuilder(Chart chart) {
@@ -15,6 +12,12 @@ class ChartStyleBuilderFactory {
       return AreaChartBuilder();
     } else if (chart is ScatterChart) {
       return ScatterChartBuilder();
+    } else if (chart is BubbleChart) {
+      return BubbleChartBuilder();
+    } else if (chart is StockChart) {
+      return StockChartBuilder();
+    } else if (chart is OfPieChart) {
+      return OfPieChartBuilder();
     } else if (chart is PieChart || chart is DoughnutChart) {
       return PieChartBuilder();
     } else if (chart is RadarChart) {
