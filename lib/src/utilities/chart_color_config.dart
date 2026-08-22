@@ -109,4 +109,101 @@ class ChartColorConfig {
   /// Marker sizes
   static const String smallMarker = '5';
   static const String largeMarker = '7';
+
+  // ========================================================================
+  // STYLE RESOLUTION HELPERS
+  // ========================================================================
+
+  /// Returns the fill color for a series, respecting any user-provided style.
+  static ExcelColor resolveFillColor(
+      ChartSeries series, int index, List<ExcelColor> palette) {
+    return series.style?.fillColor ?? palette[index % palette.length];
+  }
+
+  /// Returns the border color for a series (defaults to the fill color when
+  /// the user hasn't set a border color explicitly).
+  static ExcelColor resolveBorderColor(
+      ChartSeries series, int index, List<ExcelColor> palette) {
+    final fill = resolveFillColor(series, index, palette);
+    return series.style?.borderColor ?? fill;
+  }
+
+  // ========================================================================
+  // XML HELPER — shared solid-fill emitter
+  // ========================================================================
+
+  /// Emits an `<a:solidFill>` element.
+  ///
+  /// When [alpha] is `null` or 100, no `<a:alpha>` child is added (= fully
+  /// opaque).  Any other value emits the OOXML-scale alpha (0–100 000).
+  static void emitSolidFill(
+      XmlBuilder b, ExcelColor color, [int alpha = 100]) {
+    b.element('a:solidFill', nest: () {
+      if (alpha >= 100) {
+        b.element('a:srgbClr', attributes: {'val': color.colorHex6});
+      } else {
+        b.element('a:srgbClr', attributes: {'val': color.colorHex6}, nest: () {
+          b.element('a:alpha',
+              attributes: {'val': ChartSeriesStyle.alphaToOoxml(alpha)});
+        });
+      }
+    });
+  }
+
+  /// Builds a complete `<c:spPr>` element for a series, taking the user's
+  /// [ChartSeriesStyle] into account when present.
+  ///
+  /// Parameters:
+  /// - [defaultFillAlpha]: opacity % used when there is no user style and the
+  ///   chart type renders a transparent fill (area, radar-filled).
+  ///   Pass `100` for solid fills (column, bar, scatter).
+  /// - [defaultBorderAlpha]: opacity % for the auto-palette border.
+  /// - [defaultBorderWidth]: OOXML EMU string for the border line width.
+  /// - [includeFill]: set to `false` for line-only charts (plain line chart
+  ///   body — fill handled elsewhere).
+  static void buildSpPr(
+    XmlBuilder b,
+    ChartSeries series,
+    int seriesIndex,
+    List<ExcelColor> palette, {
+    int defaultFillAlpha = 100,
+    int defaultBorderAlpha = 100,
+    String defaultBorderWidth = thinLineWidth,
+    bool includeFill = true,
+  }) {
+    final userStyle = series.style;
+    final fillColor = resolveFillColor(series, seriesIndex, palette);
+    final borderColor = resolveBorderColor(series, seriesIndex, palette);
+
+    // Resolve effective alphas
+    int effectiveFillAlpha;
+    bool noFill;
+    if (userStyle != null) {
+      noFill = userStyle.fillType == ChartFillType.none;
+      effectiveFillAlpha = userStyle.fillType == ChartFillType.transparent
+          ? userStyle.fillAlpha
+          : 100;
+    } else {
+      noFill = false;
+      effectiveFillAlpha = defaultFillAlpha;
+    }
+
+    final effectiveBorderAlpha =
+        userStyle?.borderAlpha ?? defaultBorderAlpha;
+    final effectiveBorderWidth =
+        userStyle?.borderWidth ?? defaultBorderWidth;
+
+    b.element('c:spPr', nest: () {
+      if (includeFill) {
+        if (noFill) {
+          b.element('a:noFill');
+        } else {
+          emitSolidFill(b, fillColor, effectiveFillAlpha);
+        }
+      }
+      b.element('a:ln', attributes: {'w': effectiveBorderWidth}, nest: () {
+        emitSolidFill(b, borderColor, effectiveBorderAlpha);
+      });
+    });
+  }
 }

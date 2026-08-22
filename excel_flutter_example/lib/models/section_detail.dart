@@ -26,6 +26,9 @@ enum SelectedSection {
   fullDemo,
   cellComments,
   conditionalFormatting,
+  chartDataLabels,
+  chartColors,
+  newCharts,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

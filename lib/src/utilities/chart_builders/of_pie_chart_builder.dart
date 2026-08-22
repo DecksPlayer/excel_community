@@ -1,18 +1,21 @@
 part of '../../../excel_community.dart';
 
-/// Builder for Pie and Doughnut chart styles.
-///
-/// When the user provides a [ChartSeriesStyle] on the single pie series, that
-/// color (and fill type) is applied to **all** slices uniformly. Without a
-/// custom style the builder uses the automatic shuffled 20-color palette.
-class PieChartBuilder implements ChartStyleBuilder {
+/// Builder for OfPie (Pie-of-Pie and Bar-of-Pie) chart styles.
+class OfPieChartBuilder implements ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
-    if (chart is PieChart) {
-      builder.element('c:firstSliceAng', attributes: {'val': '0'});
-    } else if (chart is DoughnutChart) {
-      builder.element('c:holeSize', attributes: {'val': '50'});
+    final ofPie = chart as OfPieChart;
+    builder.element('c:ofPieType',
+        attributes: {'val': ofPie.ofPieType.ooxmlValue});
+    builder.element('c:splitType',
+        attributes: {'val': ofPie.splitType.ooxmlValue});
+    if (ofPie.splitPosition != null) {
+      builder.element('c:splitPos',
+          attributes: {'val': ofPie.splitPosition.toString()});
     }
+    builder.element('c:secondPieSize',
+        attributes: {'val': ofPie.secondPieSize.toString()});
+    builder.element('c:serLines');
   }
 
   @override
@@ -29,7 +32,6 @@ class PieChartBuilder implements ChartStyleBuilder {
     final userStyle = series.style;
 
     if (userStyle?.fillColor != null) {
-      // User-defined: apply same style to all slices.
       for (int i = 0; i < valuesCount; i++) {
         builder.element('c:dPt', nest: () {
           builder.element('c:idx', attributes: {'val': '$i'});
@@ -58,7 +60,6 @@ class PieChartBuilder implements ChartStyleBuilder {
         });
       }
     } else {
-      // Automatic: randomized palette, white separator border.
       final colors = ChartColorConfig.getRandomizedPieColors(valuesCount);
       for (int i = 0; i < valuesCount; i++) {
         builder.element('c:dPt', nest: () {

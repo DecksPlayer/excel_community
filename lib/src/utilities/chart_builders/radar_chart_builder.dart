@@ -1,6 +1,6 @@
 part of '../../../excel_community.dart';
 
-/// Builder for Radar chart styles with optional fill
+/// Builder for Radar chart styles with optional fill.
 class RadarChartBuilder implements ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
@@ -13,29 +13,17 @@ class RadarChartBuilder implements ChartStyleBuilder {
   void buildSeriesStyle(
       XmlBuilder builder, Chart chart, ChartSeries series, int seriesIndex) {
     final radarChart = chart as RadarChart;
-    final color = ChartColorConfig.getRadarColor(seriesIndex).colorHex6;
-
-    builder.element('c:spPr', nest: () {
-      // Fill with 45% opacity (only if filled style)
-      if (radarChart.filled) {
-        builder.element('a:solidFill', nest: () {
-          builder.element('a:srgbClr', attributes: {'val': color}, nest: () {
-            builder.element('a:alpha',
-                attributes: {'val': ChartColorConfig.opacity45});
-          });
-        });
-      }
-
-      // Line formatting (85% opacity)
-      builder.element('a:ln',
-          attributes: {'w': ChartColorConfig.thickLineWidth}, nest: () {
-        builder.element('a:solidFill', nest: () {
-          builder.element('a:srgbClr', attributes: {'val': color}, nest: () {
-            builder.element('a:alpha',
-                attributes: {'val': ChartColorConfig.opacity85});
-          });
-        });
-      });
-    });
+    ChartColorConfig.buildSpPr(
+      builder,
+      series,
+      seriesIndex,
+      ChartColorConfig.radarPalette,
+      // Filled radar default: 45 % fill, 85 % border.
+      // Non-filled radar: no fill (only border line).
+      includeFill: radarChart.filled,
+      defaultFillAlpha: 45,
+      defaultBorderAlpha: 85,
+      defaultBorderWidth: ChartColorConfig.thickLineWidth,
+    );
   }
 }

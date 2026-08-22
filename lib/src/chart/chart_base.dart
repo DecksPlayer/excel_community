@@ -7,11 +7,20 @@ abstract class Chart {
   final ChartAnchor anchor;
   final bool showLegend;
 
+  /// Optional data labels shown on every data point.
+  ///
+  /// When `null` (the default), no `<c:dLbls>` element is written and Excel
+  /// uses its default (no labels). Supply a [ChartDataLabels] instance to
+  /// enable one or more label components (value, category name, series name,
+  /// percentage).
+  final ChartDataLabels? dataLabels;
+
   Chart({
     required this.title,
     required this.series,
     required this.anchor,
     this.showLegend = true,
+    this.dataLabels,
   });
 
   /// The XML element name for this chart type in ChartML (e.g., 'barChart', 'lineChart').
@@ -30,8 +39,21 @@ class ChartSeries {
   /// Optional cached data for values (Y axis)
   List<num>? values;
 
-  /// Optional cached X numeric values for ScatterChart
+  /// Optional cached X numeric values for ScatterChart and BubbleChart
   List<num>? xValues;
+
+  /// Optional range reference for bubble size values in BubbleChart (e.g. "Sheet1!$C$2:$C$10")
+  final String? bubbleSizeRange;
+
+  /// Optional cached numeric values for bubble sizes in BubbleChart
+  List<num>? bubbleSizes;
+
+  /// Optional per-series visual styling (fill color, transparency, border).
+  ///
+  /// When `null`, the chart builder falls back to the automatic palette color
+  /// for this series index. Supply a [ChartSeriesStyle] to override any or
+  /// all visual properties.
+  final ChartSeriesStyle? style;
 
   ChartSeries({
     required this.name,
@@ -40,6 +62,9 @@ class ChartSeries {
     this.categories,
     this.values,
     this.xValues,
+    this.bubbleSizeRange,
+    this.bubbleSizes,
+    this.style,
   });
 }
 

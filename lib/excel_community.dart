@@ -29,7 +29,10 @@ part 'src/number_format/formats/numbers/datetime_format.dart';
 part 'src/number_format/formats/numbers/time_format.dart';
 
 /// Chart
+part 'src/chart/chart_enums.dart';
 part 'src/chart/chart_base.dart';
+part 'src/chart/chart_data_labels.dart';
+part 'src/chart/chart_series_style.dart';
 part 'src/chart/chart_types.dart';
 
 /// Pivot Table
@@ -62,6 +65,9 @@ part 'src/utilities/chart_builders/column_bar_chart_builder.dart';
 part 'src/utilities/chart_builders/line_chart_builder.dart';
 part 'src/utilities/chart_builders/area_chart_builder.dart';
 part 'src/utilities/chart_builders/scatter_chart_builder.dart';
+part 'src/utilities/chart_builders/bubble_chart_builder.dart';
+part 'src/utilities/chart_builders/stock_chart_builder.dart';
+part 'src/utilities/chart_builders/of_pie_chart_builder.dart';
 part 'src/utilities/chart_builders/pie_chart_builder.dart';
 part 'src/utilities/chart_builders/radar_chart_builder.dart';
 part 'src/utilities/chart_builders/chart_style_builder_factory.dart';

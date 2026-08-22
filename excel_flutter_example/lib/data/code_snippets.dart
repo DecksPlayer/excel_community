@@ -15,4 +15,7 @@ export 'snippets/hidden_columns.dart';
 export 'snippets/merged_cells.dart';
 export 'snippets/cell_comments.dart';
 export 'snippets/conditional_formatting.dart';
+export 'snippets/chart_data_labels.dart';
+export 'snippets/chart_colors.dart';
+export 'snippets/new_charts.dart';
 

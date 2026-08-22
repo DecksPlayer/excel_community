@@ -11,6 +11,9 @@ import 'helpers/hidden_columns_helper.dart';
 import 'helpers/merged_cells_helper.dart';
 import 'helpers/cell_comments_helper.dart';
 import 'helpers/conditional_formatting_helper.dart';
+import 'helpers/chart_data_labels_helper.dart';
+import 'helpers/chart_colors_helper.dart';
+import 'helpers/new_charts_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -58,4 +61,13 @@ class ExcelGenerator {
 
   static Future<String> generateConditionalFormatting() =>
       generateConditionalFormattingHelper();
+
+  static Future<String> generateChartDataLabels() =>
+      generateChartDataLabelsHelper();
+
+  static Future<String> generateChartColors() =>
+      generateChartColorsHelper();
+
+  static Future<String> generateNewCharts() =>
+      generateNewChartsHelper();
 }

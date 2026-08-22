@@ -354,5 +354,53 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: conditionalFormattingSnippet,
       );
+    case SelectedSection.chartDataLabels:
+      return SectionDetail(
+        title: 'Chart Data Labels',
+        description:
+            'Annotate each data point with its numeric value, category name, series name, and/or percentage share. Works across all 8 chart types and round-trips correctly when opening the saved file.',
+        icon: Icons.label_outline,
+        themeColor: Colors.lightBlue,
+        highlights: [
+          'Column chart: value labels positioned above each bar (outEnd)',
+          'Pie chart: percentage + value labels with newline separator',
+          'Line chart: category name + value labels on each data point',
+          'All label components are independent — mix and match freely',
+          'Custom separator and labelPosition supported on every chart type',
+        ],
+        codeSnippet: chartDataLabelsSnippet,
+      );
+    case SelectedSection.chartColors:
+      return SectionDetail(
+        title: 'Chart Color Customization',
+        description:
+            'Override the automatic color palette on any series using ChartSeriesStyle. Supports solid fills, transparent fills (with configurable alpha), no-fill (border only), and custom border colors. Works on all 8 chart types.',
+        icon: Icons.palette,
+        themeColor: Colors.deepPurple,
+        highlights: [
+          'ChartFillType.solid — 100 % opaque fill with any hex color',
+          'ChartFillType.transparent — configurable alpha (0–100 %)',
+          'ChartFillType.none — border-only, no area fill',
+          'Custom borderColor, borderAlpha, and borderWidth per series',
+          'Backward compatible: omit style to keep automatic palette',
+        ],
+        codeSnippet: chartColorsSnippet,
+      );
+    case SelectedSection.newCharts:
+      return SectionDetail(
+        title: 'Advanced & Stacked Charts',
+        description:
+            'New chart types and grouping modes: Bubble charts (3D X/Y/Size), Stock charts (High-Low-Close with lines & bars), Of-Pie charts (Pie-of-Pie / Bar-of-Pie), and Stacked / 100% Stacked column and area charts.',
+        icon: Icons.bubble_chart,
+        themeColor: Colors.teal,
+        highlights: [
+          'BubbleChart: 3-dimensional data comparison (X, Y, and Bubble Size)',
+          'StockChart: Financial High-Low-Close with up/down bars and extreme lines',
+          'OfPieChart: Secondary pie or stacked bar breakdown for small slices',
+          'ChartGrouping.stacked & percentStacked for Column, Bar, Line, Area',
+          'Scatter & Line with smooth curve interpolation and optional markers',
+        ],
+        codeSnippet: newChartsSnippet,
+      );
   }
 }

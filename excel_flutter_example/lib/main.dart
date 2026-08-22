@@ -147,6 +147,15 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.conditionalFormatting:
           resultStatus = await ExcelGenerator.generateConditionalFormatting();
           break;
+        case SelectedSection.chartDataLabels:
+          resultStatus = await ExcelGenerator.generateChartDataLabels();
+          break;
+        case SelectedSection.chartColors:
+          resultStatus = await ExcelGenerator.generateChartColors();
+          break;
+        case SelectedSection.newCharts:
+          resultStatus = await ExcelGenerator.generateNewCharts();
+          break;
       }
       setState(() {
         _status = resultStatus;
