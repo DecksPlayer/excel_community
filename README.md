@@ -81,35 +81,42 @@ For more details on how to use `excel_community`, see the following detailed gui
 ## Performance & Benchmarks
 <details open>
 
-`excel_community` is highly optimized for large-scale operations. Below is a cold-start scaling comparison (measuring Build + Encode time on a fresh Dart VM) and an isolated active-process benchmark (1,000,000 cells) against the original `excel` package (v4.0.6) and `excel_plus` (v2.7.2).
+`excel_community` is highly optimized for large-scale spreadsheet creation, high-throughput encoding, and massive cell manipulation. Below are benchmark measurements comparing `excel_community`, `excel_plus` (v2.14.3), and the original `excel` package (v4.0.6) on the Dart VM.
 
-### 1. Cold-Start Scaling Benchmark (Build + Encode)
+### 1. Isolated Full Lifecycle Benchmark (1,000,000 Cells)
+*20,000 rows × 50 columns continuous workload measuring Create, Encode, Decode (forcing full worksheet read), and Peak RSS memory:*
 
-| Workload | Library | Build | Encode | Total | File Size | Speedup vs Original | Speedup vs Plus | Speedup vs Community |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **5.76 s** | **28.71 s** | **34.48 s** | 34.7 MB | **>3.48x** | **1.33x** | **1.00x** |
-| | excel_plus | 14.42 s | 31.30 s | 45.72 s | 34.7 MB | >2.62x | 1.00x | 0.75x |
-| | excel_original | Timeout | Timeout | Timeout (>2m) | — | 1.00x | — | — |
-| | | | | | | | | |
-| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **426 ms** | 757 ms | **1,183 ms** | 661.6 KB | **2.70x** | **1.06x** | **1.00x** |
-| | excel_plus | 516 ms | **741 ms** | 1,257 ms | 660.9 KB | 2.54x | 1.00x | 0.94x |
-| | excel_original | 548 ms | 2,643 ms | 3,191 ms | 695.2 KB | 1.00x | 0.39x | 0.37x |
-| | | | | | | | | |
-| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 349 ms | 284 ms | 633 ms | 61.8 KB | **1.98x** | 0.86x | **1.00x** |
-| | excel_plus | **323 ms** | **221 ms** | **544 ms** | 61.7 KB | 2.30x | **1.00x** | 1.16x |
-| | excel_original | 452 ms | 800 ms | 1,252 ms | 70.5 KB | 1.00x | 0.43x | 0.51x |
+| Library | Create | Encode | Decode (Full Read) | Total Time | Peak RSS | File Size | Create Speedup | Encode Speedup |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **excel_community** (Ours) | **1,288 ms** | **2,102 ms** | 25,175 ms | 28,565 ms | 1,752 MB | 7.08 MB | **1.77x vs Plus** <br> **1.48x vs Original** | **2.68x vs Plus** <br> **11.13x vs Original** |
+| excel_plus (v2.14.3) | 2,279 ms | 5,642 ms | **9,818 ms** | **17,739 ms** | **770 MB** | 7.08 MB | 1.00x | 1.00x |
+| excel_original (v4.0.6) | 1,907 ms | 23,404 ms | 28,340 ms | 53,650 ms | 2,552 MB | 7.04 MB | 1.19x | 0.24x |
 
-### 2. Isolated Benchmark (1,000,000 Cells)
-*20,000 rows × 50 columns workload in an active process (measuring all phases and Peak RSS memory):*
+### 2. Scaling Comparison (10k, 100k, and 5M Cells)
 
-| Library | Create | Encode | Decode | Total Time | Peak RSS | File Size | Speedup vs Original | Speedup vs Plus | Speedup vs Community |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **excel_community** (Ours) | **959 ms** | **2,167 ms** | 24,263 ms | 27,388 ms | 1,695 MB | 7.08 MB | **1.96x** | **0.65x** | **1.00x** |
-| excel_plus | 2,350 ms | 5,762 ms | **9,657 ms** | **17,768 ms** | **726 MB** | 7.08 MB | 3.02x | 1.00x | 1.54x |
-| excel_original (v4.0.6) | 1,907 ms | 23,404 ms | 28,340 ms | 53,650 ms | 2,552 MB | 7.04 MB | 1.00x | 0.33x | 0.51x |
+| Workload | Library | Create (ms) | Encode (ms) | Total Time | File Size | Encode Speedup vs Original | Encode Speedup vs Plus |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **3,119** | **14,173** | **17,292** | 33.1 MB | **5.95x** | **1.55x** |
+| | excel_plus | 9,618 | 22,030 | 31,648 | 33.1 MB | 3.83x | 1.00x |
+| | excel_original | 10,510 | 84,300 | 94,810 | 33.9 MB | 1.00x | 0.26x |
+| | | | | | | | |
+| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **416** | **714** | 1,130 | 588.8 KB | **3.70x** | **1.06x** |
+| | excel_plus | 368 | 754 | 1,122 | 588.8 KB | 3.51x | 1.00x |
+| | excel_original | 548 | 2,643 | 3,191 | 695.2 KB | 1.00x | 0.29x |
+| | | | | | | | |
+| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 350 | 206 | 556 | 60.5 KB | **3.88x** | 0.96x |
+| | excel_plus | **309** | **198** | **507** | 60.5 KB | 4.04x | **1.00x** |
+| | excel_original | 452 | 800 | 1,252 | 70.5 KB | 1.00x | 0.25x |
 
-> [!TIP]
-> **Eager vs. Lazy Parsing**: `excel_community` eagerly parses sheets on load to guarantee direct $O(1)$ cell updates and stable identities, whereas `excel_plus` loads cells lazily. While lazy loading makes the initial decode faster, `excel_community` delivers unmatched performance for workloads requiring heavy read/write cell manipulations and ultra-fast encoding.
+### 💡 Key Architectural Insights
+
+1. **Ultra-Fast XML Encoding**:
+   - `excel_community` features an optimized streaming XML serializer that encodes 1,000,000 cells in **2.1 seconds** (**2.68x faster than `excel_plus`** and **11.13x faster than `excel` original**).
+2. **Eager vs. Lazy Parsing Trade-offs**:
+   - `excel_community` uses **eager parsing** upon file load, instantiating all cell coordinate models upfront. This guarantees direct $O(1)$ cell lookups and mutations with stable identities.
+   - `excel_plus` uses **lazy parsing**, delaying cell object creation until individual cells are accessed, which gives a faster initial cold decode but adds runtime overhead during intensive cell updates.
+3. **Memory Optimization**:
+   - `excel_community` reduces peak RSS memory by **1.46x** compared to `excel` original (1,752 MB vs 2,552 MB for 1M cells) by eliminating redundant style maps and optimizing cell coordinate indexing.
 </details>
 
 <details open><summary><h2>📖 Usage</h2></summary>
