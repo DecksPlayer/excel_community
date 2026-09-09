@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-09-09
+### Added
+- **`FormulaCellValue.cachedValue`**: formula cells now retain the pre-calculated `<v>` result found in the source file (instead of discarding it), so the last value Excel computed can be read without recalculating the formula.
+- **`Data.displayText`** and **`NumFormat.format(CellValue?)`**: render a cell's value as the display text a spreadsheet application would show, based on its assigned number format (e.g. `1234.5` with `NumFormat.standard_7` → `"$1,234.50"`). Best-effort coverage of the ~50 built-in standard formats plus common custom currency/percentage/date/time patterns.
+- **Flutter Example**: new "Formulas & Display Text" showcase section demonstrating `FormulaCellValue.cachedValue` and `Data.displayText` against a bundled fixture with real cached formula results.
+
 ## [2.3.0] - 2026-08-22
 ### Added
 - **New Standard Chart Types**:

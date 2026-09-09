@@ -30,6 +30,7 @@ enum SelectedSection {
   chartColors,
   newCharts,
   readAsset,
+  formulasDisplayText,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

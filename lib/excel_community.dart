@@ -23,6 +23,7 @@ part 'src/sharedStrings/shared_strings.dart';
 
 /// Number Format
 part 'src/number_format/num_format.dart';
+part 'src/number_format/format_renderer.dart';
 part 'src/number_format/formats/numbers/standard_formats.dart';
 part 'src/number_format/formats/numbers/numeric_format.dart';
 part 'src/number_format/formats/numbers/datetime_format.dart';

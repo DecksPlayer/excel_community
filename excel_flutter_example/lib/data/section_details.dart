@@ -418,6 +418,20 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: readAssetSnippet,
       );
+    case SelectedSection.formulasDisplayText:
+      return SectionDetail(
+        title: 'Formulas & Display Text',
+        description:
+            'Read a formula cell\'s cached result (FormulaCellValue.cachedValue) and render any cell as the text a spreadsheet app would show (Data.displayText) — currency, percentages, dates, and custom formats.',
+        icon: Icons.functions,
+        themeColor: Colors.blueGrey,
+        highlights: [
+          'FormulaCellValue.cachedValue holds the last <v> result Excel cached for a formula, without recalculating it',
+          'Data.displayText renders a value using its CellStyle.numberFormat (e.g. 1234.5 → "\$1,234.50")',
+          'displayText resolves a formula cell through its cachedValue automatically',
+          'Best-effort coverage of the ~50 built-in ECMA-376 formats plus common custom currency/percentage/date patterns',
+        ],
+        codeSnippet: formulasDisplayTextSnippet,
+      );
   }
 }
-

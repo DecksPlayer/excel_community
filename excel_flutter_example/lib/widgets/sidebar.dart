@@ -211,6 +211,13 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.formulasDisplayText,
+                'Formulas & Display Text',
+                Icons.functions,
+                Colors.blueGrey,
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.cellLocking,
                 'Sheet Protection & Locks',
                 Icons.lock_outline,

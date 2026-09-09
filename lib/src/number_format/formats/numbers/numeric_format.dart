@@ -43,6 +43,25 @@ sealed class NumericNumFormat extends NumFormat {
   String writeInt(IntCellValue value) {
     return value.value.toString();
   }
+
+  @override
+  String format(CellValue? value) {
+    final resolved = _resolveDisplayValue(value);
+    final num? n = switch (resolved) {
+      IntCellValue(value: final v) => v,
+      DoubleCellValue(value: final v) => v,
+      BoolCellValue(value: final v) => v ? 1 : 0,
+      _ => null,
+    };
+    if (n == null) {
+      return resolved?.toString() ?? '';
+    }
+    try {
+      return renderNumericValue(formatCode, n);
+    } catch (_) {
+      return n.toString();
+    }
+  }
 }
 
 class StandardNumericNumFormat extends NumericNumFormat

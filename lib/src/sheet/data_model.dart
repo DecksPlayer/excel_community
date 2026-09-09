@@ -88,6 +88,18 @@ class Data extends Equatable {
   /// It will return `null` if no value is stored in this cell.
   CellValue? get value => _value;
 
+  /// Renders this cell's value as the display text a spreadsheet
+  /// application would show, based on its assigned [cellStyle.numberFormat].
+  ///
+  /// Returns `''` for an empty cell. For a formula cell, this reflects the
+  /// cached `<v>` result read from the source file, if any — see
+  /// [FormulaCellValue.cachedValue]. This is a best-effort rendering; see
+  /// [NumFormat.format] for its accuracy caveats.
+  String get displayText {
+    final format = cellStyle?.numberFormat ?? NumFormat.standard_0;
+    return format.format(_value);
+  }
+
   /// returns the user-defined CellStyle
   ///
   /// if `no` cellStyle is set then it returns `null`

@@ -50,14 +50,29 @@
 - ✅ **Cell Operations**: Merge cells, insert/delete rows and columns
 - ✅ **Sheet Management**: Create, copy, rename, delete sheets
 - ✅ **Freeze Panes**: Lock rows and/or columns so headers and key columns stay visible while scrolling (single sheet or multi-sheet workbooks)
+- ✅ **Conditional Formatting**: Native OpenXML conditional formatting rules and differential styles (`<conditionalFormatting>`, `<dxfs>`)
+- ✅ **Cell Protection & Security**: 16-bit XOR password hashing and granular cell locking permissions (`locked`, `hidden`)
+- ✅ **Hidden Rows & Columns**: Programmatically hide/unhide specific rows and columns (`<row hidden="1">`, `<col hidden="1">`)
+- ✅ **Cached Formula Values**: Retains source pre-calculated results in `FormulaCellValue.cachedValue`
+- ✅ **Display Text Formatting**: Spreadsheet-accurate rendered strings via `Data.displayText` and `NumFormat.format()`
 - ✅ **Cross-platform**: Works on Flutter Web, Android, iOS, Desktop
 
 ## Road-map:
- - ➕ Formulas and Calculations
- - 💾 Support Multiple Data type efficiently
  - ✅ Charts (Implemented!)
  - ✅ Images (Implemented!)
- - 📰 Create Tables and style
+ - ✅ Pivot Tables (Implemented!)
+ - ✅ Conditional Formatting (Implemented!)
+ - ✅ Sheet Protection & Password Hash (Implemented!)
+ - ✅ Display Text & Number Formatting (Implemented!)
+ - ✅ Formulas & Cached Values (Implemented!)
+ - 💾 Data Export & Transformation (`rowsAsMaps`, `toJson`)
+ - 🔽 AutoFilter (`<autoFilter>`)
+ - 🏷️ Sheet Tab Colors (`<tabColor>`)
+ - 🔗 Cell Hyperlinks (`<hyperlinks>`)
+ - 📋 Data Validation & Dropdowns (`<dataValidation>`)
+ - 🖨️ Page Setup & Print Configuration (`<pageSetup>`)
+ - 📁 Row & Column Grouping (`<outlinePr>`)
+ - 📰 Excel Structured Tables (`<tableParts>`, Table Styles)
  - 🔐 Encrypt and Decrypt excel on the go.
  - Many more **features**
 
@@ -171,6 +186,17 @@ for (var table in excel.tables.keys) {
   }
 }
 ```
+
+> [!TIP]
+> Need the text a spreadsheet app would actually show for a cell (e.g. `"$1,234.50"` instead of `1234.5`)? Use `cell.displayText`, which renders the value according to its assigned `numberFormat`. For a formula cell, `FormulaCellValue.cachedValue` holds the last `<v>` result Excel cached in the file (if any) — `displayText` uses it automatically:
+> ```dart
+> final cell = excel.tables['Sheet1']!.rows[0][0]!;
+> print(cell.displayText); // e.g. "$1,234.50"
+>
+> final formula = cell.value as FormulaCellValue?;
+> print(formula?.cachedValue); // the <v> Excel last computed, or null
+> ```
+> This is a best-effort renderer covering the ~50 built-in standard formats plus common custom currency/percentage/date patterns — not a full implementation of the Excel formatting language.
 
 </details>
 

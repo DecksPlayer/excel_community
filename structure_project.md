@@ -37,6 +37,7 @@ excel_community/
 │   │   │       ├── charts.dart
 │   │   │       ├── conditional_formatting.dart
 │   │   │       ├── fonts_styles.dart
+│   │   │       ├── formulas_display_text.dart
 │   │   │       ├── hidden_columns.dart
 │   │   │       ├── images.dart
 │   │   │       ├── merged_cells.dart
@@ -49,6 +50,7 @@ excel_community/
 │   │   │       ├── cell_comments_helper.dart
 │   │   │       ├── chart_helper.dart
 │   │   │       ├── conditional_formatting_helper.dart
+│   │   │       ├── formulas_display_text_helper.dart
 │   │   │       ├── full_demo_helper.dart
 │   │   │       ├── hidden_columns_helper.dart
 │   │   │       ├── image_helper.dart
@@ -78,6 +80,7 @@ excel_community/
 │       │   └── chart_types.dart           # Concrete chart types (Column, Bar, Line, Pie, etc.)
 │       ├── number_format/                 # Number format processing engine
 │       │   ├── num_format.dart            # NumFormat base, StandardNumFormat, CustomNumFormat
+│       │   ├── format_renderer.dart       # Best-effort numeric/date display-text renderer (NumFormat.format)
 │       │   └── formats/numbers/
 │       │       ├── datetime_format.dart   # Date and time numeric format handlers
 │       │       ├── numeric_format.dart    # Decimal, currency, and scientific format handlers
@@ -215,7 +218,7 @@ excel_community/
 - **`Sheet`**: Represents an individual Excel worksheet. Encapsulates cell data indexed by row and column, dimensions, frozen pane settings, merged cell spans, sheet protection, charts, embedded images, pivot tables, and conditional formatting rules.
 
 #### [`lib/src/sheet/data_model.dart`](lib/src/sheet/data_model.dart)
-- **`Data`**: Represents an individual cell within a worksheet. Holds the cell's typed value (`CellValue`), formatting style (`CellStyle`), 0-based row and column coordinates, parent sheet reference, and optional cell comment.
+- **`Data`**: Represents an individual cell within a worksheet. Holds the cell's typed value (`CellValue`), formatting style (`CellStyle`), 0-based row and column coordinates, parent sheet reference, and optional cell comment. Exposes `displayText`, which renders the value as formatted text via `CellStyle.numberFormat.format()`.
 
 #### [`lib/src/sheet/cell_index.dart`](lib/src/sheet/cell_index.dart)
 - **`CellIndex`**: Immutable value object representing a 2D coordinate on a worksheet. Supports conversions between 0-based integer indexes (`columnIndex`, `rowIndex`) and standard Excel alphanumeric references (e.g., `"A1"`, `"BC42"`).
@@ -285,7 +288,7 @@ excel_community/
 - **`DateTimeCellValue`**: Represents a combined date and time timestamp with convenience accessors for local and UTC `DateTime` instances.
 
 #### [`lib/src/sheet/cell_value/formula_cell_value.dart`](lib/src/sheet/cell_value/formula_cell_value.dart)
-- **`FormulaCellValue`**: Represents an Excel calculation formula string (e.g., `"=SUM(A1:A10)"`, `"=VLOOKUP(...)"`).
+- **`FormulaCellValue`**: Represents an Excel calculation formula string (e.g., `"=SUM(A1:A10)"`, `"=VLOOKUP(...)"`). Carries an optional `cachedValue` — the pre-calculated `<v>` result read from the source file, if it had one (not recalculated or rewritten by this library).
 
 ---
 
@@ -355,7 +358,10 @@ excel_community/
 ### 2.8 Number Format Engine (`lib/src/number_format/`)
 
 #### [`lib/src/number_format/num_format.dart`](lib/src/number_format/num_format.dart)
-- **`NumFormat`** (`sealed class`): Base class for number formats. Provides factory methods for standard ECMA-376 formats (e.g., `standard_0`, `standard_14`, currency, dates, percentages) and custom format strings.
+- **`NumFormat`** (`sealed class`): Base class for number formats. Provides factory methods for standard ECMA-376 formats (e.g., `standard_0`, `standard_14`, currency, dates, percentages) and custom format strings. Declares `format(CellValue?)`, implemented per format family to render a cell's display text.
+
+#### [`lib/src/number_format/format_renderer.dart`](lib/src/number_format/format_renderer.dart)
+- Best-effort renderer (`renderNumericValue`, `renderDateTimeValue`) that converts a raw `CellValue` into the display text a spreadsheet application would show for a given ECMA-376 §18.8.30 format code — thousands separators, fixed decimals, percentages, scientific notation, currency/date/time literals. Backs `NumFormat.format()` and `Data.displayText`. Not a full implementation of the Excel formatting language (exotic locale codes and precise fraction rendering fall back to a simplified output).
 - **`StandardNumFormat`** (`sealed class`): Represents a built-in OpenXML standard format with a fixed `numFmtId` (0–163).
 - **`CustomNumFormat`** (`sealed class`): Represents a user-defined custom format string with a dynamic format ID (≥ 164).
 - **`NumFormatMaintainer`**: Tracks, allocates, and maps standard and custom number format IDs to avoid duplication in `styles.xml`.
@@ -495,6 +501,7 @@ excel_community/
   - `SheetsHelper`: Multi-sheet operations (renaming, reordering, RTL layout).
   - `SimpleHelper`: Quickstart basic table creation.
   - `StylesHelper`: Typography, colors, patterns, and alignment showcases.
+  - `FormulasDisplayTextHelper`: Reads a bundled fixture with real cached `<v>` formula results and demonstrates `FormulaCellValue.cachedValue` and `Data.displayText` across currency, percentage, date, custom, and time formats.
 - **UI Widgets** (`widgets/`):
   - `SpreadsheetPreview`: Interactive grid previewing generated Excel sheets.
   - `Sidebar`: Navigation drawer for selecting demo categories.

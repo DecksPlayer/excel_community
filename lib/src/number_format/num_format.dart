@@ -139,6 +139,11 @@ sealed class NumFormat {
 
   CellValue read(String v);
 
+  /// Renders [value] as the display text a spreadsheet application would
+  /// show for this format code (best-effort — see [renderNumericValue] and
+  /// [renderDateTimeValue] for the accuracy caveats).
+  String format(CellValue? value);
+
   @override
   int get hashCode => Object.hash(runtimeType, formatCode);
 

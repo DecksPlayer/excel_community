@@ -19,4 +19,4 @@ export 'snippets/chart_data_labels.dart';
 export 'snippets/chart_colors.dart';
 export 'snippets/new_charts.dart';
 export 'snippets/read_asset.dart';
-
+export 'snippets/formulas_display_text.dart';
