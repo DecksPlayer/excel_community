@@ -48,6 +48,35 @@ sealed class DateTimeNumFormat extends NumFormat {
   }
 
   @override
+  String format(CellValue? value) {
+    final resolved = _resolveDisplayValue(value);
+    try {
+      if (resolved is DateCellValue) {
+        return renderDateTimeValue(formatCode,
+            year: resolved.year,
+            month: resolved.month,
+            day: resolved.day,
+            hour: 0,
+            minute: 0,
+            second: 0);
+      }
+      if (resolved is DateTimeCellValue) {
+        return renderDateTimeValue(formatCode,
+            year: resolved.year,
+            month: resolved.month,
+            day: resolved.day,
+            hour: resolved.hour,
+            minute: resolved.minute,
+            second: resolved.second,
+            millisecond: resolved.millisecond);
+      }
+    } catch (_) {
+      return resolved?.toString() ?? '';
+    }
+    return resolved?.toString() ?? '';
+  }
+
+  @override
   bool accepts(CellValue? value) => switch (value) {
         null => true,
         FormulaCellValue() => true,

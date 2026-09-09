@@ -62,6 +62,23 @@ sealed class TimeNumFormat extends NumFormat {
   }
 
   @override
+  String format(CellValue? value) {
+    final resolved = _resolveDisplayValue(value);
+    if (resolved is TimeCellValue) {
+      try {
+        return renderDateTimeValue(formatCode,
+            hour: resolved.hour,
+            minute: resolved.minute,
+            second: resolved.second,
+            millisecond: resolved.millisecond);
+      } catch (_) {
+        return resolved.toString();
+      }
+    }
+    return resolved?.toString() ?? '';
+  }
+
+  @override
   bool accepts(CellValue? value) => switch (value) {
         null => true,
         FormulaCellValue() => true,

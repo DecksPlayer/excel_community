@@ -79,6 +79,7 @@ build/
 
 # Generated test files
 *.xlsx
+!excel_flutter_example/assets/*.xlsx
 test_*.dart
 **/TEST_*.xlsx
 generar_*.dart

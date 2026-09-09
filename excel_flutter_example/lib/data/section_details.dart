@@ -394,13 +394,44 @@ SectionDetail getSectionDetail(SelectedSection section) {
         icon: Icons.bubble_chart,
         themeColor: Colors.teal,
         highlights: [
-          'BubbleChart: 3-dimensional data comparison (X, Y, and Bubble Size)',
+          'BubbleChart: 3-dimensional data comparison (X, Resource Size)',
           'StockChart: Financial High-Low-Close with up/down bars and extreme lines',
           'OfPieChart: Secondary pie or stacked bar breakdown for small slices',
           'ChartGrouping.stacked & percentStacked for Column, Bar, Line, Area',
           'Scatter & Line with smooth curve interpolation and optional markers',
         ],
         codeSnippet: newChartsSnippet,
+      );
+    case SelectedSection.readAsset:
+      return SectionDetail(
+        title: 'Read Asset Excel (Borders & Data)',
+        description:
+            'Load pre-existing XLSX spreadsheets bundled directly in Flutter assets (using rootBundle), decode worksheets, inspect and extract cell values, verify thin/medium/thick border fidelity, modify content, and re-export seamlessly.',
+        icon: Icons.folder_open_outlined,
+        themeColor: const Color(0xFF0284C7), // Sky 600
+        highlights: [
+          'Load XLSX files from Flutter assets via rootBundle.load()',
+          'Decode complex worksheets with merged headers and thin grid borders',
+          'Inspect CellStyle border properties (left, right, top, bottom, diagonal)',
+          'Read typed cell values: TextCellValue, IntCellValue, FormulaCellValue',
+          '100% border & style fidelity on re-encoding (no styling lost on save)',
+        ],
+        codeSnippet: readAssetSnippet,
+      );
+    case SelectedSection.formulasDisplayText:
+      return SectionDetail(
+        title: 'Formulas & Display Text',
+        description:
+            'Read a formula cell\'s cached result (FormulaCellValue.cachedValue) and render any cell as the text a spreadsheet app would show (Data.displayText) — currency, percentages, dates, and custom formats.',
+        icon: Icons.functions,
+        themeColor: Colors.blueGrey,
+        highlights: [
+          'FormulaCellValue.cachedValue holds the last <v> result Excel cached for a formula, without recalculating it',
+          'Data.displayText renders a value using its CellStyle.numberFormat (e.g. 1234.5 → "\$1,234.50")',
+          'displayText resolves a formula cell through its cachedValue automatically',
+          'Best-effort coverage of the ~50 built-in ECMA-376 formats plus common custom currency/percentage/date patterns',
+        ],
+        codeSnippet: formulasDisplayTextSnippet,
       );
   }
 }

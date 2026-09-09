@@ -14,6 +14,8 @@ import 'helpers/conditional_formatting_helper.dart';
 import 'helpers/chart_data_labels_helper.dart';
 import 'helpers/chart_colors_helper.dart';
 import 'helpers/new_charts_helper.dart';
+import 'helpers/read_asset_helper.dart';
+import 'helpers/formulas_display_text_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -24,8 +26,7 @@ class ExcelGenerator {
   static Future<String> generateExcelWithChart(ChartType type) =>
       generateExcelWithChartHelper(type);
 
-  static Future<String> generateFontsStyles() =>
-      generateFontsStylesHelper();
+  static Future<String> generateFontsStyles() => generateFontsStylesHelper();
 
   static Future<String> generateNumberFormats() =>
       generateNumberFormatsHelper();
@@ -53,11 +54,9 @@ class ExcelGenerator {
   static Future<String> generateMultiPageCharts() =>
       generateMultiPageChartsHelper();
 
-  static Future<String> generateMergedCells() =>
-      generateMergedCellsHelper();
+  static Future<String> generateMergedCells() => generateMergedCellsHelper();
 
-  static Future<String> generateCellComments() =>
-      generateCellCommentsHelper();
+  static Future<String> generateCellComments() => generateCellCommentsHelper();
 
   static Future<String> generateConditionalFormatting() =>
       generateConditionalFormattingHelper();
@@ -65,9 +64,12 @@ class ExcelGenerator {
   static Future<String> generateChartDataLabels() =>
       generateChartDataLabelsHelper();
 
-  static Future<String> generateChartColors() =>
-      generateChartColorsHelper();
+  static Future<String> generateChartColors() => generateChartColorsHelper();
 
-  static Future<String> generateNewCharts() =>
-      generateNewChartsHelper();
+  static Future<String> generateNewCharts() => generateNewChartsHelper();
+
+  static Future<String> readAssetExcel() => readAssetExcelHelper();
+
+  static Future<String> generateFormulasDisplayText() =>
+      generateFormulasDisplayTextHelper();
 }

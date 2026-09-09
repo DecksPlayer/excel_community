@@ -204,6 +204,20 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.readAsset,
+                'Read Asset (Borders & Data)',
+                Icons.folder_open_outlined,
+                const Color(0xFF0284C7),
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.formulasDisplayText,
+                'Formulas & Display Text',
+                Icons.functions,
+                Colors.blueGrey,
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.cellLocking,
                 'Sheet Protection & Locks',
                 Icons.lock_outline,

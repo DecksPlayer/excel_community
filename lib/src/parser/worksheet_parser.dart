@@ -177,7 +177,8 @@ class _WorksheetParser {
           if (rId != null) {
             sheetObject._drawingRId = rId;
           }
-        } else if (tagName == 'legacyDrawing' || tagName.endsWith(':legacyDrawing')) {
+        } else if (tagName == 'legacyDrawing' ||
+            tagName.endsWith(':legacyDrawing')) {
           final rId = _getAttr(event, 'id');
           if (rId != null) {
             sheetObject._legacyDrawingRId = rId;
@@ -359,10 +360,8 @@ class _WorksheetParser {
             }
           }
 
-          final formulae = ruleNode
-              .findElements('formula')
-              .map((e) => e.innerText)
-              .toList();
+          final formulae =
+              ruleNode.findElements('formula').map((e) => e.innerText).toList();
 
           rules.add(ConditionalFormattingRule(
             type: type,
@@ -457,7 +456,18 @@ class _WorksheetParser {
       case 'n':
       default:
         if (formulaStr != null) {
-          value = FormulaCellValue(formulaStr);
+          CellValue? cachedValue;
+          if (valueStr != null) {
+            if (styleAttr != null && s < _excel._cellStyleList.length) {
+              final numFmtId = _excel._numFmtIds[s];
+              final numFormat = _excel._numFormats.getByNumFmtId(numFmtId) ??
+                  NumFormat.standard_0;
+              cachedValue = numFormat.read(valueStr);
+            } else {
+              cachedValue = NumFormat.defaultNumeric.read(valueStr);
+            }
+          }
+          value = FormulaCellValue(formulaStr, cachedValue: cachedValue);
         } else if (valueStr != null) {
           if (styleAttr != null && s < _excel._cellStyleList.length) {
             final numFmtId = _excel._numFmtIds[s];

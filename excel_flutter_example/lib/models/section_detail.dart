@@ -29,6 +29,8 @@ enum SelectedSection {
   chartDataLabels,
   chartColors,
   newCharts,
+  readAsset,
+  formulasDisplayText,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

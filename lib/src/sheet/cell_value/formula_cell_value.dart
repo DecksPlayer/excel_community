@@ -5,8 +5,16 @@ class FormulaCellValue extends CellValue {
   /// The formula string (e.g., "=SUM(A1:A10)").
   final String formula;
 
+  /// The last value Excel computed for this formula and stored in the XLSX's
+  /// `<v>` element, if the source file had one.
+  ///
+  /// This is `null` for formulas created programmatically (before saving) and
+  /// is never recalculated by this library — it only reflects whatever value
+  /// was cached in the file at the time it was read.
+  final CellValue? cachedValue;
+
   /// Creates a new FormulaCellValue.
-  const FormulaCellValue(this.formula);
+  const FormulaCellValue(this.formula, {this.cachedValue});
 
   @override
   NumFormat get defaultFormat => NumFormat.standard_0;
@@ -25,10 +33,12 @@ class FormulaCellValue extends CellValue {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, formula);
+  int get hashCode => Object.hash(runtimeType, formula, cachedValue);
 
   @override
   operator ==(Object other) {
-    return other is FormulaCellValue && other.formula == formula;
+    return other is FormulaCellValue &&
+        other.formula == formula &&
+        other.cachedValue == cachedValue;
   }
 }
