@@ -574,6 +574,39 @@ class SpreadsheetPreview extends StatelessWidget {
           );
         }
       }
+    } else if (selectedSection == SelectedSection.readAsset) {
+      if (rowIndex == 2 || rowIndex == 3) {
+        if (colIndex == 1) {
+          return Container(
+            color: const Color(0xFFE0F2FE),
+            alignment: Alignment.center,
+            child: const Text(
+              'Merge b:f',
+              style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Color(0xFF0369A1)),
+            ),
+          );
+        }
+        if (colIndex >= 2 && colIndex <= 5) {
+          return Container(color: const Color(0xFFE0F2FE));
+        }
+      } else if (rowIndex == 4) {
+        final headers = ['', 'values', '1', '2', '3', '4'];
+        if (colIndex < headers.length && headers[colIndex].isNotEmpty) {
+          return Container(
+            color: const Color(0xFFF1F5F9),
+            alignment: Alignment.center,
+            child: Text(
+              headers[colIndex],
+              style: const TextStyle(fontSize: 6.5, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+            ),
+          );
+        }
+      } else if (rowIndex == 5) {
+        if (colIndex == 1) return const Center(child: Text('row 6', style: TextStyle(fontSize: 6, fontWeight: FontWeight.w600)));
+        if (colIndex == 2 || colIndex == 4) return const Center(child: Text('x', style: TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Color(0xFF0284C7))));
+      } else if (rowIndex == 6) {
+        if (colIndex == 1) return const Center(child: Text('row 7', style: TextStyle(fontSize: 6, fontWeight: FontWeight.w600)));
+      }
     } else {
       if (rowIndex == 0) {
         if (colIndex == 0) return Container(color: Colors.blue.shade50, child: const Center(child: Text('Label', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold))));
@@ -597,7 +630,8 @@ class SpreadsheetPreview extends StatelessWidget {
         selectedSection == SelectedSection.fontsStyles ||
         selectedSection == SelectedSection.numberFormats ||
         selectedSection == SelectedSection.cellComments ||
-        selectedSection == SelectedSection.mergedCells) {
+        selectedSection == SelectedSection.mergedCells ||
+        selectedSection == SelectedSection.readAsset) {
       return const SizedBox.shrink();
     }
 

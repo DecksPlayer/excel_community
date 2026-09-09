@@ -68,6 +68,7 @@ flutter:
   assets:
     - assets/logo.svg
     - assets/logo.png
+    - assets/excel_borter_test_output.xlsx
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

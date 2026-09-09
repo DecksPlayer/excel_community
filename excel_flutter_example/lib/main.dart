@@ -156,6 +156,9 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.newCharts:
           resultStatus = await ExcelGenerator.generateNewCharts();
           break;
+        case SelectedSection.readAsset:
+          resultStatus = await ExcelGenerator.readAssetExcel();
+          break;
       }
       setState(() {
         _status = resultStatus;

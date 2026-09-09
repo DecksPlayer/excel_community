@@ -394,7 +394,7 @@ SectionDetail getSectionDetail(SelectedSection section) {
         icon: Icons.bubble_chart,
         themeColor: Colors.teal,
         highlights: [
-          'BubbleChart: 3-dimensional data comparison (X, Y, and Bubble Size)',
+          'BubbleChart: 3-dimensional data comparison (X, Resource Size)',
           'StockChart: Financial High-Low-Close with up/down bars and extreme lines',
           'OfPieChart: Secondary pie or stacked bar breakdown for small slices',
           'ChartGrouping.stacked & percentStacked for Column, Bar, Line, Area',
@@ -402,5 +402,22 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: newChartsSnippet,
       );
+    case SelectedSection.readAsset:
+      return SectionDetail(
+        title: 'Read Asset Excel (Borders & Data)',
+        description:
+            'Load pre-existing XLSX spreadsheets bundled directly in Flutter assets (using rootBundle), decode worksheets, inspect and extract cell values, verify thin/medium/thick border fidelity, modify content, and re-export seamlessly.',
+        icon: Icons.folder_open_outlined,
+        themeColor: const Color(0xFF0284C7), // Sky 600
+        highlights: [
+          'Load XLSX files from Flutter assets via rootBundle.load()',
+          'Decode complex worksheets with merged headers and thin grid borders',
+          'Inspect CellStyle border properties (left, right, top, bottom, diagonal)',
+          'Read typed cell values: TextCellValue, IntCellValue, FormulaCellValue',
+          '100% border & style fidelity on re-encoding (no styling lost on save)',
+        ],
+        codeSnippet: readAssetSnippet,
+      );
   }
 }
+

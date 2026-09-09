@@ -14,6 +14,7 @@ import 'helpers/conditional_formatting_helper.dart';
 import 'helpers/chart_data_labels_helper.dart';
 import 'helpers/chart_colors_helper.dart';
 import 'helpers/new_charts_helper.dart';
+import 'helpers/read_asset_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -70,4 +71,7 @@ class ExcelGenerator {
 
   static Future<String> generateNewCharts() =>
       generateNewChartsHelper();
+
+  static Future<String> readAssetExcel() =>
+      readAssetExcelHelper();
 }
