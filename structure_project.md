@@ -138,6 +138,7 @@ excel_community/
 │       │   ├── sheet_data_ext.dart        # SheetDataExt extension (rows, cols, mutations)
 │       │   ├── sheet_dimensions.dart      # SheetDimensions extension (sizes, autofit, hiding)
 │       │   ├── sheet_images.dart          # SheetImages extension (addImage, images API)
+│       │   ├── auto_filter.dart           # AutoFilter, FilterColumn, & CustomFilterRule models
 │       │   ├── sheet_protection.dart      # SheetProtection & password hashing
 │       │   └── sheet_spans.dart           # SheetSpans extension (merge, unMerge)
 │       ├── utilities/                     # Shared helpers, colors, enums, builders
@@ -240,6 +241,12 @@ excel_community/
 #### [`lib/src/sheet/header_footer.dart`](lib/src/sheet/header_footer.dart)
 - **`HeaderFooter`**: Defines printing and page layout header and footer configurations (left, center, right sections for normal, odd, even, and first pages).
 - **`BoolParsing`** (`extension`): Utility extension for parsing boolean attributes in header/footer XML nodes.
+
+#### [`lib/src/sheet/auto_filter.dart`](lib/src/sheet/auto_filter.dart)
+- **`AutoFilter`**: Represents an OpenXML `<autoFilter>` element containing the cell range reference (`ref`), upper-left and lower-right coordinates, column filters, and methods to test cell inclusion (`containsCell`, `containsCellId`).
+- **`FilterColumn`**: Represents column filter configuration within an AutoFilter (`<filterColumn>`), including button visibility, matching filter values (`<filters>`), blank filtering, and custom comparison rules (`<customFilters>`).
+- **`CustomFilterRule`**: Custom filter criteria mapping an operator (`equal`, `greaterThan`, `lessThan`, etc.) and comparison value.
+- **`FilterOperator`** (`enum`): OpenXML comparison operators for custom filter conditions.
 
 #### [`lib/src/sheet/sheet_protection.dart`](lib/src/sheet/sheet_protection.dart)
 - **`SheetProtection`**: Manages worksheet protection flags (locking cells, formatting, inserting/deleting rows/columns, sorting, filtering) and implements the standard Excel 16-bit password hashing algorithm.
@@ -524,6 +531,8 @@ excel_community/
 | **Sheet** | `CellStyle` | [`lib/src/sheet/cell_style.dart`](lib/src/sheet/cell_style.dart) | Cell styling definition (fonts, fills, borders, alignments, number format). |
 | **Sheet** | `Border` | [`lib/src/sheet/border_style.dart`](lib/src/sheet/border_style.dart) | Individual border line configuration (style and color). |
 | **Sheet** | `SheetProtection` | [`lib/src/sheet/sheet_protection.dart`](lib/src/sheet/sheet_protection.dart) | Worksheet protection settings and 16-bit password hashing. |
+| **Sheet** | `AutoFilter` | [`lib/src/sheet/auto_filter.dart`](lib/src/sheet/auto_filter.dart) | Worksheet AutoFilter range and column filter definitions. |
+| **Sheet** | `FilterColumn` | [`lib/src/sheet/auto_filter.dart`](lib/src/sheet/auto_filter.dart) | Filter criteria and button configuration per column. |
 | **Values** | `CellValue` | [`lib/src/sheet/cell_value/cell_value.dart`](lib/src/sheet/cell_value/cell_value.dart) | Sealed base class for typed cell values (`Text`, `Int`, `Double`, `Date`, etc.). |
 | **Images** | `ExcelImage` | [`lib/src/sheet/excel_image.dart`](lib/src/sheet/excel_image.dart) | Image embedding model with binary payload and anchor positioning. |
 | **Images** | `ImageAnchor` | [`lib/src/sheet/excel_image.dart`](lib/src/sheet/excel_image.dart) | Image position and size anchor using EMUs or pixels. |

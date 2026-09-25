@@ -16,6 +16,7 @@ import 'helpers/chart_colors_helper.dart';
 import 'helpers/new_charts_helper.dart';
 import 'helpers/read_asset_helper.dart';
 import 'helpers/formulas_display_text_helper.dart';
+import 'helpers/autofilter_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -72,4 +73,7 @@ class ExcelGenerator {
 
   static Future<String> generateFormulasDisplayText() =>
       generateFormulasDisplayTextHelper();
+
+  static Future<String> generateAutoFilter() =>
+      generateAutoFilterHelper();
 }

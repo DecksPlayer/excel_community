@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2026-09-25
+### Added
+- **AutoFilter (`<autoFilter>`)**: Full OpenXML/SpreadsheetML support for worksheet auto-filters.
+  - **`AutoFilter` Model**: Represents `<autoFilter ref="...">` with normalized coordinates, start/end cells (`startCell`, `endCell`), dimensions (`rowCount`, `columnCount`), and containment checks (`containsCell`, `containsCellId`).
+  - **`FilterColumn` & `CustomFilterRule`**: Column criteria configuration (`<filterColumn>`), button visibility flags (`hiddenButton`, `showButton`), matching values (`<filters><filter val="..."/></filters>`), blank filtering, and custom comparison rules (`<customFilters>`).
+  - **Sheet API**:
+    - `sheet.setAutoFilter(CellIndex start, CellIndex end, {List<FilterColumn>? filterColumns})`
+    - `sheet.setAutoFilterByString(String range, {List<FilterColumn>? filterColumns})`
+    - `sheet.clearAutoFilter()` and alias `sheet.removeAutoFilter()`
+    - `sheet.hasAutoFilter` (boolean getter)
+    - `sheet.addFilterColumn(FilterColumn filterColumn)`
+  - **SAX Streaming Parser**: Event-based parsing in `_WorksheetParser` supporting self-closing `<autoFilter ref="..."/>` and child elements with zero memory overhead.
+  - **Schema Compliance**: Serialized in exact ECMA-376 schema order (immediately following `sheetProtection` and preceding `sortState` and `mergeCells`).
+  - **Round-Trip Preservation**: Full round-trip preservation of filter ranges and custom/advanced filter XML when opening, modifying, and saving existing spreadsheets.
+  - **Flutter Example**: Added new "AutoFilter (`<autoFilter>`)" showcase section in `excel_flutter_example` with live code, interactive preview, and downloadable XLSX file.
+
 ## [2.4.0] - 2026-09-09
 ### Added
 - **`FormulaCellValue.cachedValue`**: formula cells now retain the pre-calculated `<v>` result found in the source file (instead of discarding it), so the last value Excel computed can be read without recalculating the formula.

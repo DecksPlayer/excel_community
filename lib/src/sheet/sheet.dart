@@ -27,6 +27,7 @@ class Sheet {
   Set<int> _hiddenColumns = {};
   Set<int> _hiddenRows = {};
   final List<ConditionalFormattingGroup> _conditionalFormattings = [];
+  AutoFilter? _autoFilter;
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -50,6 +51,7 @@ class Sheet {
             hiddenColumnsVal: oldSheetObject._hiddenColumns,
             hiddenRowsVal: oldSheetObject._hiddenRows,
             conditionalFormattingsVal: oldSheetObject._conditionalFormattings,
+            autoFilterVal: oldSheetObject._autoFilter,
             drawingRId: oldSheetObject._drawingRId,
             legacyDrawingRId: oldSheetObject._legacyDrawingRId);
 
@@ -74,8 +76,10 @@ class Sheet {
       Set<int>? hiddenColumnsVal,
       Set<int>? hiddenRowsVal,
       List<ConditionalFormattingGroup>? conditionalFormattingsVal,
+      AutoFilter? autoFilterVal,
       String? drawingRId,
       String? legacyDrawingRId}) {
+    _autoFilter = autoFilterVal;
     _drawingRId = drawingRId;
     _legacyDrawingRId = legacyDrawingRId;
     this.sheetProtection = sheetProtection ?? SheetProtection();
@@ -418,5 +422,63 @@ class Sheet {
   /// Clears all conditional formatting rules from this sheet.
   void clearConditionalFormatting() {
     _conditionalFormattings.clear();
+  }
+
+  /// The AutoFilter configuration for this worksheet, or `null` if none is set.
+  AutoFilter? get autoFilter => _autoFilter;
+
+  set autoFilter(AutoFilter? filter) {
+    _autoFilter = filter;
+  }
+
+  /// Sets an AutoFilter on the range from [start] to [end].
+  ///
+  /// Example:
+  /// ```dart
+  /// sheet.setAutoFilter(CellIndex.indexByString("A1"), CellIndex.indexByString("D10"));
+  /// ```
+  void setAutoFilter(CellIndex start, CellIndex end,
+      {List<FilterColumn>? filterColumns}) {
+    _autoFilter = AutoFilter.fromRange(
+      start: start,
+      end: end,
+      filterColumns: filterColumns,
+    );
+  }
+
+  /// Sets an AutoFilter using a cell range string (e.g. `"A1:D10"`).
+  void setAutoFilterByString(String range,
+      {List<FilterColumn>? filterColumns}) {
+    _autoFilter = AutoFilter(
+      ref: range,
+      filterColumns: filterColumns,
+    );
+  }
+
+  /// Removes / clears any AutoFilter on this sheet.
+  void clearAutoFilter() {
+    _autoFilter = null;
+  }
+
+  /// Removes / clears any AutoFilter on this sheet (alias for [clearAutoFilter]).
+  void removeAutoFilter() => clearAutoFilter();
+
+  /// Whether this worksheet has an active AutoFilter.
+  bool get hasAutoFilter => _autoFilter != null;
+
+  /// Adds or replaces a [FilterColumn] in the current [autoFilter].
+  ///
+  /// If no [autoFilter] is set on this sheet, this method is a no-op.
+  void addFilterColumn(FilterColumn filterColumn) {
+    if (_autoFilter == null) return;
+    final updated = List<FilterColumn>.from(_autoFilter!.filterColumns);
+    final idx = updated.indexWhere((c) => c.colId == filterColumn.colId);
+    if (idx >= 0) {
+      updated[idx] = filterColumn;
+    } else {
+      updated.add(filterColumn);
+      updated.sort((a, b) => a.colId.compareTo(b.colId));
+    }
+    _autoFilter = _autoFilter!.copyWith(filterColumns: updated);
   }
 }

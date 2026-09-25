@@ -56,6 +56,7 @@ class _WorksheetManager {
       'cols',
       'sheetData',
       'sheetProtection',
+      'autoFilter',
       'mergeCells',
       'conditionalFormatting',
       'headerFooter',
@@ -162,7 +163,10 @@ class _WorksheetManager {
     if (sheetObject.sheetProtection.sheet) {
       out.write(sheetObject.sheetProtection.toXmlString());
     }
-    writeOriginal('autoFilter');
+    if (sheetObject.autoFilter != null) {
+      out.write(sheetObject.autoFilter!.toXmlString());
+    }
+    printedTags.add('autoFilter');
     writeOriginal('sortState');
     writeOriginal('dataConsolidate');
     writeOriginal('customSheetViews');

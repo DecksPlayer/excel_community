@@ -433,5 +433,21 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: formulasDisplayTextSnippet,
       );
+    case SelectedSection.autoFilter:
+      return SectionDetail(
+        title: 'AutoFilter (<autoFilter>)',
+        description:
+            'Enable native Excel interactive dropdown filter buttons across a range of cells, configure criteria per column (filterValues, blanks, customFilters), and preserve existing filters on reload.',
+        icon: Icons.filter_alt_outlined,
+        themeColor: const Color(0xFF2563EB), // Royal Blue
+        highlights: [
+          'Enable AutoFilter with sheet.setAutoFilter(start, end) or sheet.setAutoFilterByString("A1:G9")',
+          'Native ECMA-376 OpenXML <autoFilter ref="A1:G9"/> serialization in compliant schema sequence',
+          'Inspect filter dimensions, row count, column count, and cell containment (containsCell)',
+          'Add column filters with sheet.addFilterColumn(FilterColumn(colId: ..., filterValues: [...]))',
+          'Fast SAX streaming parser preserves existing filter criteria on save without memory overhead',
+        ],
+        codeSnippet: autoFilterSnippet,
+      );
   }
 }

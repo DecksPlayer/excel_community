@@ -55,6 +55,7 @@
 - ✅ **Hidden Rows & Columns**: Programmatically hide/unhide specific rows and columns (`<row hidden="1">`, `<col hidden="1">`)
 - ✅ **Cached Formula Values**: Retains source pre-calculated results in `FormulaCellValue.cachedValue`
 - ✅ **Display Text Formatting**: Spreadsheet-accurate rendered strings via `Data.displayText` and `NumFormat.format()`
+- ✅ **AutoFilter Support**: Full OpenXML AutoFilter (`<autoFilter ref="A1:F20">`), column filters, and criteria preservation
 - ✅ **Cross-platform**: Works on Flutter Web, Android, iOS, Desktop
 
 ## Road-map:
@@ -65,8 +66,8 @@
  - ✅ Sheet Protection & Password Hash (Implemented!)
  - ✅ Display Text & Number Formatting (Implemented!)
  - ✅ Formulas & Cached Values (Implemented!)
+ - ✅ AutoFilter (`<autoFilter>`) (Implemented!)
  - 💾 Data Export & Transformation (`rowsAsMaps`, `toJson`)
- - 🔽 AutoFilter (`<autoFilter>`)
  - 🏷️ Sheet Tab Colors (`<tabColor>`)
  - 🔗 Cell Hyperlinks (`<hyperlinks>`)
  - 📋 Data Validation & Dropdowns (`<dataValidation>`)
@@ -821,6 +822,40 @@ sheetObject.spannedItems.forEach((cells) {
  */
 
 sheetObject.unMerge('A1:E4');
+```
+
+### AutoFilter (`<autoFilter>`)
+
+Enable native Excel dropdown filters across a table or range of cells:
+
+```dart
+// 1. Enable AutoFilter over a range of cells (headers and data)
+sheetObject.setAutoFilter(
+  CellIndex.indexByString('A1'),
+  CellIndex.indexByString('F50'),
+);
+
+// 2. Or enable using a range string
+sheetObject.setAutoFilterByString('A1:F50');
+
+// 3. Inspect AutoFilter properties
+if (sheetObject.hasAutoFilter) {
+  print('Filter range: ${sheetObject.autoFilter?.ref}'); // "A1:F50"
+  print('Columns: ${sheetObject.autoFilter?.columnCount}'); // 6
+  print('Rows: ${sheetObject.autoFilter?.rowCount}'); // 50
+  print(sheetObject.autoFilter?.containsCellId('B3')); // true
+}
+
+// 4. Optionally specify active filter criteria on specific columns (0-based offset from start column)
+sheetObject.addFilterColumn(
+  FilterColumn(
+    colId: 1, // Second column in the AutoFilter range
+    filterValues: ['Completed', 'In Progress'],
+  ),
+);
+
+// 5. Remove or clear AutoFilter
+sheetObject.clearAutoFilter(); // or sheetObject.removeAutoFilter();
 ```
 
 ### Find and Replace

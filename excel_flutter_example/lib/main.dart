@@ -162,6 +162,9 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.formulasDisplayText:
           resultStatus = await ExcelGenerator.generateFormulasDisplayText();
           break;
+        case SelectedSection.autoFilter:
+          resultStatus = await ExcelGenerator.generateAutoFilter();
+          break;
       }
       setState(() {
         _status = resultStatus;

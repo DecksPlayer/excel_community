@@ -321,7 +321,7 @@ graph TD
         P1B["✅ Implementar Data.displayText y NumFormat.format()"]
     end
     subgraph "Prioridad 2 - Alto Valor para XLSX"
-        P2A["Filtros Automáticos (<autoFilter>)"]
+        P2A["✅ Filtros Automáticos (<autoFilter>)"]
         P2B["Validación de Datos y Dropdowns (<dataValidation>)"]
         P2C["Color de Solapas/Pestañas (<tabColor>)"]
         P2D["Hipervínculos (<hyperlinks>)"]
@@ -336,8 +336,7 @@ graph TD
 
 1. ✅ **Retención de `<v>` en Fórmulas** — completado: `_WorksheetParser` y `FormulaCellValue.cachedValue` almacenan el valor precalculado cuando el archivo lo tenía.
 2. ✅ **`Data.displayText` y `NumFormat.format()`** — completado: formateador numérico/fecha best-effort (`lib/src/number_format/format_renderer.dart`) que transforma valores brutos (`1234.5`) en cadenas formateadas (`"$1,234.50"`), habilitando su consumo directo en UIs.
-3. **Filtros Automáticos (`<autoFilter>`)**:
-   * Añadir `Sheet.setAutoFilter(CellIndex start, CellIndex end)` y serializar `<autoFilter ref="A1:D1"/>` en `sheetX.xml`.
+3. ✅ **Filtros Automáticos (`<autoFilter>`)** — completado: modelo `AutoFilter` y `FilterColumn`, métodos `Sheet.setAutoFilter(CellIndex start, CellIndex end)`, `Sheet.setAutoFilterByString(String range)`, `Sheet.clearAutoFilter()`, parsing SAX bidireccional y serialización schema-compliant de `<autoFilter ref="A1:D10"/>` en `sheetX.xml`.
 4. **Validación de Datos (`<dataValidation>`)**:
    * Permitir listas desplegables (dropdowns) en celdas mediante `<dataValidation type="list">`.
 5. **Color de Solapas/Pestañas (`<tabColor>`)**:

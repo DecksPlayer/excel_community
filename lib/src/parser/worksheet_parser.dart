@@ -51,6 +51,8 @@ class _WorksheetParser {
     final events = xml_events.parseEvents(contentString);
 
     List<xml_events.XmlEvent>? currentHeaderFooterEvents;
+    List<xml_events.XmlEvent>? currentAutoFilterEvents;
+    String? autoFilterRef;
     int? currentWorksheetRowIndex;
 
     // SAX cell parsing state
@@ -227,6 +229,17 @@ class _WorksheetParser {
           if (pw != null) {
             sheetObject.sheetProtection.password = pw;
           }
+        } else if (tagName == 'autoFilter' ||
+            tagName.endsWith(':autoFilter')) {
+          final ref = _getAttr(event, 'ref');
+          if (event.isSelfClosing) {
+            if (ref != null && ref.isNotEmpty) {
+              sheetObject.autoFilter = AutoFilter(ref: ref);
+            }
+          } else {
+            autoFilterRef = ref;
+            currentAutoFilterEvents = [event];
+          }
         } else if (tagName == 'mergeCell' || tagName.endsWith(':mergeCell')) {
           final ref = _getAttr(event, 'ref');
           if (ref != null && ref.contains(':') && ref.split(':').length == 2) {
@@ -262,6 +275,8 @@ class _WorksheetParser {
           }
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       } else if (event is xml_events.XmlTextEvent) {
         if (insideCell) {
@@ -274,6 +289,8 @@ class _WorksheetParser {
           }
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       } else if (event is xml_events.XmlEndElementEvent) {
         final tagName = event.name;
@@ -314,14 +331,27 @@ class _WorksheetParser {
           final hfNode = XmlDocument.parse(hfXml).rootElement;
           sheetObject.headerFooter = HeaderFooter.fromXmlElement(hfNode);
           currentHeaderFooterEvents = null;
+        } else if ((tagName == 'autoFilter' ||
+                tagName.endsWith(':autoFilter')) &&
+            currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
+          final afXml =
+              currentAutoFilterEvents.map((e) => e.toString()).join();
+          sheetObject.autoFilter = _parseAutoFilterXml(autoFilterRef, afXml);
+          currentAutoFilterEvents = null;
+          autoFilterRef = null;
         } else if (tagName == 'row' || tagName.endsWith(':row')) {
           currentWorksheetRowIndex = null;
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       } else {
         if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       }
     }
@@ -379,6 +409,93 @@ class _WorksheetParser {
         }
       }
     } catch (_) {}
+  }
+
+  AutoFilter _parseAutoFilterXml(String? refAttr, String xmlString) {
+    try {
+      final doc = XmlDocument.parse(xmlString);
+      final root = doc.rootElement;
+      final ref = refAttr ?? root.getAttribute('ref') ?? '';
+      final filterCols = <FilterColumn>[];
+
+      for (final fc in root.findAllElements('filterColumn')) {
+        final colId = int.tryParse(fc.getAttribute('colId') ?? '0') ?? 0;
+        final hb = fc.getAttribute('hiddenButton');
+        final sb = fc.getAttribute('showButton');
+        final hiddenButton = hb == null ? null : (hb == '1' || hb == 'true');
+        final showButton = sb == null ? null : (sb == '1' || sb == 'true');
+
+        final filterValues = <String>[];
+        bool blank = false;
+        final filtersElem = fc.findElements('filters').firstOrNull;
+        if (filtersElem != null) {
+          blank = filtersElem.getAttribute('blank') == '1' ||
+              filtersElem.getAttribute('blank') == 'true';
+          for (final f in filtersElem.findElements('filter')) {
+            final val = f.getAttribute('val');
+            if (val != null) {
+              filterValues.add(val);
+            }
+          }
+        }
+
+        final customFilters = <CustomFilterRule>[];
+        bool customFiltersAnd = false;
+        final cfElem = fc.findElements('customFilters').firstOrNull;
+        if (cfElem != null) {
+          customFiltersAnd = cfElem.getAttribute('and') == '1' ||
+              cfElem.getAttribute('and') == 'true';
+          for (final cf in cfElem.findElements('customFilter')) {
+            final opStr = cf.getAttribute('operator') ?? 'equal';
+            final val = cf.getAttribute('val') ?? '';
+            customFilters.add(CustomFilterRule(
+              operator: FilterOperator.fromValue(opStr),
+              val: val,
+            ));
+          }
+        }
+
+        bool hasComplex = false;
+        for (final child in fc.childElements) {
+          final localName = child.name.local;
+          if (localName != 'filters' && localName != 'customFilters') {
+            hasComplex = true;
+            break;
+          }
+          if (localName == 'filters') {
+            for (final sub in child.childElements) {
+              if (sub.name.local != 'filter') {
+                hasComplex = true;
+                break;
+              }
+            }
+          }
+        }
+
+        final innerChildren =
+            hasComplex ? fc.children.map((c) => c.toXmlString()).join() : null;
+
+        filterCols.add(FilterColumn(
+          colId: colId,
+          hiddenButton: hiddenButton,
+          showButton: showButton,
+          filterValues: filterValues,
+          blank: blank,
+          customFilters: customFilters,
+          customFiltersAnd: customFiltersAnd,
+          customXml: innerChildren,
+        ));
+      }
+
+      final innerXml = root.children.map((c) => c.toXmlString()).join();
+      return AutoFilter(
+        ref: ref,
+        filterColumns: filterCols,
+        customXml: filterCols.isEmpty && innerXml.isNotEmpty ? innerXml : null,
+      );
+    } catch (_) {
+      return AutoFilter(ref: refAttr ?? '');
+    }
   }
 
   // ---------------------------------------------------------------------------

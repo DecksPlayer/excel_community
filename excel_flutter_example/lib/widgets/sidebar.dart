@@ -218,6 +218,13 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.autoFilter,
+                'AutoFilter (<autoFilter>)',
+                Icons.filter_alt_outlined,
+                const Color(0xFF2563EB),
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.cellLocking,
                 'Sheet Protection & Locks',
                 Icons.lock_outline,

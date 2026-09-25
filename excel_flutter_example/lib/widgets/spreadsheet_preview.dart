@@ -175,7 +175,68 @@ class SpreadsheetPreview extends StatelessWidget {
   }
 
   Widget _buildMockCellContent(int rowIndex, int colIndex) {
-    if (selectedSection == SelectedSection.freezePanes) {
+    if (selectedSection == SelectedSection.autoFilter) {
+      final headers = ['ID', 'Product', 'Category', 'Region', 'Units', 'Price'];
+      if (rowIndex == 0) {
+        if (colIndex < headers.length) {
+          final isFilteredCol = colIndex == 2;
+          return Container(
+            color: const Color(0xFF1E3A8A),
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    headers[colIndex],
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 6,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Icon(
+                  isFilteredCol ? Icons.filter_alt : Icons.arrow_drop_down,
+                  size: 9,
+                  color: isFilteredCol ? Colors.amberAccent : Colors.white70,
+                ),
+              ],
+            ),
+          );
+        }
+      } else if (rowIndex >= 1 && rowIndex <= 8) {
+        final data = [
+          ['101', 'MacBook', 'Electronics', 'North', '18', '\$2,499'],
+          ['102', 'Desk', 'Furniture', 'Europe', '45', '\$680'],
+          ['103', 'Monitor', 'Electronics', 'APAC', '60', '\$520'],
+          ['104', 'Chair', 'Furniture', 'North', '85', '\$340'],
+          ['105', 'Audio', 'Electronics', 'LATAM', '120', '\$199'],
+          ['106', 'Table', 'Furniture', 'Europe', '12', '\$1,250'],
+          ['107', 'Keyboard', 'Electronics', 'APAC', '150', '\$129'],
+          ['108', 'Cabinet', 'Furniture', 'North', '35', '\$210'],
+        ];
+        final rowData = data[rowIndex - 1];
+        if (colIndex < rowData.length) {
+          final isElectronics = rowData[2] == 'Electronics';
+          return Container(
+            color: isElectronics ? const Color(0xFFEFF6FF) : Colors.transparent,
+            alignment: Alignment.center,
+            child: Text(
+              rowData[colIndex],
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 6,
+                fontWeight: colIndex == 1 ? FontWeight.w600 : FontWeight.normal,
+                color: isElectronics ? const Color(0xFF1E40AF) : const Color(0xFF334155),
+              ),
+            ),
+          );
+        }
+      }
+      return const SizedBox.shrink();
+    } else if (selectedSection == SelectedSection.freezePanes) {
       if (rowIndex == 0) {
         if (colIndex == 0) {
           return Container(
@@ -631,7 +692,8 @@ class SpreadsheetPreview extends StatelessWidget {
         selectedSection == SelectedSection.numberFormats ||
         selectedSection == SelectedSection.cellComments ||
         selectedSection == SelectedSection.mergedCells ||
-        selectedSection == SelectedSection.readAsset) {
+        selectedSection == SelectedSection.readAsset ||
+        selectedSection == SelectedSection.autoFilter) {
       return const SizedBox.shrink();
     }
 
