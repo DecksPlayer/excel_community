@@ -165,6 +165,9 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.autoFilter:
           resultStatus = await ExcelGenerator.generateAutoFilter();
           break;
+        case SelectedSection.tabColor:
+          resultStatus = await ExcelGenerator.generateTabColors();
+          break;
       }
       setState(() {
         _status = resultStatus;

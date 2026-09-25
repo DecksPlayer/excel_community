@@ -41,12 +41,15 @@ excel_community/
 │   │   │       ├── hidden_columns.dart
 │   │   │       ├── images.dart
 │   │   │       ├── merged_cells.dart
-│   │   │       └── styling.dart
+│   │   │       ├── styling.dart
+│   │   │       ├── autofilter.dart
+│   │   │       └── tab_color.dart
 │   │   ├── models/
 │   │   │   └── section_detail.dart        # Section detail data model
 │   │   ├── services/
 │   │   │   ├── excel_generator.dart       # Main Excel generation service orchestrator
 │   │   │   └── helpers/                   # Specialized scenario builder helpers
+│   │   │       ├── autofilter_helper.dart
 │   │   │       ├── cell_comments_helper.dart
 │   │   │       ├── chart_helper.dart
 │   │   │       ├── conditional_formatting_helper.dart
@@ -59,7 +62,8 @@ excel_community/
 │   │   │       ├── protection_helper.dart
 │   │   │       ├── sheets_helper.dart
 │   │   │       ├── simple_helper.dart
-│   │   │       └── styles_helper.dart
+│   │   │       ├── styles_helper.dart
+│   │   │       └── tab_color_helper.dart
 │   │   ├── widgets/                       # Flutter UI presentation widgets
 │   │   │   ├── about_view.dart
 │   │   │   ├── code_view_card.dart
@@ -139,6 +143,7 @@ excel_community/
 │       │   ├── sheet_dimensions.dart      # SheetDimensions extension (sizes, autofit, hiding)
 │       │   ├── sheet_images.dart          # SheetImages extension (addImage, images API)
 │       │   ├── auto_filter.dart           # AutoFilter, FilterColumn, & CustomFilterRule models
+│       │   ├── tab_color.dart             # TabColor OpenXML <tabColor> domain model
 │       │   ├── sheet_protection.dart      # SheetProtection & password hashing
 │       │   └── sheet_spans.dart           # SheetSpans extension (merge, unMerge)
 │       ├── utilities/                     # Shared helpers, colors, enums, builders
@@ -247,6 +252,9 @@ excel_community/
 - **`FilterColumn`**: Represents column filter configuration within an AutoFilter (`<filterColumn>`), including button visibility, matching filter values (`<filters>`), blank filtering, and custom comparison rules (`<customFilters>`).
 - **`CustomFilterRule`**: Custom filter criteria mapping an operator (`equal`, `greaterThan`, `lessThan`, etc.) and comparison value.
 - **`FilterOperator`** (`enum`): OpenXML comparison operators for custom filter conditions.
+
+#### [`lib/src/sheet/tab_color.dart`](lib/src/sheet/tab_color.dart)
+- **`TabColor`**: Represents an OpenXML `<tabColor>` element for worksheet tab coloring. Encapsulates ARGB hex strings, `ExcelColor` references, Office theme indices (`theme`), tint modifiers (`tint`), indexed colors (`indexed`), and auto colors (`auto`). Provides normalization from `#RRGGBB`, `#AARRGGBB`, and shorthand `#RGB`, plus schema-compliant serialization inside `<sheetPr>`.
 
 #### [`lib/src/sheet/sheet_protection.dart`](lib/src/sheet/sheet_protection.dart)
 - **`SheetProtection`**: Manages worksheet protection flags (locking cells, formatting, inserting/deleting rows/columns, sorting, filtering) and implements the standard Excel 16-bit password hashing algorithm.

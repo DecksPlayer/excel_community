@@ -225,6 +225,13 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.tabColor,
+                'Sheet Tab Colors (<tabColor>)',
+                Icons.color_lens_outlined,
+                const Color(0xFF10B981),
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.cellLocking,
                 'Sheet Protection & Locks',
                 Icons.lock_outline,

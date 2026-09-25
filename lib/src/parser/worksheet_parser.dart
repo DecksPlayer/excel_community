@@ -75,7 +75,28 @@ class _WorksheetParser {
       if (event is xml_events.XmlStartElementEvent) {
         final tagName = event.name;
 
-        if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
+        if (tagName == 'tabColor' || tagName.endsWith(':tabColor')) {
+          final rgb = _getAttr(event, 'rgb');
+          final themeStr = _getAttr(event, 'theme');
+          final tintStr = _getAttr(event, 'tint');
+          final indexedStr = _getAttr(event, 'indexed');
+          final autoStr = _getAttr(event, 'auto');
+
+          final theme = themeStr != null ? int.tryParse(themeStr) : null;
+          final tint = tintStr != null ? double.tryParse(tintStr) : null;
+          final indexed = indexedStr != null ? int.tryParse(indexedStr) : null;
+          final auto =
+              autoStr != null ? (autoStr == '1' || autoStr == 'true') : null;
+
+          sheetObject.tabColor = TabColor(
+            rgb: rgb != null ? _normalizeColorHex(rgb) : null,
+            color: rgb != null ? ExcelColor.fromHexString(rgb) : null,
+            theme: theme,
+            tint: tint,
+            indexed: indexed,
+            auto: auto,
+          );
+        } else if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
           final rtl = _getAttr(event, 'rightToLeft');
           sheetObject.isRTL = rtl == '1';
           insideSheetView = true;

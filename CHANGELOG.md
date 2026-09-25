@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.4.1] - 2026-09-25
 ### Added
+- **Sheet Tab Colors (`<tabColor>`)**: Full OpenXML/SpreadsheetML support for colored worksheet tabs.
+  - **`TabColor` Domain Model**: Encapsulates `<tabColor>` element with support for 8-digit ARGB hex (`#RRGGBB`, `RRGGBB`, `#AARRGGBB`, `AARRGGBB`, and 3-char shorthand `#RGB`), `ExcelColor` presets, Office theme color indices (`theme`), tints (`tint`), indexed colors (`indexed`), and auto colors (`auto`).
+  - **Sheet API**:
+    - `sheet.tabColor` (getter and setter)
+    - `sheet.setTabColor(ExcelColor color)`
+    - `sheet.setTabColorHex(String hex)`
+    - `sheet.clearTabColor()` and alias `sheet.removeTabColor()`
+    - `sheet.hasTabColor` (boolean getter)
+  - **SAX Streaming Parser**: Event-based streaming parser in `_WorksheetParser` extracts `<tabColor>` attributes (`rgb`, `theme`, `tint`, `indexed`, `auto`) directly with zero memory overhead.
+  - **Schema Compliance**: Serialized inside `<sheetPr>` as the very first child element preceding `<outlinePr>` and `<pageSetUpPr>` in strict compliance with ECMA-376 Part 4 CT_SheetPr sequence rules.
+  - **Attribute & Element Preservation**: Preserves existing `<sheetPr>` attributes (`codeName`, `filterMode`, etc.) and non-color child elements (`<outlinePr>`, `<pageSetUpPr>`) across read/write cycles.
+  - **Multi-Sheet Management**: Setting tab color marks a sheet as customized, preventing it from being inadvertently renamed or discarded when adding additional sheets.
+  - **Interactive Flutter Example**: Added "Sheet Tab Colors (`<tabColor>`)" section to `excel_flutter_example` with real-time UI preview showing colored tabs, source code snippets, and live XLSX file generation.
+
 - **AutoFilter (`<autoFilter>`)**: Full OpenXML/SpreadsheetML support for worksheet auto-filters.
   - **`AutoFilter` Model**: Represents `<autoFilter ref="...">` with normalized coordinates, start/end cells (`startCell`, `endCell`), dimensions (`rowCount`, `columnCount`), and containment checks (`containsCell`, `containsCellId`).
   - **`FilterColumn` & `CustomFilterRule`**: Column criteria configuration (`<filterColumn>`), button visibility flags (`hiddenButton`, `showButton`), matching values (`<filters><filter val="..."/></filters>`), blank filtering, and custom comparison rules (`<customFilters>`).

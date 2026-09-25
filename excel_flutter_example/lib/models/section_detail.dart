@@ -32,6 +32,7 @@ enum SelectedSection {
   readAsset,
   formulasDisplayText,
   autoFilter,
+  tabColor,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

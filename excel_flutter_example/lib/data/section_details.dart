@@ -449,5 +449,21 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: autoFilterSnippet,
       );
+    case SelectedSection.tabColor:
+      return SectionDetail(
+        title: 'Sheet Tab Colors (<tabColor>)',
+        description:
+            'Assign vibrant, custom tab colors to any worksheet using ARGB hex codes, ExcelColor presets, or Office theme indices. Full ECMA-376 schema compliance inside <sheetPr> with read/write preservation.',
+        icon: Icons.color_lens_outlined,
+        themeColor: const Color(0xFF10B981), // Emerald
+        highlights: [
+          'Set custom tab colors with sheet.setTabColorHex("#2563EB") or sheet.setTabColor(ExcelColor.green)',
+          'Supports #RRGGBB, RRGGBB, #AARRGGBB, 3-char shorthand #RGB, and Office themes with tint',
+          'Fully schema-compliant: serialized inside <sheetPr> as the first child before outlinePr',
+          'Preserves existing sheetPr attributes (codeName, filterMode) and child elements during re-save',
+          'Fast SAX streaming parser reads <tabColor> on workbook load with zero overhead',
+        ],
+        codeSnippet: tabColorSnippet,
+      );
   }
 }

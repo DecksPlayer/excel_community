@@ -28,6 +28,7 @@ class Sheet {
   Set<int> _hiddenRows = {};
   final List<ConditionalFormattingGroup> _conditionalFormattings = [];
   AutoFilter? _autoFilter;
+  TabColor? _tabColor;
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -52,6 +53,7 @@ class Sheet {
             hiddenRowsVal: oldSheetObject._hiddenRows,
             conditionalFormattingsVal: oldSheetObject._conditionalFormattings,
             autoFilterVal: oldSheetObject._autoFilter,
+            tabColorVal: oldSheetObject._tabColor,
             drawingRId: oldSheetObject._drawingRId,
             legacyDrawingRId: oldSheetObject._legacyDrawingRId);
 
@@ -77,9 +79,11 @@ class Sheet {
       Set<int>? hiddenRowsVal,
       List<ConditionalFormattingGroup>? conditionalFormattingsVal,
       AutoFilter? autoFilterVal,
+      TabColor? tabColorVal,
       String? drawingRId,
       String? legacyDrawingRId}) {
     _autoFilter = autoFilterVal;
+    _tabColor = tabColorVal;
     _drawingRId = drawingRId;
     _legacyDrawingRId = legacyDrawingRId;
     this.sheetProtection = sheetProtection ?? SheetProtection();
@@ -481,4 +485,42 @@ class Sheet {
     }
     _autoFilter = _autoFilter!.copyWith(filterColumns: updated);
   }
+
+  /// The sheet tab color configuration for this worksheet, or `null` if none is set.
+  TabColor? get tabColor => _tabColor;
+
+  set tabColor(TabColor? color) {
+    _tabColor = color;
+  }
+
+  /// Sets the sheet tab color using an [ExcelColor].
+  ///
+  /// Example:
+  /// ```dart
+  /// sheet.setTabColor(ExcelColor.green);
+  /// ```
+  void setTabColor(ExcelColor color) {
+    _tabColor = TabColor.fromColor(color);
+  }
+
+  /// Sets the sheet tab color using a hex string (e.g. `'#FF0000'`, `'4CAF50'`, or `'FF4CAF50'`).
+  ///
+  /// Example:
+  /// ```dart
+  /// sheet.setTabColorHex('#4CAF50');
+  /// ```
+  void setTabColorHex(String hex) {
+    _tabColor = TabColor.fromHex(hex);
+  }
+
+  /// Clears/removes any custom tab color from this sheet.
+  void clearTabColor() {
+    _tabColor = null;
+  }
+
+  /// Clears/removes any custom tab color from this sheet (alias for [clearTabColor]).
+  void removeTabColor() => clearTabColor();
+
+  /// Whether this worksheet has a custom tab color set.
+  bool get hasTabColor => _tabColor != null;
 }

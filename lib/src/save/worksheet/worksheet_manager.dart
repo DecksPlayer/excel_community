@@ -49,8 +49,10 @@ class _WorksheetManager {
     List<xml_events.XmlEvent>? currentCapturedEvents;
     String? currentTagName;
     int depth = 0;
+    String? originalSheetPrXml;
 
     const replacedTags = {
+      'sheetPr',
       'sheetViews',
       'sheetFormatPr',
       'cols',
@@ -77,6 +79,9 @@ class _WorksheetManager {
           currentCapturedEvents = [event];
           if (event.isSelfClosing) {
             final xmlString = event.toString();
+            if (currentTagName == 'sheetPr') {
+              originalSheetPrXml = xmlString;
+            }
             if (!replacedTags.contains(currentTagName)) {
               originalElements
                   .putIfAbsent(currentTagName, () => [])
@@ -105,6 +110,9 @@ class _WorksheetManager {
           if (depth == 0) {
             final xmlString =
                 currentCapturedEvents.map((e) => e.toString()).join();
+            if (currentTagName == 'sheetPr') {
+              originalSheetPrXml = xmlString;
+            }
             if (!replacedTags.contains(currentTagName)) {
               originalElements
                   .putIfAbsent(currentTagName!, () => [])
@@ -143,7 +151,8 @@ class _WorksheetManager {
 
     // Write in schema-compliant order:
     // 1. sheetPr
-    writeOriginal('sheetPr');
+    out.write(_buildSheetPrXml(sheetObject, originalSheetPrXml));
+    printedTags.add('sheetPr');
     // 2. dimension
     writeOriginal('dimension');
     // 3. sheetViews
@@ -237,6 +246,63 @@ class _WorksheetManager {
 
     out.write('</worksheet>');
     return out.toString();
+  }
+
+  String _buildSheetPrXml(Sheet sheetObject, String? originalSheetPrXml) {
+    if (originalSheetPrXml != null) {
+      try {
+        final doc = XmlDocument.parse(originalSheetPrXml);
+        final root = doc.rootElement;
+
+        final hasTabColor = sheetObject.tabColor != null;
+        final attributes = root.attributes;
+        // Collect other children except tabColor and whitespace-only text nodes
+        final otherChildren = root.children
+            .where((node) {
+              if (node is XmlElement) {
+                return node.name.local != 'tabColor';
+              }
+              if (node is XmlText && node.value.trim().isEmpty) {
+                return false;
+              }
+              return true;
+            })
+            .map((node) => node.toXmlString())
+            .toList();
+
+        if (!hasTabColor && otherChildren.isEmpty && attributes.isEmpty) {
+          return '';
+        }
+
+        final sb = StringBuffer();
+        sb.write('<${root.name.qualified}');
+        for (final attr in attributes) {
+          sb.write(' ${attr.name.qualified}="${_escapeXml(attr.value)}"');
+        }
+
+        if (!hasTabColor && otherChildren.isEmpty) {
+          sb.write('/>');
+        } else {
+          sb.write('>');
+          if (hasTabColor) {
+            sb.write(sheetObject.tabColor!.toXmlString());
+          }
+          for (final childXml in otherChildren) {
+            sb.write(childXml);
+          }
+          sb.write('</${root.name.qualified}>');
+        }
+        return sb.toString();
+      } catch (_) {
+        // Fallback below if parsing original XML fails
+      }
+    }
+
+    if (sheetObject.tabColor != null) {
+      return '<sheetPr>${sheetObject.tabColor!.toXmlString()}</sheetPr>';
+    }
+
+    return '';
   }
 
   String _buildSheetViewsXml(Sheet sheetObject, {required bool isActiveSheet}) {

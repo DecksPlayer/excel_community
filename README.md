@@ -56,6 +56,7 @@
 - ✅ **Cached Formula Values**: Retains source pre-calculated results in `FormulaCellValue.cachedValue`
 - ✅ **Display Text Formatting**: Spreadsheet-accurate rendered strings via `Data.displayText` and `NumFormat.format()`
 - ✅ **AutoFilter Support**: Full OpenXML AutoFilter (`<autoFilter ref="A1:F20">`), column filters, and criteria preservation
+- ✅ **Sheet Tab Colors**: Assign custom tab colors using hex codes, ExcelColor presets, or Office theme indices (`<sheetPr><tabColor>`)
 - ✅ **Cross-platform**: Works on Flutter Web, Android, iOS, Desktop
 
 ## Road-map:
@@ -67,8 +68,8 @@
  - ✅ Display Text & Number Formatting (Implemented!)
  - ✅ Formulas & Cached Values (Implemented!)
  - ✅ AutoFilter (`<autoFilter>`) (Implemented!)
+ - ✅ Sheet Tab Colors (`<tabColor>`) (Implemented!)
  - 💾 Data Export & Transformation (`rowsAsMaps`, `toJson`)
- - 🏷️ Sheet Tab Colors (`<tabColor>`)
  - 🔗 Cell Hyperlinks (`<hyperlinks>`)
  - 📋 Data Validation & Dropdowns (`<dataValidation>`)
  - 🖨️ Page Setup & Print Configuration (`<pageSetup>`)
@@ -856,6 +857,32 @@ sheetObject.addFilterColumn(
 
 // 5. Remove or clear AutoFilter
 sheetObject.clearAutoFilter(); // or sheetObject.removeAutoFilter();
+```
+
+### Sheet Tab Colors (`<tabColor>`)
+
+Assign vibrant, custom tab colors to any worksheet using ARGB hex codes, `ExcelColor` presets, or Office theme indices:
+
+```dart
+var sheetObject = excel['Sales'];
+
+// 1. Set tab color using hex string (#RRGGBB, RRGGBB, #AARRGGBB, or #RGB)
+sheetObject.setTabColorHex('#4CAF50'); // Vibrant Green
+
+// 2. Set tab color using standard ExcelColor preset
+sheetObject.setTabColor(ExcelColor.blue);
+
+// 3. Set tab color using Office theme index with optional tint (-1.0 to 1.0)
+sheetObject.tabColor = TabColor.fromTheme(4, tint: 0.3999);
+
+// 4. Inspect tab color
+if (sheetObject.hasTabColor) {
+  print('ARGB: ${sheetObject.tabColor?.colorHex}');   // "FF4CAF50"
+  print('RGB: ${sheetObject.tabColor?.colorHex6}');    // "4CAF50"
+}
+
+// 5. Remove or clear tab color
+sheetObject.clearTabColor(); // or sheetObject.removeTabColor();
 ```
 
 ### Find and Replace

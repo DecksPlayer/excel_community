@@ -74,6 +74,8 @@ Este documento proporciona un análisis exhaustivo y de bajo nivel de la arquite
 | **Lectura Lazy / Streaming (`streamRows`)** | ❌ Carga completa | ✅ Sí (`streamRows`) | `excel_plus` lee fila por fila desde el stream SAX sin instanciar la matriz. |
 | **Preservación de `<v>` en Fórmulas** | ✅ Lee `<f>` y `<v>` (`FormulaCellValue.cachedValue`) | ✅ Lee `<f>` y `<v>` | Ambas retienen el resultado precalculado; `excel_community` no lo recalcula ni lo vuelve a escribir al guardar. |
 | **Motor de Recálculo de Fórmulas** | ❌ No (solo texto) | ✅ Sí (`recalculate`) | Intérprete AST con dependencias incrementales (`changed: [...]`). |
+| **AutoFilter (`<autoFilter>`)** | ✅ Sí (`sheet.setAutoFilter`) | ❌ No disponible | Rango, columnas de filtro, valores y preservación en guardado. |
+| **Color de Pestañas (`<tabColor>`)** | ✅ Sí (`sheet.setTabColor`) | ❌ No disponible | ARGB hex, ExcelColor, temas de Office con tint y preservación `<sheetPr>`. |
 | **Lectura Legacy `.xls` (BIFF8/OLE2)** | ✅ Nativo en Dart | ✅ Nativo en Dart | Decodificador CFB y parseo de registros BIFF8. |
 
 ---

@@ -576,6 +576,8 @@ class Excel {
         if (s._sheetData.isEmpty &&
             s._spanList.isEmpty &&
             s.charts.isEmpty &&
+            !s.hasTabColor &&
+            !s.hasAutoFilter &&
             sheet != 'Sheet1') {
           _isRenamingDefaultSheet = true;
           try {
