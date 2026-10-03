@@ -465,5 +465,66 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: tabColorSnippet,
       );
+    case SelectedSection.pageSetup:
+      return SectionDetail(
+        title: 'Page Setup & Printing (<pageSetup>)',
+        description:
+            'Configure how each worksheet prints: orientation, paper size, scaling or fit-to-pages, margins, gridlines and headings. Settings are read from existing files and preserved on save.',
+        icon: Icons.print_outlined,
+        themeColor: const Color(0xFF0EA5E9), // Sky
+        highlights: [
+          'Orientation and paper size: sheet.setPageOrientation(PageOrientation.landscape), sheet.setPaperSize(PaperSize.a4)',
+          'Scale to a percentage with sheet.setPrintScale(80) or fit to N x M pages with sheet.fitToPages(width: 1, height: 0)',
+          'Margins in inches or centimetres with Normal / Wide / Narrow presets (<pageMargins>)',
+          'Print gridlines, row/column headings and centered content (<printOptions>)',
+          'Page numbering, page order, copies, draft / black & white and error printing via the PageSetup model',
+        ],
+        codeSnippet: pageSetupSnippet,
+      );
+    case SelectedSection.dataExport:
+      return SectionDetail(
+        title: 'Data Export & Transformation',
+        description:
+            'Convert worksheets to Dart maps, value grids, JSON or CSV, and import maps back as rows.',
+        icon: Icons.data_object,
+        themeColor: const Color(0xFF7C3AED), // Violet
+        highlights: [
+          'sheet.rowsAsMaps() with native Dart values or ExportValueMode.displayText',
+          'sheet.toJson() / excel.toJson() with ISO dates and HH:MM:SS times',
+          'sheet.toCsv() with RFC 4180 quoting and custom separators',
+          'sheet.appendRowsFromMaps() writes maps as rows, matching or adding header columns',
+        ],
+        codeSnippet: dataExportSnippet,
+      );
+    case SelectedSection.hyperlinks:
+      return SectionDetail(
+        title: 'Cell Hyperlinks (<hyperlinks>)',
+        description:
+            'Link cells to web pages, e-mail addresses, files, or other cells and defined names in the workbook.',
+        icon: Icons.link,
+        themeColor: const Color(0xFF2563EB),
+        highlights: [
+          'Hyperlink.url / .email / .cell / .location factories',
+          'sheet.setHyperlink(cell, link, text:) and cell.hyperlink getter/setter',
+          'External links stored as worksheet relationships (TargetMode="External")',
+          'Links move with their cells when rows or columns are inserted or removed',
+        ],
+        codeSnippet: hyperlinksSnippet,
+      );
+    case SelectedSection.dataValidation:
+      return SectionDetail(
+        title: 'Data Validation & Dropdowns',
+        description:
+            'Dropdown lists, number, date, time and text-length limits or custom formulas, with input and error messages.',
+        icon: Icons.fact_check_outlined,
+        themeColor: const Color(0xFF0D9488),
+        highlights: [
+          'DataValidation.list / listFromRange / wholeNumber / decimal / date / time / textLength / custom',
+          'withPrompt() and withError() with stop, warning or information styles',
+          'sheet.addDataValidation(range, rule) subtracts overlapping rules',
+          'rule.accepts(value) checks values in Dart',
+        ],
+        codeSnippet: dataValidationSnippet,
+      );
   }
 }

@@ -576,8 +576,13 @@ class Excel {
         if (s._sheetData.isEmpty &&
             s._spanList.isEmpty &&
             s.charts.isEmpty &&
+            s.images.isEmpty &&
+            !s.hasHyperlinks &&
+            !s.hasDataValidations &&
             !s.hasTabColor &&
             !s.hasAutoFilter &&
+            !s.hasPageSetup &&
+            !s.hasPrintOptions &&
             sheet != 'Sheet1') {
           _isRenamingDefaultSheet = true;
           try {

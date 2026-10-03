@@ -50,6 +50,7 @@ class _WorksheetManager {
     String? currentTagName;
     int depth = 0;
     String? originalSheetPrXml;
+    String? originalPageSetupRId;
 
     const replacedTags = {
       'sheetPr',
@@ -61,6 +62,11 @@ class _WorksheetManager {
       'autoFilter',
       'mergeCells',
       'conditionalFormatting',
+      'dataValidations',
+      'hyperlinks',
+      'printOptions',
+      'pageMargins',
+      'pageSetup',
       'headerFooter',
       'drawing',
       'pivotTableParts',
@@ -77,6 +83,12 @@ class _WorksheetManager {
         if (depth == 0) {
           currentTagName = tagName;
           currentCapturedEvents = [event];
+          if (tagName == 'pageSetup') {
+            // Keep the link to an existing printer settings part.
+            for (final attr in event.attributes) {
+              if (attr.name == 'r:id') originalPageSetupRId = attr.value;
+            }
+          }
           if (event.isSelfClosing) {
             final xmlString = event.toString();
             if (currentTagName == 'sheetPr') {
@@ -135,6 +147,11 @@ class _WorksheetManager {
     for (final attr in worksheetAttributes) {
       out.write(' ${attr.name}="${attr.value}"');
     }
+    // r:id attributes (drawings, hyperlinks, ...) need the relationships
+    // namespace even when the original file did not declare it.
+    if (!worksheetAttributes.any((a) => a.name == 'xmlns:r')) {
+      out.write(' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"');
+    }
     out.write('>');
 
     final printedTags = <String>{};
@@ -188,11 +205,14 @@ class _WorksheetManager {
     out.write(_buildConditionalFormattingXml(sheetObject));
     printedTags.add('conditionalFormatting');
 
-    writeOriginal('dataValidations');
-    writeOriginal('hyperlinks');
-    writeOriginal('printOptions');
-    writeOriginal('pageMargins');
-    writeOriginal('pageSetup');
+    out.write(_buildDataValidationsXml(sheetObject));
+    printedTags.add('dataValidations');
+    out.write(_buildHyperlinksXml(sheetObject));
+    printedTags.add('hyperlinks');
+    out.write(sheetObject.printOptions?.toXmlString() ?? '');
+    out.write((sheetObject.pageMargins ?? PageMargins.normal).toXmlString());
+    out.write((sheetObject.pageSetup ?? const PageSetup())
+        .toXmlString(relationshipId: originalPageSetupRId));
 
     // 9. headerFooter
     out.write(_buildHeaderFooterXml(sheetObject));
@@ -249,60 +269,77 @@ class _WorksheetManager {
   }
 
   String _buildSheetPrXml(Sheet sheetObject, String? originalSheetPrXml) {
+    final tabColorXml = sheetObject.tabColor?.toXmlString() ?? '';
+    final fitToPage = sheetObject.pageSetup?.fitToPage;
+
+    String qualifiedName = 'sheetPr';
+    final attributes = <XmlAttribute>[];
+    final otherChildren = <String>[];
+    // Attributes of the original <pageSetUpPr> other than fitToPage
+    // (e.g. autoPageBreaks), which are preserved.
+    final pageSetUpPrAttributes = <XmlAttribute>[];
+    String pageSetUpPrName = 'pageSetUpPr';
+
     if (originalSheetPrXml != null) {
       try {
-        final doc = XmlDocument.parse(originalSheetPrXml);
-        final root = doc.rootElement;
-
-        final hasTabColor = sheetObject.tabColor != null;
-        final attributes = root.attributes;
-        // Collect other children except tabColor and whitespace-only text nodes
-        final otherChildren = root.children
-            .where((node) {
-              if (node is XmlElement) {
-                return node.name.local != 'tabColor';
-              }
-              if (node is XmlText && node.value.trim().isEmpty) {
-                return false;
-              }
-              return true;
-            })
-            .map((node) => node.toXmlString())
-            .toList();
-
-        if (!hasTabColor && otherChildren.isEmpty && attributes.isEmpty) {
-          return '';
-        }
-
-        final sb = StringBuffer();
-        sb.write('<${root.name.qualified}');
-        for (final attr in attributes) {
-          sb.write(' ${attr.name.qualified}="${_escapeXml(attr.value)}"');
-        }
-
-        if (!hasTabColor && otherChildren.isEmpty) {
-          sb.write('/>');
-        } else {
-          sb.write('>');
-          if (hasTabColor) {
-            sb.write(sheetObject.tabColor!.toXmlString());
+        final root = XmlDocument.parse(originalSheetPrXml).rootElement;
+        qualifiedName = root.name.qualified;
+        attributes.addAll(root.attributes);
+        for (final node in root.children) {
+          if (node is XmlElement) {
+            final local = node.name.local;
+            if (local == 'tabColor') continue;
+            if (local == 'pageSetUpPr') {
+              pageSetUpPrName = node.name.qualified;
+              pageSetUpPrAttributes.addAll(
+                  node.attributes.where((a) => a.name.local != 'fitToPage'));
+              continue;
+            }
+            otherChildren.add(node.toXmlString());
+          } else if (node is XmlText && node.value.trim().isEmpty) {
+            continue;
+          } else {
+            otherChildren.add(node.toXmlString());
           }
-          for (final childXml in otherChildren) {
-            sb.write(childXml);
-          }
-          sb.write('</${root.name.qualified}>');
         }
-        return sb.toString();
       } catch (_) {
-        // Fallback below if parsing original XML fails
+        // Ignore a malformed original <sheetPr> and rebuild from the model.
+        qualifiedName = 'sheetPr';
+        attributes.clear();
+        otherChildren.clear();
+        pageSetUpPrAttributes.clear();
       }
     }
 
-    if (sheetObject.tabColor != null) {
-      return '<sheetPr>${sheetObject.tabColor!.toXmlString()}</sheetPr>';
+    String pageSetUpPrXml = '';
+    if (fitToPage != null || pageSetUpPrAttributes.isNotEmpty) {
+      final sb = StringBuffer('<$pageSetUpPrName');
+      for (final attr in pageSetUpPrAttributes) {
+        sb.write(' ${attr.name.qualified}="${_escapeXml(attr.value)}"');
+      }
+      if (fitToPage != null) {
+        sb.write(' fitToPage="${fitToPage ? 1 : 0}"');
+      }
+      sb.write('/>');
+      pageSetUpPrXml = sb.toString();
     }
 
-    return '';
+    // CT_SheetPr child order: tabColor, outlinePr, pageSetUpPr.
+    final childrenXml =
+        tabColorXml + otherChildren.join() + pageSetUpPrXml;
+
+    if (childrenXml.isEmpty && attributes.isEmpty) return '';
+
+    final sb = StringBuffer('<$qualifiedName');
+    for (final attr in attributes) {
+      sb.write(' ${attr.name.qualified}="${_escapeXml(attr.value)}"');
+    }
+    if (childrenXml.isEmpty) {
+      sb.write('/>');
+    } else {
+      sb.write('>$childrenXml</$qualifiedName>');
+    }
+    return sb.toString();
   }
 
   String _buildSheetViewsXml(Sheet sheetObject, {required bool isActiveSheet}) {
@@ -662,6 +699,27 @@ class _WorksheetManager {
     }
     buffer.write('</mergeCells>');
     return buffer.toString();
+  }
+
+  String _buildDataValidationsXml(Sheet sheetObject) {
+    final validations = sheetObject._dataValidations;
+    if (validations.isEmpty) return '';
+    final sb = StringBuffer('<dataValidations count="${validations.length}">');
+    validations.forEach((sqref, validation) {
+      sb.write(validation._toXmlString(sqref));
+    });
+    sb.write('</dataValidations>');
+    return sb.toString();
+  }
+
+  String _buildHyperlinksXml(Sheet sheetObject) {
+    if (sheetObject._hyperlinks.isEmpty) return '';
+    final sb = StringBuffer('<hyperlinks>');
+    sheetObject._hyperlinks.forEach((ref, link) {
+      sb.write(link._toXmlString(ref, sheetObject._hyperlinkRIds[ref]));
+    });
+    sb.write('</hyperlinks>');
+    return sb.toString();
   }
 
   String _buildHeaderFooterXml(Sheet sheetObject) {

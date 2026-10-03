@@ -232,6 +232,34 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.pageSetup,
+                'Page Setup & Printing (<pageSetup>)',
+                Icons.print_outlined,
+                const Color(0xFF0EA5E9),
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.dataExport,
+                'Data Export (JSON / CSV)',
+                Icons.data_object,
+                const Color(0xFF7C3AED),
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.hyperlinks,
+                'Cell Hyperlinks (<hyperlinks>)',
+                Icons.link,
+                const Color(0xFF2563EB),
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.dataValidation,
+                'Data Validation & Dropdowns',
+                Icons.fact_check_outlined,
+                const Color(0xFF0D9488),
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.cellLocking,
                 'Sheet Protection & Locks',
                 Icons.lock_outline,
@@ -305,36 +333,39 @@ class Sidebar extends StatelessWidget {
     Color color,
   ) {
     final isSelected = selectedSection == section;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 2),
-      decoration: BoxDecoration(
-        color: isSelected ? color.withOpacity(0.08) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListTile(
-        onTap: () {
-          onSectionSelected(section);
-          if (Scaffold.of(context).isDrawerOpen) {
-            Navigator.pop(context);
-          }
-        },
-        leading: Icon(
-          icon,
-          color: isSelected ? color : const Color(0xFF64748B),
-          size: 18,
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: isSelected
-                ? const Color(0xFF0F172A)
-                : const Color(0xFF475569),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 13,
+    // The ListTile paints its highlight and ink splashes on its own Material,
+    // so they are not hidden by the decorated containers around the sidebar.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          tileColor: isSelected ? color.withValues(alpha: 0.08) : null,
+          onTap: () {
+            onSectionSelected(section);
+            if (Scaffold.of(context).isDrawerOpen) {
+              Navigator.pop(context);
+            }
+          },
+          leading: Icon(
+            icon,
+            color: isSelected ? color : const Color(0xFF64748B),
+            size: 18,
           ),
+          title: Text(
+            label,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFF0F172A)
+                  : const Color(0xFF475569),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+            ),
+          ),
+          dense: true,
+          visualDensity: const VisualDensity(vertical: -2),
         ),
-        dense: true,
-        visualDensity: const VisualDensity(vertical: -2),
       ),
     );
   }

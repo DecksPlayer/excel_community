@@ -30,6 +30,10 @@ excel_community/
 │   ├── lib/
 │   │   ├── data/
 │   │   │   ├── code_snippets.dart         # Snippet lookup registry for UI view
+│   │   │   ├── data_export_samples.dart   # Sample workbook + JSON for the Data Export wiki
+│   │   │   ├── data_validation_samples.dart # Data validation wiki rules and sample values
+│   │   │   ├── hyperlink_samples.dart     # Hyperlink wiki examples (run, saved and reopened)
+│   │   │   ├── number_format_catalog.dart # Number formats + expected Excel output (wiki & demo workbook)
 │   │   │   ├── section_details.dart       # Showcase section catalog & descriptions
 │   │   │   └── snippets/                  # Code sample snippets for each feature
 │   │   │       ├── basic.dart
@@ -43,7 +47,11 @@ excel_community/
 │   │   │       ├── merged_cells.dart
 │   │   │       ├── styling.dart
 │   │   │       ├── autofilter.dart
-│   │   │       └── tab_color.dart
+│   │   │       ├── tab_color.dart
+│   │   │       ├── page_setup.dart
+│   │   │       ├── data_export.dart
+│   │   │       ├── hyperlinks.dart
+│   │   │       └── data_validation.dart
 │   │   ├── models/
 │   │   │   └── section_detail.dart        # Section detail data model
 │   │   ├── services/
@@ -53,6 +61,9 @@ excel_community/
 │   │   │       ├── cell_comments_helper.dart
 │   │   │       ├── chart_helper.dart
 │   │   │       ├── conditional_formatting_helper.dart
+│   │   │       ├── data_export_helper.dart
+│   │   │       ├── data_validation_helper.dart
+│   │   │       ├── hyperlinks_helper.dart
 │   │   │       ├── formulas_display_text_helper.dart
 │   │   │       ├── full_demo_helper.dart
 │   │   │       ├── hidden_columns_helper.dart
@@ -62,16 +73,24 @@ excel_community/
 │   │   │       ├── protection_helper.dart
 │   │   │       ├── sheets_helper.dart
 │   │   │       ├── simple_helper.dart
+│   │   │       ├── page_setup_helper.dart
 │   │   │       ├── styles_helper.dart
 │   │   │       └── tab_color_helper.dart
 │   │   ├── widgets/                       # Flutter UI presentation widgets
 │   │   │   ├── about_view.dart
 │   │   │   ├── code_view_card.dart
+│   │   │   ├── data_export_view.dart
+│   │   │   ├── data_validation_view.dart
 │   │   │   ├── fonts_styles_view.dart
 │   │   │   ├── header_card.dart
+│   │   │   ├── hyperlinks_view.dart
+│   │   │   ├── number_formats_view.dart
+│   │   │   ├── page_setup_view.dart
 │   │   │   ├── preview_card.dart
 │   │   │   ├── sidebar.dart
-│   │   │   └── spreadsheet_preview.dart
+│   │   │   ├── spreadsheet_preview.dart
+│   │   │   └── wiki/
+│   │   │       └── wiki_components.dart   # Shared wiki layout: header, tabs, search, grid, cards
 │   │   └── main.dart                      # Flutter app entry point
 │   ├── test/                              # Flutter widget tests
 │   └── pubspec.yaml                       # Flutter demo dependencies
@@ -103,6 +122,8 @@ excel_community/
 │       │   │   └── chart_manager.dart     # Chart XML & drawing relationship generator
 │       │   ├── comments/
 │       │   │   └── comment_manager.dart   # VML drawing & comment XML serializer
+│       │   ├── hyperlinks/
+│       │   │   └── hyperlink_manager.dart # External hyperlink relationships (TargetMode=External)
 │       │   ├── images/
 │       │   │   └── image_manager.dart     # Drawing XML image anchor & media manager
 │       │   ├── pivot_table/
@@ -144,6 +165,10 @@ excel_community/
 │       │   ├── sheet_images.dart          # SheetImages extension (addImage, images API)
 │       │   ├── auto_filter.dart           # AutoFilter, FilterColumn, & CustomFilterRule models
 │       │   ├── tab_color.dart             # TabColor OpenXML <tabColor> domain model
+│       │   ├── page_setup.dart            # PageSetup, PaperSize, PageMargins & PrintOptions print models
+│       │   ├── sheet_export.dart          # SheetExport/ExcelExport: rowsAsMaps, toJson, toCsv, appendRowsFromMaps
+│       │   ├── hyperlink.dart             # Hyperlink model, SheetHyperlinks & DataHyperlink APIs
+│       │   ├── data_validation.dart       # DataValidation model, SheetDataValidations & DataDataValidation APIs
 │       │   ├── sheet_protection.dart      # SheetProtection & password hashing
 │       │   └── sheet_spans.dart           # SheetSpans extension (merge, unMerge)
 │       ├── utilities/                     # Shared helpers, colors, enums, builders
@@ -171,6 +196,7 @@ excel_community/
 │       │   ├── constants.dart             # OpenXML namespaces, XML templates, MIME types
 │       │   ├── enum.dart                  # TextWrapping, VerticalAlign, HorizontalAlign, Underline, FontScheme
 │       │   ├── fast_list.dart             # FastList<K> optimized collection
+│       │   ├── cell_rect.dart             # _CellRect: range parsing, containment, subtraction & row/column shifts
 │       │   ├── span.dart                  # _Span merged cell boundary model
 │       │   └── utility.dart               # Coordinate calculations & helper functions
 │       ├── web_helper/                    # Platform-specific file downloading
@@ -255,6 +281,28 @@ excel_community/
 
 #### [`lib/src/sheet/tab_color.dart`](lib/src/sheet/tab_color.dart)
 - **`TabColor`**: Represents an OpenXML `<tabColor>` element for worksheet tab coloring. Encapsulates ARGB hex strings, `ExcelColor` references, Office theme indices (`theme`), tint modifiers (`tint`), indexed colors (`indexed`), and auto colors (`auto`). Provides normalization from `#RRGGBB`, `#AARRGGBB`, and shorthand `#RGB`, plus schema-compliant serialization inside `<sheetPr>`.
+
+#### [`lib/src/sheet/page_setup.dart`](lib/src/sheet/page_setup.dart)
+- **`PageSetup`**: Represents the OpenXML `<pageSetup>` element (orientation, paper size, scale, fit-to-width/height, first page number, page order, black & white, draft, comments/errors printing, DPI, copies) plus the `fitToPage` flag stored in `<sheetPr><pageSetUpPr>`. Only explicitly set attributes are serialized; an existing printer settings `r:id` is preserved on save.
+- **`PaperSize`**: SpreadsheetML paper size code with named constants (`letter`, `legal`, `a3`, `a4`, `a5`, envelopes, ...) and millimetre dimensions; unknown codes round-trip via `PaperSize.fromCode`.
+- **`PageMargins`**: `<pageMargins>` in inches with Excel's `normal`, `wide` and `narrow` presets and a `fromCentimeters` factory.
+- **`PrintOptions`**: `<printOptions>` flags for gridlines, headings and horizontal/vertical centering.
+- **`PageOrientation`**, **`PageOrder`**, **`PrintCellComments`**, **`PrintErrors`** (`enum`s): OpenXML enumerations for the corresponding `<pageSetup>` attributes.
+
+#### [`lib/src/sheet/data_validation.dart`](lib/src/sheet/data_validation.dart)
+- **`DataValidation`**: Represents an OpenXML `<dataValidation>`: `type` (`DataValidationType`), `operator` (`DataValidationOperator`), `formula1`/`formula2`, blank/dropdown/message flags, prompt and error texts and `errorStyle` (`DataValidationErrorStyle`). Factories `list`, `listFromRange`, `wholeNumber`, `decimal`, `date`, `time`, `textLength`, `custom` and `inputMessage`; builders `withPrompt`/`withError`; `accepts(CellValue)` evaluates the rule in Dart (`null` when it depends on formulas or ranges).
+- **`SheetDataValidations`** (`extension` on `Sheet`): `addDataValidation(range, rule)` (subtracts the area from overlapping rules), `setDataValidation`, `getDataValidation`, `removeDataValidation`, `clearDataValidations`, `dataValidations`, `hasDataValidations`. Rules shift with row/column inserts and removals.
+- **`DataDataValidation`** (`extension` on `Data`): `cell.dataValidation` getter/setter.
+
+#### [`lib/src/sheet/hyperlink.dart`](lib/src/sheet/hyperlink.dart)
+- **`Hyperlink`**: Represents an OpenXML `<hyperlink>`: external `url` (web, `mailto:`, file) and/or internal `location` (cell, range or defined name), plus `tooltip` and `display`. Factories `Hyperlink.url`, `Hyperlink.email`, `Hyperlink.cell` (quotes sheet names when needed) and `Hyperlink.location`.
+- **`SheetHyperlinks`** (`extension` on `Sheet`): `setHyperlink`, `setHyperlinkRange`, `getHyperlink`, `removeHyperlink`, `clearHyperlinks`, `hyperlinks`, `hasHyperlinks`. Links are keyed by cell or range reference and shift with `insertRow`/`removeRow`/`insertColumn`/`removeColumn`.
+- **`DataHyperlink`** (`extension` on `Data`): `cell.hyperlink` getter/setter.
+
+#### [`lib/src/sheet/sheet_export.dart`](lib/src/sheet/sheet_export.dart)
+- **`SheetExport`** (`extension` on `Sheet`): `rowsAsMaps` (header row as keys; empty headers named by column letter, duplicates suffixed), `rowsAsValues`, `toJson`, `toCsv` (RFC 4180) and the inverse `appendRowsFromMaps`.
+- **`ExcelExport`** (`extension` on `Excel`): `toMaps` and `toJson` for every sheet of the workbook.
+- **`ExportValueMode`** (`enum`): `typed` (native Dart values: `DateTime` for dates, `Duration` for times, cached values for formulas) or `displayText` (formatted text as shown by Excel).
 
 #### [`lib/src/sheet/sheet_protection.dart`](lib/src/sheet/sheet_protection.dart)
 - **`SheetProtection`**: Manages worksheet protection flags (locking cells, formatting, inserting/deleting rows/columns, sorting, filtering) and implements the standard Excel 16-bit password hashing algorithm.
@@ -417,13 +465,14 @@ excel_community/
 ### 2.10 XLSX Save & Serialization Subsystem (`lib/src/save/`)
 
 #### [`lib/src/save/save_file.dart`](lib/src/save/save_file.dart)
-- **`Save`**: Coordinates the entire workbook serialization process. Invokes manager classes to build XML parts, packages media and drawing assets, updates `[Content_Types].xml`, and encodes the final ZIP archive byte stream.
+- **`Save`**: Coordinates the entire workbook serialization process. Invokes manager classes to build XML parts, packages media and drawing assets, updates `[Content_Types].xml`, and encodes the final ZIP archive byte stream. Shared helpers load parts from the original file on demand (`_loadXmlPart`, `_relationshipsPart`), assign unused relationship ids (`_nextRelationshipId`) and continue part numbering after the original file (`_highestPartIndex`).
 
 #### Specialized Save Managers:
 - **`_ChartManager`** (`lib/src/save/charts/chart_manager.dart`): Serializes chart objects into OpenXML chart parts (`xl/charts/chart*.xml`), creates drawing parts (`xl/drawings/drawing*.xml`), and writes relationship files.
 - **`_ImageManager`** (`lib/src/save/images/image_manager.dart`): Embeds image binaries into `xl/media/`, generates drawing XML image anchors, and merges image anchors into existing chart drawings when both exist on the same worksheet.
 - **`_PivotTableManager`** (`lib/src/save/pivot_table/pivot_table_manager.dart`): Serializes Pivot Table definitions, Pivot Cache definitions, and Pivot Cache records into their respective XML parts.
 - **`_CommentManager`** (`lib/src/save/comments/comment_manager.dart`): Generates cell comment XML parts (`xl/comments*.xml`), legacy VML drawing shapes (`xl/drawings/vmlDrawing*.vml`), and relationship links.
+- **`_HyperlinkManager`** (`lib/src/save/hyperlinks/hyperlink_manager.dart`): Rebuilds each worksheet's external hyperlink relationships (`TargetMode="External"`) from the `Hyperlink` model, keeping every other relationship of the sheet.
 - **`_StyleManager`** (`lib/src/save/styles/style_manager.dart`): Coordinates generation of the unified `xl/styles.xml` file.
 - **`_StyleResourceCollector`** (`lib/src/save/styles/style_resource_collector.dart`): Traverses all cells and conditional formatting rules to collect, deduplicate, and index all fonts, fills, borders, number formats, and differential styles.
 - **`_StyleResources`** (`lib/src/save/styles/style_resource_collector.dart`): Data container holding deduplicated style resource collections and index maps.
@@ -525,6 +574,12 @@ excel_community/
   - `PreviewCard`: Card container for table previews.
   - `AboutView`: Library features, architecture, and documentation summary view.
   - `FontsStylesView`: Interactive font and typography preview widget.
+  - `wiki/wiki_components.dart`: Shared building blocks for the interactive wiki sections (`WikiPage`, `WikiTab`, `WikiSearchField`, `WikiGrid`, `WikiCard`, `WikiPreviewBox`). Each `WikiCard` has a live preview and its own copyable code snippet.
+  - `DataExportView`: Data export wiki: runs `rowsAsMaps`, `rowsAsValues`, `toJson`, `toCsv` and `appendRowsFromMaps` on a sample workbook and shows the library's live output next to each snippet (Export and Import tabs).
+  - `DataValidationView`: Data validation wiki (Dropdown Lists, Numbers/Dates/Times, Text/Custom/Checks): each card renders the cell with its dropdown and input message and checks sample values with `DataValidation.accepts()`.
+  - `HyperlinksView`: Hyperlinks wiki (External, Inside the Workbook, Read/Style/Remove tabs): each card applies a link, shows the cell as Excel renders it and the links read back from the saved file.
+  - `NumberFormatsView`: Number formats wiki: every built-in `NumFormat` (IDs 23–26 reserved) and common custom codes, grouped by category with cross-category search. Previews are rendered by `NumFormat.format()`; data comes from `data/number_format_catalog.dart`, which also drives the demo workbook.
+  - `PageSetupView`: Interactive page setup & print wiki: every `PaperSize` drawn to scale with a portrait/landscape toggle, plus orientation & scaling, margin presets and print options, each with a live page preview and copyable code.
 
 ---
 

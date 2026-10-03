@@ -8,7 +8,11 @@ class _ChartManager {
 
   void processCharts() {
     final writer = ChartXmlWriter();
-    int chartCount = 0;
+    // Continue after the charts of the original file so they are not
+    // overwritten.
+    int chartCount = _save._highestPartIndex(
+        RegExp(r'^xl/charts/chart(\d+)\.xml$'),
+        originalOnly: true);
 
     _excel._sheetMap.forEach((sheetName, sheet) {
       if (sheet.charts.isEmpty) return;
@@ -32,7 +36,8 @@ class _ChartManager {
         final digits = RegExp(r'\d+').stringMatch(nameOnly) ?? '1';
         drawingIdx = int.parse(digits);
       } else {
-        final idx = _countExistingDrawings() + 1;
+        final idx =
+            _save._highestPartIndex(RegExp(r'^xl/drawings/drawing(\d+)\.xml$')) + 1;
         drawingPath = 'xl/drawings/drawing$idx.xml';
         drawingRelsPath = 'xl/drawings/_rels/drawing$idx.xml.rels';
         drawingIsNew = true;
@@ -40,25 +45,13 @@ class _ChartManager {
       }
 
       // --- Ensure drawing rels XML exists ---
-      var drawingRels = _excel._xmlFiles[drawingRelsPath];
-      if (drawingRels == null) {
-        final relsBuilder = XmlBuilder();
-        relsBuilder.processing(
-            'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-        relsBuilder.element('Relationships',
-            attributes: {
-              'xmlns':
-                  'http://schemas.openxmlformats.org/package/2006/relationships',
-            },
-            nest: () {});
-        drawingRels = relsBuilder.buildDocument();
-        _excel._xmlFiles[drawingRelsPath] = drawingRels;
-      }
+      final drawingRels = _save._relationshipsPart(drawingRelsPath);
       final relsRoot = drawingRels.findAllElements('Relationships').first;
-      int nextRId = relsRoot.children.whereType<XmlElement>().length + 1;
+      int nextRId =
+          int.parse(_save._nextRelationshipId(relsRoot).substring(3));
 
       // --- Ensure drawing XML exists ---
-      var drawingDoc = _excel._xmlFiles[drawingPath];
+      var drawingDoc = _save._loadXmlPart(drawingPath);
       if (drawingDoc == null) {
         drawingDoc = _buildEmptyDrawing();
         _excel._xmlFiles[drawingPath] = drawingDoc;
@@ -159,25 +152,10 @@ class _ChartManager {
         );
 
         // Add drawing relationship to the sheet's rels file
-        var sheetRels = _excel._xmlFiles[sheetRelsPath];
-        if (sheetRels == null) {
-          final relsBuilder = XmlBuilder();
-          relsBuilder.processing(
-              'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-          relsBuilder.element('Relationships',
-              attributes: {
-                'xmlns':
-                    'http://schemas.openxmlformats.org/package/2006/relationships',
-              },
-              nest: () {});
-          sheetRels = relsBuilder.buildDocument();
-          _excel._xmlFiles[sheetRelsPath] = sheetRels;
-        }
+        final sheetRels = _save._relationshipsPart(sheetRelsPath);
 
         final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
-        final drawingRIdIndex =
-            sheetRelsRoot.children.whereType<XmlElement>().length + 1;
-        final drawingRId = 'rId$drawingRIdIndex';
+        final drawingRId = _save._nextRelationshipId(sheetRelsRoot);
         final drawingFileName = drawingPath.split('/').last;
 
         sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
@@ -195,7 +173,7 @@ class _ChartManager {
   }
 
   (String, String)? _findExistingDrawing(String sheetRelsPath) {
-    final sheetRels = _excel._xmlFiles[sheetRelsPath];
+    final sheetRels = _save._loadXmlPart(sheetRelsPath);
     if (sheetRels == null) return null;
 
     for (final rel in sheetRels.findAllElements('Relationship')) {
@@ -212,14 +190,6 @@ class _ChartManager {
     return null;
   }
 
-  int _countExistingDrawings() {
-    return _excel._xmlFiles.keys
-        .where((k) =>
-            k.startsWith('xl/drawings/drawing') &&
-            k.endsWith('.xml') &&
-            !k.contains('/_rels/'))
-        .length;
-  }
 
   XmlDocument _buildEmptyDrawing() {
     final b = XmlBuilder();

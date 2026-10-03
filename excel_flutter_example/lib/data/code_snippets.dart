@@ -22,3 +22,7 @@ export 'snippets/read_asset.dart';
 export 'snippets/formulas_display_text.dart';
 export 'snippets/autofilter.dart';
 export 'snippets/tab_color.dart';
+export 'snippets/page_setup.dart';
+export 'snippets/data_export.dart';
+export 'snippets/hyperlinks.dart';
+export 'snippets/data_validation.dart';

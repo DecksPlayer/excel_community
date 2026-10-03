@@ -170,7 +170,13 @@ extension SheetDataExt on Sheet {
   ///
   void removeColumn(int columnIndex) {
     _checkMaxColumn(columnIndex);
-    if (columnIndex < 0 || columnIndex >= maxColumns) {
+    if (columnIndex < 0) {
+      return;
+    }
+    // Links and validations can sit on columns without values.
+    _shiftHyperlinks(rows: false, index: columnIndex, delta: -1);
+    _shiftDataValidations(rows: false, index: columnIndex, delta: -1);
+    if (columnIndex >= maxColumns) {
       return;
     }
 
@@ -244,6 +250,8 @@ extension SheetDataExt on Sheet {
     if (columnIndex < 0) {
       return;
     }
+    _shiftHyperlinks(rows: false, index: columnIndex, delta: 1);
+    _shiftDataValidations(rows: false, index: columnIndex, delta: 1);
 
     bool updateSpanCell = false;
 
@@ -303,7 +311,13 @@ extension SheetDataExt on Sheet {
   ///
   void removeRow(int rowIndex) {
     _checkMaxRow(rowIndex);
-    if (rowIndex < 0 || rowIndex >= maxRows) {
+    if (rowIndex < 0) {
+      return;
+    }
+    // Links and validations can sit on rows without values.
+    _shiftHyperlinks(index: rowIndex, delta: -1);
+    _shiftDataValidations(index: rowIndex, delta: -1);
+    if (rowIndex >= maxRows) {
       return;
     }
 
@@ -376,6 +390,8 @@ extension SheetDataExt on Sheet {
     if (rowIndex < 0) {
       return;
     }
+    _shiftHyperlinks(index: rowIndex, delta: 1);
+    _shiftDataValidations(index: rowIndex, delta: 1);
 
     bool updateSpanCell = false;
 

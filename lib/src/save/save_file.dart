@@ -15,6 +15,7 @@ class Save {
   late final _WorksheetManager _worksheetManager;
   late final _WorkbookManager _workbookManager;
   late final _CommentManager _commentManager;
+  late final _HyperlinkManager _hyperlinkManager;
 
   Save._(this._excel, this.parser) {
     _chartManager = _ChartManager(_excel, this);
@@ -24,6 +25,7 @@ class Save {
     _worksheetManager = _WorksheetManager(_excel, this);
     _workbookManager = _WorkbookManager(_excel);
     _commentManager = _CommentManager(_excel, this);
+    _hyperlinkManager = _HyperlinkManager(_excel, this);
   }
 
   List<int>? _save() {
@@ -41,6 +43,7 @@ class Save {
     _imageManager.processImages();
     _pivotTableManager.processPivotTables();
     _commentManager.processComments();
+    _hyperlinkManager.processHyperlinks();
 
     _worksheetManager.setSheetElements();
 
@@ -90,6 +93,63 @@ class Save {
         diagonalBorderUp: cellStyle.diagonalBorderUp,
         diagonalBorderDown: cellStyle.diagonalBorderDown,
       );
+
+  /// Returns the XML part at [path]: the copy already loaded or created
+  /// during this save, otherwise the part parsed from the original file
+  /// (cached in `_xmlFiles` so later edits are written back), or `null`.
+  XmlDocument? _loadXmlPart(String path) {
+    final loaded = _excel._xmlFiles[path];
+    if (loaded != null) return loaded;
+    final file = _excel._archive.findFile(path);
+    if (file == null) return null;
+    file.decompress();
+    final document = XmlDocument.parse(utf8.decode(file.content));
+    _excel._xmlFiles[path] = document;
+    return document;
+  }
+
+  /// Like [_loadXmlPart] for a `.rels` part, creating an empty
+  /// `<Relationships>` part when it does not exist yet.
+  XmlDocument _relationshipsPart(String path) {
+    final existing = _loadXmlPart(path);
+    if (existing != null) return existing;
+    final builder = XmlBuilder();
+    builder.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
+    builder.element('Relationships', attributes: {
+      'xmlns': 'http://schemas.openxmlformats.org/package/2006/relationships',
+    });
+    final document = builder.buildDocument();
+    _excel._xmlFiles[path] = document;
+    return document;
+  }
+
+  /// Next unused `rIdN` in a `<Relationships>` element (highest + 1, so ids
+  /// with gaps never collide).
+  String _nextRelationshipId(XmlElement relationships) {
+    var highest = 0;
+    for (final rel in relationships.childElements) {
+      final match = RegExp(r'^rId(\d+)$').firstMatch(rel.getAttribute('Id') ?? '');
+      if (match != null) highest = max(highest, int.parse(match.group(1)!));
+    }
+    return 'rId${highest + 1}';
+  }
+
+  /// Highest N among part names matching [pattern] (whose first group is
+  /// N), e.g. `^xl/drawings/drawing(\d+)\.xml$`. Looks at the original file
+  /// and, unless [originalOnly], at the parts created during this save.
+  int _highestPartIndex(RegExp pattern, {bool originalOnly = false}) {
+    var highest = 0;
+    final names = {
+      ..._excel._archive.files.map((f) => f.name),
+      if (!originalOnly) ..._excel._xmlFiles.keys,
+    };
+    for (final name in names) {
+      final match = pattern.firstMatch(name);
+      if (match == null) continue;
+      highest = max(highest, int.parse(match.group(1)!));
+    }
+    return highest;
+  }
 
   void _addContentType(String contentType, String partName) {
     final contentTypes = _excel._xmlFiles['[Content_Types].xml'];

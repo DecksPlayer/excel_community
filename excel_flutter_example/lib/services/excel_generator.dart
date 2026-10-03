@@ -18,6 +18,10 @@ import 'helpers/read_asset_helper.dart';
 import 'helpers/formulas_display_text_helper.dart';
 import 'helpers/autofilter_helper.dart';
 import 'helpers/tab_color_helper.dart';
+import 'helpers/page_setup_helper.dart';
+import 'helpers/data_export_helper.dart';
+import 'helpers/hyperlinks_helper.dart';
+import 'helpers/data_validation_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -80,4 +84,16 @@ class ExcelGenerator {
 
   static Future<String> generateTabColors() =>
       generateTabColorHelper();
+
+  static Future<String> generatePageSetup() =>
+      generatePageSetupHelper();
+
+  static Future<String> generateDataExport() =>
+      generateDataExportHelper();
+
+  static Future<String> generateHyperlinks() =>
+      generateHyperlinksHelper();
+
+  static Future<String> generateDataValidation() =>
+      generateDataValidationHelper();
 }

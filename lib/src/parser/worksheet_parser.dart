@@ -70,6 +70,12 @@ class _WorksheetParser {
     String? inlineText;
 
     bool insideSheetView = false;
+    bool? fitToPage;
+    Map<String, String>? relationshipTargets;
+    // <dataValidation> being read: attributes and formula text.
+    Map<String, String>? validationAttrs;
+    final validationFormulas = <String, StringBuffer>{};
+    String? validationFormula;
 
     for (final event in events) {
       if (event is xml_events.XmlStartElementEvent) {
@@ -96,6 +102,61 @@ class _WorksheetParser {
             indexed: indexed,
             auto: auto,
           );
+        } else if (tagName == 'pageSetUpPr' ||
+            tagName.endsWith(':pageSetUpPr')) {
+          fitToPage = _parseBoolAttr(event, 'fitToPage');
+        } else if (tagName == 'pageMargins' ||
+            tagName.endsWith(':pageMargins')) {
+          sheetObject._pageMargins = _parsePageMargins(event);
+        } else if (tagName == 'printOptions' ||
+            tagName.endsWith(':printOptions')) {
+          sheetObject.printOptions = PrintOptions(
+            gridLines: _parseBoolAttr(event, 'gridLines'),
+            headings: _parseBoolAttr(event, 'headings'),
+            horizontalCentered: _parseBoolAttr(event, 'horizontalCentered'),
+            verticalCentered: _parseBoolAttr(event, 'verticalCentered'),
+            gridLinesSet: _parseBoolAttr(event, 'gridLinesSet'),
+          );
+        } else if ((tagName == 'dataValidation' ||
+                tagName.endsWith(':dataValidation')) &&
+            !tagName.startsWith('x14:')) {
+          // Excel 2010 x14:dataValidation (in extLst) is kept as raw XML.
+          validationAttrs = {
+            for (final attr in event.attributes)
+              attr.name.split(':').last: attr.value,
+          };
+          validationFormulas.clear();
+          if (event.isSelfClosing) {
+            _addParsedValidation(sheetObject, validationAttrs, validationFormulas);
+            validationAttrs = null;
+          }
+        } else if (validationAttrs != null &&
+            (tagName == 'formula1' || tagName == 'formula2')) {
+          validationFormula = tagName;
+          validationFormulas[tagName] = StringBuffer();
+        } else if (tagName == 'hyperlink' || tagName.endsWith(':hyperlink')) {
+          final ref = _getAttr(event, 'ref');
+          final rId = _getAttr(event, 'id');
+          String? url;
+          if (rId != null) {
+            relationshipTargets ??= _externalRelationshipTargets(path);
+            url = relationshipTargets[rId];
+          }
+          final location = _getAttr(event, 'location');
+          if (ref != null && (url != null || location != null)) {
+            try {
+              sheetObject._hyperlinks[_CellRect.parse(ref).ref] = Hyperlink(
+                url: url,
+                location: location,
+                tooltip: _getAttr(event, 'tooltip'),
+                display: _getAttr(event, 'display'),
+              );
+            } catch (_) {
+              // Ignore malformed references.
+            }
+          }
+        } else if (tagName == 'pageSetup' || tagName.endsWith(':pageSetup')) {
+          sheetObject.pageSetup = _parsePageSetup(event);
         } else if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
           final rtl = _getAttr(event, 'rightToLeft');
           sheetObject.isRTL = rtl == '1';
@@ -308,6 +369,8 @@ class _WorksheetParser {
           } else if (insideInlineText) {
             inlineText = (inlineText ?? '') + event.value;
           }
+        } else if (validationFormula != null) {
+          validationFormulas[validationFormula]!.write(event.value);
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
         } else if (currentAutoFilterEvents != null) {
@@ -341,6 +404,13 @@ class _WorksheetParser {
           } else if (tagName == 't' || tagName.endsWith(':t')) {
             insideInlineText = false;
           }
+        } else if (validationFormula != null &&
+            (tagName == 'formula1' || tagName == 'formula2')) {
+          validationFormula = null;
+        } else if (validationAttrs != null &&
+            (tagName == 'dataValidation' || tagName.endsWith(':dataValidation'))) {
+          _addParsedValidation(sheetObject, validationAttrs, validationFormulas);
+          validationAttrs = null;
         } else if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
           insideSheetView = false;
         } else if ((tagName == 'headerFooter' ||
@@ -377,8 +447,109 @@ class _WorksheetParser {
       }
     }
 
+    if (fitToPage != null) {
+      sheetObject.pageSetup = (sheetObject.pageSetup ?? const PageSetup())
+          .copyWith(fitToPage: fitToPage);
+    }
+
     _parseConditionalFormatting(sheetObject, contentString);
     normalizeTable(sheetObject);
+  }
+
+  void _addParsedValidation(Sheet sheetObject, Map<String, String> attrs,
+      Map<String, StringBuffer> formulas) {
+    final sqref = attrs['sqref'];
+    if (sqref == null || sqref.trim().isEmpty) return;
+    bool flag(String name) => attrs[name] == '1' || attrs[name] == 'true';
+    final validation = DataValidation(
+      type: DataValidationType.fromXmlValue(attrs['type']),
+      operator: DataValidationOperator.fromXmlValue(attrs['operator']),
+      formula1: formulas['formula1']?.toString(),
+      formula2: formulas['formula2']?.toString(),
+      allowBlank: flag('allowBlank'),
+      showDropdown: !flag('showDropDown'),
+      showInputMessage: flag('showInputMessage'),
+      showErrorMessage: flag('showErrorMessage'),
+      promptTitle: attrs['promptTitle'],
+      prompt: attrs['prompt'],
+      errorTitle: attrs['errorTitle'],
+      error: attrs['error'],
+      errorStyle: DataValidationErrorStyle.fromXmlValue(attrs['errorStyle']),
+    );
+    try {
+      final key = _CellRect.parseList(sqref).map((r) => r.ref).join(' ');
+      sheetObject._dataValidations[key] = validation;
+    } catch (_) {
+      // Ignore malformed ranges.
+    }
+  }
+
+  /// Targets of the worksheet's relationships (`.rels`), keyed by id.
+  Map<String, String> _externalRelationshipTargets(String worksheetPath) {
+    final slash = worksheetPath.lastIndexOf('/');
+    final relsPath = '${worksheetPath.substring(0, slash)}/_rels/'
+        '${worksheetPath.substring(slash + 1)}.rels';
+    final file = _excel._archive.findFile(relsPath);
+    if (file == null) return const {};
+    file.decompress();
+    final document = XmlDocument.parse(utf8.decode(file.content));
+    return {
+      for (final rel in document.findAllElements('Relationship'))
+        if (rel.getAttribute('Id') != null && rel.getAttribute('Target') != null)
+          rel.getAttribute('Id')!: rel.getAttribute('Target')!,
+    };
+  }
+
+  bool? _parseBoolAttr(xml_events.XmlStartElementEvent event, String name) {
+    final value = _getAttr(event, name);
+    if (value == null) return null;
+    return value == '1' || value.toLowerCase() == 'true';
+  }
+
+  int? _parseIntAttr(xml_events.XmlStartElementEvent event, String name) {
+    final value = _getAttr(event, name);
+    return value != null ? int.tryParse(value) : null;
+  }
+
+  PageMargins _parsePageMargins(xml_events.XmlStartElementEvent event) {
+    double attr(String name, double fallback) =>
+        double.tryParse(_getAttr(event, name) ?? '') ?? fallback;
+    const d = PageMargins.normal;
+    return PageMargins(
+      left: attr('left', d.left),
+      right: attr('right', d.right),
+      top: attr('top', d.top),
+      bottom: attr('bottom', d.bottom),
+      header: attr('header', d.header),
+      footer: attr('footer', d.footer),
+    );
+  }
+
+  PageSetup? _parsePageSetup(xml_events.XmlStartElementEvent event) {
+    final paperSizeCode = _parseIntAttr(event, 'paperSize');
+    final setup = PageSetup(
+      orientation: PageOrientation.fromXmlValue(_getAttr(event, 'orientation')),
+      paperSize:
+          paperSizeCode != null ? PaperSize.fromCode(paperSizeCode) : null,
+      paperWidth: _getAttr(event, 'paperWidth'),
+      paperHeight: _getAttr(event, 'paperHeight'),
+      scale: _parseIntAttr(event, 'scale'),
+      fitToWidth: _parseIntAttr(event, 'fitToWidth'),
+      fitToHeight: _parseIntAttr(event, 'fitToHeight'),
+      firstPageNumber: _parseIntAttr(event, 'firstPageNumber'),
+      useFirstPageNumber: _parseBoolAttr(event, 'useFirstPageNumber'),
+      pageOrder: PageOrder.fromXmlValue(_getAttr(event, 'pageOrder')),
+      blackAndWhite: _parseBoolAttr(event, 'blackAndWhite'),
+      draft: _parseBoolAttr(event, 'draft'),
+      cellComments:
+          PrintCellComments.fromXmlValue(_getAttr(event, 'cellComments')),
+      errors: PrintErrors.fromXmlValue(_getAttr(event, 'errors')),
+      horizontalDpi: _parseIntAttr(event, 'horizontalDpi'),
+      verticalDpi: _parseIntAttr(event, 'verticalDpi'),
+      copies: _parseIntAttr(event, 'copies'),
+      usePrinterDefaults: _parseBoolAttr(event, 'usePrinterDefaults'),
+    );
+    return setup.hasPageSetupAttributes ? setup : null;
   }
 
   void _parseConditionalFormatting(Sheet sheetObject, String contentString) {

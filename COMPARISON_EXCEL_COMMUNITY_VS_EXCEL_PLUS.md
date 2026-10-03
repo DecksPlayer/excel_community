@@ -76,6 +76,10 @@ Este documento proporciona un análisis exhaustivo y de bajo nivel de la arquite
 | **Motor de Recálculo de Fórmulas** | ❌ No (solo texto) | ✅ Sí (`recalculate`) | Intérprete AST con dependencias incrementales (`changed: [...]`). |
 | **AutoFilter (`<autoFilter>`)** | ✅ Sí (`sheet.setAutoFilter`) | ❌ No disponible | Rango, columnas de filtro, valores y preservación en guardado. |
 | **Color de Pestañas (`<tabColor>`)** | ✅ Sí (`sheet.setTabColor`) | ❌ No disponible | ARGB hex, ExcelColor, temas de Office con tint y preservación `<sheetPr>`. |
+| **Validación de Datos (`<dataValidation>`)** | ✅ Sí (`sheet.addDataValidation`) | ❌ No disponible | Listas desplegables (fijas o desde rangos), números, fechas, horas, longitud de texto y fórmulas, con mensajes; `accepts()` valida en Dart. |
+| **Hipervínculos (`<hyperlinks>`)** | ✅ Sí (`sheet.setHyperlink`, `cell.hyperlink`) | ❌ No disponible | URLs, correos, archivos, celdas y nombres definidos; lectura, escritura y preservación de relaciones externas. |
+| **Exportación de Datos (`rowsAsMaps`, `toJson`, `toCsv`)** | ✅ Sí (`sheet.rowsAsMaps`, `excel.toJson`) | ❌ No disponible | Filas como mapas o grillas de valores, JSON y CSV (RFC 4180), e importación desde mapas (`appendRowsFromMaps`). |
+| **Configuración de Página e Impresión (`<pageSetup>`)** | ✅ Sí (`sheet.pageSetup`, `sheet.fitToPages`) | ❌ No disponible | Orientación, tamaño de papel, escala, ajuste a páginas, márgenes (`<pageMargins>`) y opciones de impresión (`<printOptions>`). |
 | **Lectura Legacy `.xls` (BIFF8/OLE2)** | ✅ Nativo en Dart | ✅ Nativo en Dart | Decodificador CFB y parseo de registros BIFF8. |
 
 ---
@@ -324,12 +328,12 @@ graph TD
     end
     subgraph "Prioridad 2 - Alto Valor para XLSX"
         P2A["✅ Filtros Automáticos (<autoFilter>)"]
-        P2B["Validación de Datos y Dropdowns (<dataValidation>)"]
-        P2C["Color de Solapas/Pestañas (<tabColor>)"]
-        P2D["Hipervínculos (<hyperlinks>)"]
+        P2B["✅ Validación de Datos y Dropdowns (<dataValidation>)"]
+        P2C["✅ Color de Solapas/Pestañas (<tabColor>)"]
+        P2D["✅ Hipervínculos (<hyperlinks>)"]
     end
     subgraph "Prioridad 3 - Configuración Avanzada"
-        P3A["Configuración de Página e Impresión (<pageSetup>)"]
+        P3A["✅ Configuración de Página e Impresión (<pageSetup>)"]
         P3B["Agrupamiento / Esquemas de Filas y Columnas (<outlinePr>)"]
     end
 ```
@@ -339,12 +343,9 @@ graph TD
 1. ✅ **Retención de `<v>` en Fórmulas** — completado: `_WorksheetParser` y `FormulaCellValue.cachedValue` almacenan el valor precalculado cuando el archivo lo tenía.
 2. ✅ **`Data.displayText` y `NumFormat.format()`** — completado: formateador numérico/fecha best-effort (`lib/src/number_format/format_renderer.dart`) que transforma valores brutos (`1234.5`) en cadenas formateadas (`"$1,234.50"`), habilitando su consumo directo en UIs.
 3. ✅ **Filtros Automáticos (`<autoFilter>`)** — completado: modelo `AutoFilter` y `FilterColumn`, métodos `Sheet.setAutoFilter(CellIndex start, CellIndex end)`, `Sheet.setAutoFilterByString(String range)`, `Sheet.clearAutoFilter()`, parsing SAX bidireccional y serialización schema-compliant de `<autoFilter ref="A1:D10"/>` en `sheetX.xml`.
-4. **Validación de Datos (`<dataValidation>`)**:
-   * Permitir listas desplegables (dropdowns) en celdas mediante `<dataValidation type="list">`.
+4. ✅ **Validación de Datos (`<dataValidation>`)** — completado: modelo `DataValidation` (listas fijas o desde rangos, enteros, decimales, fechas, horas, longitud de texto y fórmulas), mensajes de entrada y error, `sheet.addDataValidation` con resta de áreas superpuestas y `accepts()` para validar en Dart.
 5. **Color de Solapas/Pestañas (`<tabColor>`)**:
    * Permitir asignar un color personalizado a la pestaña inferior de cada hoja (`sheet.tabColor`).
-6. **Hipervínculos (`<hyperlinks>`)**:
-   * Permitir asignar enlaces a URLs externas, correos o celdas internas en `sheetX.xml`.
-7. **Configuración de Página e Impresión (`<pageSetup>`)**:
-   * Soporte para orientación de página (horizontal/vertical), tamaño de papel (A4, Carta) y ajuste a una página.
+6. ✅ **Hipervínculos (`<hyperlinks>`)** — completado: modelo `Hyperlink` (URL, correo, celda, nombre definido), `sheet.setHyperlink`/`cell.hyperlink`, relaciones externas en el `.rels` de cada hoja y desplazamiento al insertar o eliminar filas y columnas.
+7. ✅ **Configuración de Página e Impresión (`<pageSetup>`)** — completado: modelos `PageSetup`, `PaperSize`, `PageMargins` y `PrintOptions`; orientación, tamaño de papel, escala, ajuste a N×M páginas (`<sheetPr><pageSetUpPr fitToPage>`), márgenes y líneas de cuadrícula/encabezados. Pendiente: áreas de impresión y títulos a imprimir (`definedNames` `_xlnm.Print_Area` / `_xlnm.Print_Titles`).
 

@@ -57,6 +57,10 @@
 - ✅ **Display Text Formatting**: Spreadsheet-accurate rendered strings via `Data.displayText` and `NumFormat.format()`
 - ✅ **AutoFilter Support**: Full OpenXML AutoFilter (`<autoFilter ref="A1:F20">`), column filters, and criteria preservation
 - ✅ **Sheet Tab Colors**: Assign custom tab colors using hex codes, ExcelColor presets, or Office theme indices (`<sheetPr><tabColor>`)
+- ✅ **Page Setup & Print Configuration**: Orientation, paper size, scaling, fit-to-pages, margins, gridlines and headings (`<pageSetup>`, `<pageMargins>`, `<printOptions>`)
+- ✅ **Data Export & Transformation**: Rows as maps or value grids, JSON and CSV export, and import from maps (`rowsAsMaps`, `toJson`, `toCsv`, `appendRowsFromMaps`)
+- ✅ **Cell Hyperlinks**: Links to web pages, e-mail addresses, files and cells or defined names in the workbook (`<hyperlinks>`)
+- ✅ **Data Validation & Dropdowns**: Dropdown lists, number/date/time/text-length limits and custom formulas with input and error messages (`<dataValidations>`)
 - ✅ **Cross-platform**: Works on Flutter Web, Android, iOS, Desktop
 
 ## Road-map:
@@ -69,10 +73,10 @@
  - ✅ Formulas & Cached Values (Implemented!)
  - ✅ AutoFilter (`<autoFilter>`) (Implemented!)
  - ✅ Sheet Tab Colors (`<tabColor>`) (Implemented!)
- - 💾 Data Export & Transformation (`rowsAsMaps`, `toJson`)
- - 🔗 Cell Hyperlinks (`<hyperlinks>`)
- - 📋 Data Validation & Dropdowns (`<dataValidation>`)
- - 🖨️ Page Setup & Print Configuration (`<pageSetup>`)
+ - ✅ Page Setup & Print Configuration (`<pageSetup>`) (Implemented!)
+ - ✅ Data Export & Transformation (`rowsAsMaps`, `toJson`) (Implemented!)
+ - ✅ Cell Hyperlinks (`<hyperlinks>`) (Implemented!)
+ - ✅ Data Validation & Dropdowns (`<dataValidation>`) (Implemented!)
  - 📁 Row & Column Grouping (`<outlinePr>`)
  - 📰 Excel Structured Tables (`<tableParts>`, Table Styles)
  - 🔐 Encrypt and Decrypt excel on the go.
@@ -883,6 +887,158 @@ if (sheetObject.hasTabColor) {
 
 // 5. Remove or clear tab color
 sheetObject.clearTabColor(); // or sheetObject.removeTabColor();
+```
+
+### Page Setup & Print Configuration (`<pageSetup>`)
+
+Control how a worksheet prints: orientation, paper size, scaling, margins and print options. Settings are read from existing files and preserved on save.
+
+```dart
+var sheetObject = excel['Report'];
+
+// 1. Orientation and paper size
+sheetObject.setPageOrientation(PageOrientation.landscape);
+sheetObject.setPaperSize(PaperSize.a4); // letter, legal, a3, a5, ... or PaperSize.fromCode(n)
+
+// 2. Scaling: either a fixed percentage (10-400)...
+sheetObject.setPrintScale(80);
+// ...or fit to N pages wide by M pages tall (0 = as many as needed)
+sheetObject.fitToPages(width: 1, height: 0); // all columns on one page width
+
+// 3. Full control with the PageSetup model
+sheetObject.pageSetup = PageSetup(
+  orientation: PageOrientation.portrait,
+  paperSize: PaperSize.letter,
+  pageOrder: PageOrder.overThenDown,
+  firstPageNumber: 3,
+  useFirstPageNumber: true,
+  blackAndWhite: true,
+  cellComments: PrintCellComments.atEnd,
+  errors: PrintErrors.blank,
+  copies: 2,
+);
+
+// 4. Margins (inches) - presets, custom values or centimetres
+sheetObject.pageMargins = PageMargins.narrow; // normal, wide, narrow
+sheetObject.pageMargins = PageMargins(left: 0.5, right: 0.5, top: 1, bottom: 1);
+sheetObject.pageMargins = PageMargins.fromCentimeters(left: 2, right: 2);
+
+// 5. Print options
+sheetObject.setPrintGridLines(true);
+sheetObject.setPrintHeadings(true);
+sheetObject.setPrintCentered(horizontally: true);
+
+// 6. Clear
+sheetObject.clearPageSetup();    // or sheetObject.removePageSetup();
+sheetObject.clearPageMargins();  // back to Excel's "Normal" margins
+sheetObject.clearPrintOptions();
+```
+
+### Data Validation & Dropdowns (`<dataValidation>`)
+
+Restrict what can be typed in a range: dropdown lists, number, date, time and text-length limits, or custom formulas, with optional input and error messages.
+
+```dart
+var sheetObject = excel['Tasks'];
+
+// 1. Dropdown from fixed values, with messages
+sheetObject.addDataValidation('C2:C100',
+    DataValidation.list(['Open', 'In progress', 'Done'])
+        .withPrompt('Status', 'Pick a status from the list')
+        .withError('Invalid status', 'Choose one of the listed values'));
+
+// 2. Dropdown from a range (on the same or another sheet)
+sheetObject.addDataValidation('D2:D100',
+    DataValidation.listFromRange('A1:A20', sheetName: 'Lookup Lists'));
+
+// 3. Numbers, dates, times and text length
+sheetObject.addDataValidation('E2:E100',
+    DataValidation.wholeNumber(DataValidationOperator.between, 1, 10));
+sheetObject.addDataValidation('F2:F100',
+    DataValidation.date(DataValidationOperator.greaterThanOrEqual, DateTime(2026, 1, 1)));
+sheetObject.addDataValidation('G2:G100',
+    DataValidation.textLength(DataValidationOperator.lessThanOrEqual, 50)
+        .withError('Too long', 'Max 50 characters', style: DataValidationErrorStyle.warning));
+
+// 4. Custom formula (relative to the first cell of the range)
+sheetObject.addDataValidation('H2:H100', DataValidation.custom('H2>E2'));
+
+// 5. Check values in Dart before writing them
+final rule = sheetObject.getDataValidation(CellIndex.indexByString('C2'));
+print(rule?.accepts(TextCellValue('Done'))); // true
+
+// 6. Remove
+sheetObject.removeDataValidation('C50:C100'); // other cells keep the rule
+sheetObject.clearDataValidations();
+```
+
+A cell has one validation: adding a rule to a range removes that area from any earlier rule. Rules move with their cells when rows or columns are inserted or removed.
+
+### Cell Hyperlinks (`<hyperlinks>`)
+
+Link cells to web pages, e-mail addresses, files, or other cells and defined names in the workbook. Links are read from existing files and preserved on save.
+
+```dart
+var sheetObject = excel['Links'];
+
+// 1. Web page (the URL is written as the cell text when the cell is empty)
+sheetObject.setHyperlink(CellIndex.indexByString('A1'),
+    Hyperlink.url('https://pub.dev', tooltip: 'Open pub.dev'));
+
+// 2. E-mail with a subject, with custom cell text
+sheetObject.setHyperlink(CellIndex.indexByString('A2'),
+    Hyperlink.email('sales@example.com', subject: 'Q3 report'),
+    text: 'Contact sales');
+
+// 3. Another cell of the workbook (sheet names are quoted when needed)
+sheetObject.setHyperlink(CellIndex.indexByString('A3'),
+    Hyperlink.cell('Q1 Sales', 'B4'), text: 'Go to Q1');
+
+// 4. A defined name or range, over several cells
+sheetObject.setHyperlinkRange('A5:C5', Hyperlink.location('TotalSales'));
+
+// 5. From the cell itself
+sheetObject.cell(CellIndex.indexByString('A6')).hyperlink = Hyperlink.url('https://dart.dev');
+print(sheetObject.cell(CellIndex.indexByString('A1')).hyperlink?.url); // https://pub.dev
+
+// 6. Remove
+sheetObject.removeHyperlink(CellIndex.indexByString('A6'));
+sheetObject.clearHyperlinks();
+```
+
+New links get Excel's hyperlink look (blue, underlined); pass `styled: false` to keep the cell style. Links move with their cells when rows or columns are inserted or removed.
+
+### Data Export & Transformation (`rowsAsMaps`, `toJson`, `toCsv`)
+
+Turn worksheet data into Dart collections, JSON or CSV, and write maps back as rows. The first row is used as the header.
+
+```dart
+var sheetObject = excel['Customers'];
+
+// 1. Rows as maps with native Dart values (String, int, double, bool, DateTime, Duration)
+final rows = sheetObject.rowsAsMaps();
+// [{'Name': 'Ana', 'Age': 31, 'Joined': DateTime.utc(2024, 3, 5)}, ...]
+
+// ...or as the text Excel displays (number formats applied)
+final shown = sheetObject.rowsAsMaps(mode: ExportValueMode.displayText);
+
+// Header below a title row
+final report = sheetObject.rowsAsMaps(headerRow: 1);
+
+// 2. The whole grid as values, including the header row
+final grid = sheetObject.rowsAsValues();
+
+// 3. JSON: dates as YYYY-MM-DD, date-times as ISO 8601, times as HH:MM:SS
+final json = sheetObject.toJson(indent: '  ');
+final workbookJson = excel.toJson(); // {"Customers": [...], "Orders": [...]}
+
+// 4. CSV (RFC 4180 quoting); cells are written as displayed by default
+final csv = sheetObject.toCsv(separator: ';');
+
+// 5. Import: maps to rows (header written on an empty sheet, matched otherwise)
+excel['Imported'].appendRowsFromMaps([
+  {'Name': 'Eva', 'Age': 40, 'Joined': DateTime.utc(2026, 1, 15)},
+]);
 ```
 
 ### Find and Replace

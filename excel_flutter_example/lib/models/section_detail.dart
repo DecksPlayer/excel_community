@@ -33,6 +33,10 @@ enum SelectedSection {
   formulasDisplayText,
   autoFilter,
   tabColor,
+  pageSetup,
+  dataExport,
+  hyperlinks,
+  dataValidation,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

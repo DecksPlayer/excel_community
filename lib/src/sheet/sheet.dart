@@ -29,6 +29,13 @@ class Sheet {
   final List<ConditionalFormattingGroup> _conditionalFormattings = [];
   AutoFilter? _autoFilter;
   TabColor? _tabColor;
+  PageSetup? _pageSetup;
+  PageMargins? _pageMargins;
+  PrintOptions? _printOptions;
+  final Map<String, Hyperlink> _hyperlinks = {};
+  final Map<String, DataValidation> _dataValidations = {};
+  // Relationship id of each external hyperlink, assigned while saving.
+  final Map<String, String> _hyperlinkRIds = {};
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -54,6 +61,11 @@ class Sheet {
             conditionalFormattingsVal: oldSheetObject._conditionalFormattings,
             autoFilterVal: oldSheetObject._autoFilter,
             tabColorVal: oldSheetObject._tabColor,
+            pageSetupVal: oldSheetObject._pageSetup,
+            pageMarginsVal: oldSheetObject._pageMargins,
+            printOptionsVal: oldSheetObject._printOptions,
+            hyperlinksVal: oldSheetObject._hyperlinks,
+            dataValidationsVal: oldSheetObject._dataValidations,
             drawingRId: oldSheetObject._drawingRId,
             legacyDrawingRId: oldSheetObject._legacyDrawingRId);
 
@@ -80,10 +92,24 @@ class Sheet {
       List<ConditionalFormattingGroup>? conditionalFormattingsVal,
       AutoFilter? autoFilterVal,
       TabColor? tabColorVal,
+      PageSetup? pageSetupVal,
+      PageMargins? pageMarginsVal,
+      PrintOptions? printOptionsVal,
+      Map<String, Hyperlink>? hyperlinksVal,
+      Map<String, DataValidation>? dataValidationsVal,
       String? drawingRId,
       String? legacyDrawingRId}) {
     _autoFilter = autoFilterVal;
     _tabColor = tabColorVal;
+    _pageSetup = pageSetupVal;
+    _pageMargins = pageMarginsVal;
+    _printOptions = printOptionsVal;
+    if (hyperlinksVal != null) {
+      _hyperlinks.addAll(hyperlinksVal);
+    }
+    if (dataValidationsVal != null) {
+      _dataValidations.addAll(dataValidationsVal);
+    }
     _drawingRId = drawingRId;
     _legacyDrawingRId = legacyDrawingRId;
     this.sheetProtection = sheetProtection ?? SheetProtection();
@@ -523,4 +549,131 @@ class Sheet {
 
   /// Whether this worksheet has a custom tab color set.
   bool get hasTabColor => _tabColor != null;
+
+  /// The print page setup (`<pageSetup>`) of this worksheet, or `null` if
+  /// none is set.
+  PageSetup? get pageSetup => _pageSetup;
+
+  set pageSetup(PageSetup? value) {
+    _pageSetup = value;
+  }
+
+  /// Whether this worksheet has a page setup configured.
+  bool get hasPageSetup => _pageSetup != null;
+
+  /// Sets the print orientation, keeping the rest of the page setup.
+  ///
+  /// ```dart
+  /// sheet.setPageOrientation(PageOrientation.landscape);
+  /// ```
+  void setPageOrientation(PageOrientation orientation) {
+    _pageSetup = (_pageSetup ?? const PageSetup())
+        .copyWith(orientation: orientation);
+  }
+
+  /// Sets the print paper size, keeping the rest of the page setup.
+  ///
+  /// ```dart
+  /// sheet.setPaperSize(PaperSize.a4);
+  /// ```
+  void setPaperSize(PaperSize paperSize) {
+    _pageSetup =
+        (_pageSetup ?? const PageSetup()).copyWith(paperSize: paperSize);
+  }
+
+  /// Prints the sheet at [percent] % of its normal size (10–400) and turns
+  /// off fit-to-page.
+  ///
+  /// Throws a [RangeError] if [percent] is outside 10–400.
+  void setPrintScale(int percent) {
+    RangeError.checkValueInInterval(percent, 10, 400, 'percent');
+    _pageSetup = (_pageSetup ?? const PageSetup())
+        .copyWith(scale: percent, fitToPage: false);
+  }
+
+  /// Scales the printout to fit [width] pages wide by [height] pages tall.
+  ///
+  /// Use `0` for either dimension to let it grow as needed, e.g.
+  /// `fitToPages(width: 1, height: 0)` fits all columns on one page width.
+  ///
+  /// Throws a [RangeError] if either value is negative.
+  void fitToPages({int width = 1, int height = 1}) {
+    RangeError.checkNotNegative(width, 'width');
+    RangeError.checkNotNegative(height, 'height');
+    _pageSetup = (_pageSetup ?? const PageSetup()).copyWith(
+      fitToPage: true,
+      fitToWidth: width,
+      fitToHeight: height,
+    );
+  }
+
+  /// Removes the page setup from this sheet.
+  void clearPageSetup() {
+    _pageSetup = null;
+  }
+
+  /// Removes the page setup from this sheet (alias for [clearPageSetup]).
+  void removePageSetup() => clearPageSetup();
+
+  /// The print margins (`<pageMargins>`) of this worksheet, in inches.
+  ///
+  /// When `null`, [PageMargins.normal] is written on save.
+  PageMargins? get pageMargins => _pageMargins;
+
+  /// Throws an [ArgumentError] if any margin is negative.
+  set pageMargins(PageMargins? value) {
+    if (value != null &&
+        [
+          value.left,
+          value.right,
+          value.top,
+          value.bottom,
+          value.header,
+          value.footer,
+        ].any((m) => m < 0)) {
+      throw ArgumentError.value(value, 'pageMargins', 'must not be negative');
+    }
+    _pageMargins = value;
+  }
+
+  /// Resets the print margins to Excel's "Normal" defaults.
+  void clearPageMargins() {
+    _pageMargins = null;
+  }
+
+  /// The print options (`<printOptions>`) of this worksheet, or `null` if
+  /// none are set.
+  PrintOptions? get printOptions => _printOptions;
+
+  set printOptions(PrintOptions? value) {
+    _printOptions = (value == null || value.isEmpty) ? null : value;
+  }
+
+  /// Whether this worksheet has print options configured.
+  bool get hasPrintOptions => _printOptions != null;
+
+  /// Prints (or stops printing) cell gridlines.
+  void setPrintGridLines(bool enabled) {
+    _printOptions =
+        (_printOptions ?? const PrintOptions()).copyWith(gridLines: enabled);
+  }
+
+  /// Prints (or stops printing) row and column headings.
+  void setPrintHeadings(bool enabled) {
+    _printOptions =
+        (_printOptions ?? const PrintOptions()).copyWith(headings: enabled);
+  }
+
+  /// Centers the printed content on the page.
+  void setPrintCentered({bool? horizontally, bool? vertically}) {
+    _printOptions = (_printOptions ?? const PrintOptions()).copyWith(
+      horizontalCentered: horizontally,
+      verticalCentered: vertically,
+    );
+  }
+
+  /// Removes all print options from this sheet.
+  void clearPrintOptions() {
+    _printOptions = null;
+  }
 }
