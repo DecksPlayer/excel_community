@@ -65,21 +65,23 @@ extension SheetDimensions on Sheet {
   ///
   /// returns width of column index
   ///
+  /// Falls back to the sheet default width and, when none was set or parsed,
+  /// to Excel's default column width (8.43).
+  ///
   double getColumnWidth(int columnIndex) {
-    if (_columnWidths.containsKey(columnIndex)) {
-      return _columnWidths[columnIndex]!;
-    }
-    return _defaultColumnWidth!;
+    return _columnWidths[columnIndex] ??
+        _defaultColumnWidth ??
+        _excelDefaultColumnWidth;
   }
 
   ///
   /// returns height of row index
   ///
+  /// Falls back to the sheet default height and, when none was set or parsed,
+  /// to Excel's default row height (15.0).
+  ///
   double getRowHeight(int rowIndex) {
-    if (_rowHeights.containsKey(rowIndex)) {
-      return _rowHeights[rowIndex]!;
-    }
-    return _defaultRowHeight!;
+    return _rowHeights[rowIndex] ?? _defaultRowHeight ?? _excelDefaultRowHeight;
   }
 
   double? get defaultRowHeight => _defaultRowHeight;

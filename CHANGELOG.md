@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2026-10-01
+### Fixed
+- **`Sheet.getColumnWidth()` / `Sheet.getRowHeight()` no longer throw** `Null check operator used on a null value` on sheets without a default width/height (e.g. sheets created with `excel['New sheet']` or decoded from files without `<sheetFormatPr>` defaults). They now fall back to the sheet default and then to Excel's defaults (column width `8.43`, row height `15.0`), the same values already used when saving.
+
 ## [2.4.1] - 2026-09-25
 ### Added
 - **Sheet Tab Colors (`<tabColor>`)**: Full OpenXML/SpreadsheetML support for colored worksheet tabs.
