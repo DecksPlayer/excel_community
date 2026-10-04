@@ -70,6 +70,7 @@ class _WorksheetManager {
       'headerFooter',
       'drawing',
       'pivotTableParts',
+      'tableParts',
     };
 
     for (final event in events) {
@@ -252,6 +253,16 @@ class _WorksheetManager {
     }
     printedTags.add('pivotTableParts');
 
+    // tableParts (rebuilt from the sheet's tables)
+    if (sheetObject._tableRIds.isNotEmpty) {
+      out.write('<tableParts count="${sheetObject._tableRIds.length}">');
+      for (final rId in sheetObject._tableRIds) {
+        out.write('<tablePart r:id="$rId"/>');
+      }
+      out.write('</tableParts>');
+    }
+    printedTags.add('tableParts');
+
     // 10. extLst
     writeOriginal('extLst');
 
@@ -288,7 +299,7 @@ class _WorksheetManager {
         for (final node in root.children) {
           if (node is XmlElement) {
             final local = node.name.local;
-            if (local == 'tabColor') continue;
+            if (local == 'tabColor' || local == 'outlinePr') continue;
             if (local == 'pageSetUpPr') {
               pageSetUpPrName = node.name.qualified;
               pageSetUpPrAttributes.addAll(
@@ -325,8 +336,9 @@ class _WorksheetManager {
     }
 
     // CT_SheetPr child order: tabColor, outlinePr, pageSetUpPr.
+    final outlinePrXml = sheetObject.outlineSettings.toXmlString();
     final childrenXml =
-        tabColorXml + otherChildren.join() + pageSetUpPrXml;
+        tabColorXml + outlinePrXml + otherChildren.join() + pageSetUpPrXml;
 
     if (childrenXml.isEmpty && attributes.isEmpty) return '';
 
@@ -416,20 +428,29 @@ class _WorksheetManager {
   String _buildSheetFormatPrXml(Sheet sheetObject) {
     final defaultRowHeight = sheetObject.defaultRowHeight;
     final defaultColumnWidth = sheetObject.defaultColumnWidth;
+    final rowLevels = sheetObject._rowOutlineLevels.values;
+    final columnLevels = sheetObject._columnOutlineLevels.values;
+    final outlineLevelRow = rowLevels.isEmpty ? 0 : rowLevels.reduce(max);
+    final outlineLevelCol = columnLevels.isEmpty ? 0 : columnLevels.reduce(max);
 
-    if (defaultRowHeight == null && defaultColumnWidth == null) {
+    if (defaultRowHeight == null &&
+        defaultColumnWidth == null &&
+        outlineLevelRow == 0 &&
+        outlineLevelCol == 0) {
       return '';
     }
     final buffer = StringBuffer();
     buffer.write('<sheetFormatPr');
-    if (defaultRowHeight != null) {
-      buffer
-          .write(' defaultRowHeight="${defaultRowHeight.toStringAsFixed(2)}"');
-    }
+    // defaultRowHeight is a required attribute.
+    buffer.write(' defaultRowHeight='
+        '"${(defaultRowHeight ?? _excelDefaultRowHeight).toStringAsFixed(2)}"');
     if (defaultColumnWidth != null) {
       buffer
           .write(' defaultColWidth="${defaultColumnWidth.toStringAsFixed(2)}"');
     }
+    // Excel needs the deepest levels to draw the outline bar.
+    if (outlineLevelRow > 0) buffer.write(' outlineLevelRow="$outlineLevelRow"');
+    if (outlineLevelCol > 0) buffer.write(' outlineLevelCol="$outlineLevelCol"');
     buffer.write('/>');
     return buffer.toString();
   }
@@ -438,15 +459,24 @@ class _WorksheetManager {
     final autoFits = sheetObject.getColumnAutoFits;
     final customWidths = sheetObject.getColumnWidths;
     final hiddenCols = sheetObject.getHiddenColumns;
+    final outlineLevels = sheetObject._columnOutlineLevels;
+    final collapsedCols = sheetObject._collapsedColumns;
 
-    if (customWidths.isEmpty && autoFits.isEmpty && hiddenCols.isEmpty) {
+    if (customWidths.isEmpty &&
+        autoFits.isEmpty &&
+        hiddenCols.isEmpty &&
+        outlineLevels.isEmpty &&
+        collapsedCols.isEmpty) {
       return '';
     }
 
-    final columnCount = max(
-        max(autoFits.isEmpty ? 0 : autoFits.keys.reduce(max) + 1,
-            customWidths.isEmpty ? 0 : customWidths.keys.reduce(max) + 1),
-        hiddenCols.isEmpty ? 0 : hiddenCols.reduce(max) + 1);
+    final columnCount = [
+      if (autoFits.isNotEmpty) autoFits.keys.reduce(max) + 1,
+      if (customWidths.isNotEmpty) customWidths.keys.reduce(max) + 1,
+      if (hiddenCols.isNotEmpty) hiddenCols.reduce(max) + 1,
+      if (outlineLevels.isNotEmpty) outlineLevels.keys.reduce(max) + 1,
+      if (collapsedCols.isNotEmpty) collapsedCols.reduce(max) + 1,
+    ].reduce(max);
 
     final buffer = StringBuffer();
     buffer.write('<cols>');
@@ -469,6 +499,13 @@ class _WorksheetManager {
           '<col min="${index + 1}" max="${index + 1}" width="${width.toStringAsFixed(2)}" bestFit="1" customWidth="1"');
       if (isHidden) {
         buffer.write(' hidden="1"');
+      }
+      final outlineLevel = outlineLevels[index];
+      if (outlineLevel != null) {
+        buffer.write(' outlineLevel="$outlineLevel"');
+      }
+      if (collapsedCols.contains(index)) {
+        buffer.write(' collapsed="1"');
       }
       buffer.write('/>');
     }
@@ -514,17 +551,18 @@ class _WorksheetManager {
       }
     }
 
-    // Collect all rows that need writing: rows with data, hidden rows, and
-    // rows that only have non-origin merged-cell style entries.
-    final Set<int> rowsToWrite = {};
-    for (var i = 0; i < sheetObject._maxRows; i++) {
-      final rowData = sheetObject._sheetData[i];
-      if ((rowData != null && rowData.isNotEmpty) ||
-          hiddenRows.contains(i) ||
-          mergedNonOriginStyles.containsKey(i)) {
-        rowsToWrite.add(i);
-      }
-    }
+    // Collect all rows that need writing: rows with data, rows that only
+    // have non-origin merged-cell style entries, and rows with properties
+    // (height, hidden, outline) even when they hold no values.
+    final Set<int> rowsToWrite = {
+      for (final entry in sheetObject._sheetData.entries)
+        if (entry.value.isNotEmpty) entry.key,
+      ...hiddenRows,
+      ...customHeights.keys,
+      ...mergedNonOriginStyles.keys,
+      ...sheetObject._rowOutlineLevels.keys,
+      ...sheetObject._collapsedRows,
+    };
 
     for (final rowIndex in rowsToWrite.toList()..sort()) {
       final rowData = sheetObject._sheetData[rowIndex];
@@ -537,6 +575,13 @@ class _WorksheetManager {
       }
       if (isRowHidden) {
         buffer.write(' hidden="1"');
+      }
+      final outlineLevel = sheetObject._rowOutlineLevels[rowIndex];
+      if (outlineLevel != null) {
+        buffer.write(' outlineLevel="$outlineLevel"');
+      }
+      if (sheetObject._collapsedRows.contains(rowIndex)) {
+        buffer.write(' collapsed="1"');
       }
       buffer.write('>');
 

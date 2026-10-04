@@ -34,6 +34,15 @@ class Sheet {
   PrintOptions? _printOptions;
   final Map<String, Hyperlink> _hyperlinks = {};
   final Map<String, DataValidation> _dataValidations = {};
+  OutlineSettings? _outlineSettings;
+  Map<int, int> _rowOutlineLevels = {};
+  Map<int, int> _columnOutlineLevels = {};
+  // Summary rows/columns marked collapsed="1".
+  Set<int> _collapsedRows = {};
+  Set<int> _collapsedColumns = {};
+  final List<ExcelTable> _tables = [];
+  // Relationship id of each table part, assigned while saving.
+  final List<String> _tableRIds = [];
   // Relationship id of each external hyperlink, assigned while saving.
   final Map<String, String> _hyperlinkRIds = {};
 
@@ -66,6 +75,12 @@ class Sheet {
             printOptionsVal: oldSheetObject._printOptions,
             hyperlinksVal: oldSheetObject._hyperlinks,
             dataValidationsVal: oldSheetObject._dataValidations,
+            outlineSettingsVal: oldSheetObject._outlineSettings,
+            rowOutlineLevelsVal: oldSheetObject._rowOutlineLevels,
+            columnOutlineLevelsVal: oldSheetObject._columnOutlineLevels,
+            collapsedRowsVal: oldSheetObject._collapsedRows,
+            collapsedColumnsVal: oldSheetObject._collapsedColumns,
+            tablesVal: oldSheetObject._tables,
             drawingRId: oldSheetObject._drawingRId,
             legacyDrawingRId: oldSheetObject._legacyDrawingRId);
 
@@ -97,6 +112,12 @@ class Sheet {
       PrintOptions? printOptionsVal,
       Map<String, Hyperlink>? hyperlinksVal,
       Map<String, DataValidation>? dataValidationsVal,
+      OutlineSettings? outlineSettingsVal,
+      Map<int, int>? rowOutlineLevelsVal,
+      Map<int, int>? columnOutlineLevelsVal,
+      Set<int>? collapsedRowsVal,
+      Set<int>? collapsedColumnsVal,
+      List<ExcelTable>? tablesVal,
       String? drawingRId,
       String? legacyDrawingRId}) {
     _autoFilter = autoFilterVal;
@@ -109,6 +130,22 @@ class Sheet {
     }
     if (dataValidationsVal != null) {
       _dataValidations.addAll(dataValidationsVal);
+    }
+    _outlineSettings = outlineSettingsVal;
+    if (rowOutlineLevelsVal != null) {
+      _rowOutlineLevels = Map<int, int>.from(rowOutlineLevelsVal);
+    }
+    if (columnOutlineLevelsVal != null) {
+      _columnOutlineLevels = Map<int, int>.from(columnOutlineLevelsVal);
+    }
+    if (collapsedRowsVal != null) {
+      _collapsedRows = Set<int>.from(collapsedRowsVal);
+    }
+    if (collapsedColumnsVal != null) {
+      _collapsedColumns = Set<int>.from(collapsedColumnsVal);
+    }
+    if (tablesVal != null) {
+      _tables.addAll(tablesVal);
     }
     _drawingRId = drawingRId;
     _legacyDrawingRId = legacyDrawingRId;
@@ -179,6 +216,25 @@ class Sheet {
       });
     }
     _countRowsAndColumns();
+  }
+
+  /// Moves per-row properties (height, hidden, outline) after inserting or
+  /// removing the row at [index].
+  void _shiftRowProperties(int index, int delta) {
+    _rowHeights = _shiftIndexMap(_rowHeights, index, delta);
+    _hiddenRows = _shiftIndexSet(_hiddenRows, index, delta);
+    _rowOutlineLevels = _shiftIndexMap(_rowOutlineLevels, index, delta);
+    _collapsedRows = _shiftIndexSet(_collapsedRows, index, delta);
+  }
+
+  /// Moves per-column properties (width, auto-fit, hidden, outline) after
+  /// inserting or removing the column at [index].
+  void _shiftColumnProperties(int index, int delta) {
+    _columnWidths = _shiftIndexMap(_columnWidths, index, delta);
+    _columnAutoFit = _shiftIndexMap(_columnAutoFit, index, delta);
+    _hiddenColumns = _shiftIndexSet(_hiddenColumns, index, delta);
+    _columnOutlineLevels = _shiftIndexMap(_columnOutlineLevels, index, delta);
+    _collapsedColumns = _shiftIndexSet(_collapsedColumns, index, delta);
   }
 
   void _removeCell(int rowIndex, int columnIndex) {

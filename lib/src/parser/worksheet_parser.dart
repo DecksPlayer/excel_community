@@ -102,6 +102,18 @@ class _WorksheetParser {
             indexed: indexed,
             auto: auto,
           );
+        } else if (tagName == 'outlinePr' || tagName.endsWith(':outlinePr')) {
+          bool flag(String name, bool fallback) {
+            final value = _getAttr(event, name);
+            return value == null ? fallback : (value == '1' || value == 'true');
+          }
+
+          sheetObject.outlineSettings = OutlineSettings(
+            summaryBelow: flag('summaryBelow', true),
+            summaryRight: flag('summaryRight', true),
+            showOutlineSymbols: flag('showOutlineSymbols', true),
+            applyStyles: flag('applyStyles', false),
+          );
         } else if (tagName == 'pageSetUpPr' ||
             tagName.endsWith(':pageSetUpPr')) {
           fitToPage = _parseBoolAttr(event, 'fitToPage');
@@ -134,12 +146,19 @@ class _WorksheetParser {
             (tagName == 'formula1' || tagName == 'formula2')) {
           validationFormula = tagName;
           validationFormulas[tagName] = StringBuffer();
+        } else if (tagName == 'tablePart' || tagName.endsWith(':tablePart')) {
+          final rId = _getAttr(event, 'id');
+          if (rId != null) {
+            relationshipTargets ??= _relationshipTargets(path);
+            final target = relationshipTargets[rId];
+            if (target != null) _addParsedTable(sheetObject, path, target);
+          }
         } else if (tagName == 'hyperlink' || tagName.endsWith(':hyperlink')) {
           final ref = _getAttr(event, 'ref');
           final rId = _getAttr(event, 'id');
           String? url;
           if (rId != null) {
-            relationshipTargets ??= _externalRelationshipTargets(path);
+            relationshipTargets ??= _relationshipTargets(path);
             url = relationshipTargets[rId];
           }
           final location = _getAttr(event, 'location');
@@ -188,6 +207,8 @@ class _WorksheetParser {
           final width = double.tryParse(_getAttr(event, 'width') ?? '');
           final hiddenVal = _getAttr(event, 'hidden');
           final isHidden = hiddenVal == '1' || hiddenVal == 'true';
+          final outlineLevel = int.tryParse(_getAttr(event, 'outlineLevel') ?? '') ?? 0;
+          final isCollapsed = _parseBoolAttr(event, 'collapsed') ?? false;
           if (min != null) {
             final end = maxVal ?? min;
             for (int col = min; col <= end; col++) {
@@ -198,6 +219,13 @@ class _WorksheetParser {
                 }
                 if (isHidden) {
                   sheetObject._hiddenColumns.add(zeroBasedCol);
+                }
+                if (outlineLevel > 0) {
+                  sheetObject._columnOutlineLevels[zeroBasedCol] =
+                      outlineLevel.clamp(1, _maxOutlineLevel);
+                }
+                if (isCollapsed) {
+                  sheetObject._collapsedColumns.add(zeroBasedCol);
                 }
               }
             }
@@ -215,6 +243,15 @@ class _WorksheetParser {
               }
               if (isHidden) {
                 sheetObject._hiddenRows.add(currentWorksheetRowIndex);
+              }
+              final outlineLevel =
+                  int.tryParse(_getAttr(event, 'outlineLevel') ?? '') ?? 0;
+              if (outlineLevel > 0) {
+                sheetObject._rowOutlineLevels[currentWorksheetRowIndex] =
+                    outlineLevel.clamp(1, _maxOutlineLevel);
+              }
+              if (_parseBoolAttr(event, 'collapsed') ?? false) {
+                sheetObject._collapsedRows.add(currentWorksheetRowIndex);
               }
             }
           }
@@ -484,8 +521,36 @@ class _WorksheetParser {
     }
   }
 
+  /// Reads the table part [target] (relative to the worksheet) into
+  /// [sheetObject].
+  void _addParsedTable(Sheet sheetObject, String worksheetPath, String target) {
+    var partPath = target;
+    if (partPath.startsWith('/')) {
+      partPath = partPath.substring(1);
+    } else {
+      final segments = worksheetPath.split('/')..removeLast();
+      for (final part in target.split('/')) {
+        if (part == '..') {
+          if (segments.isNotEmpty) segments.removeLast();
+        } else if (part != '.') {
+          segments.add(part);
+        }
+      }
+      partPath = segments.join('/');
+    }
+    final file = _excel._archive.findFile(partPath);
+    if (file == null) return;
+    try {
+      file.decompress();
+      final table = ExcelTable._fromXml(XmlDocument.parse(utf8.decode(file.content)));
+      if (table != null) sheetObject._tables.add(table);
+    } catch (_) {
+      // Ignore unreadable table parts.
+    }
+  }
+
   /// Targets of the worksheet's relationships (`.rels`), keyed by id.
-  Map<String, String> _externalRelationshipTargets(String worksheetPath) {
+  Map<String, String> _relationshipTargets(String worksheetPath) {
     final slash = worksheetPath.lastIndexOf('/');
     final relsPath = '${worksheetPath.substring(0, slash)}/_rels/'
         '${worksheetPath.substring(slash + 1)}.rels';

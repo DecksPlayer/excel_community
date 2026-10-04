@@ -80,7 +80,13 @@ class Excel {
 
   /// Creates a new, empty Excel file with a single sheet named 'Sheet1'.
   factory Excel.createExcel() {
-    return Excel.decodeBytes(Base64Decoder().convert(_newSheet));
+    final excel = Excel.decodeBytes(Base64Decoder().convert(_newSheet));
+    // The template's Sheet1 puts summary rows above groups; start new
+    // workbooks with Excel's defaults like every other new sheet.
+    for (final sheet in excel._sheetMap.values) {
+      sheet._outlineSettings = null;
+    }
+    return excel;
   }
 
   /// Decodes an Excel file from a list of bytes.
@@ -579,6 +585,9 @@ class Excel {
             s.images.isEmpty &&
             !s.hasHyperlinks &&
             !s.hasDataValidations &&
+            s._rowOutlineLevels.isEmpty &&
+            s._columnOutlineLevels.isEmpty &&
+            s._tables.isEmpty &&
             !s.hasTabColor &&
             !s.hasAutoFilter &&
             !s.hasPageSetup &&

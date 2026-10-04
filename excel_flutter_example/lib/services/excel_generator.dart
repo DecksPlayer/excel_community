@@ -22,6 +22,8 @@ import 'helpers/page_setup_helper.dart';
 import 'helpers/data_export_helper.dart';
 import 'helpers/hyperlinks_helper.dart';
 import 'helpers/data_validation_helper.dart';
+import 'helpers/grouping_helper.dart';
+import 'helpers/tables_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -96,4 +98,10 @@ class ExcelGenerator {
 
   static Future<String> generateDataValidation() =>
       generateDataValidationHelper();
+
+  static Future<String> generateGrouping() =>
+      generateGroupingHelper();
+
+  static Future<String> generateTables() =>
+      generateTablesHelper();
 }

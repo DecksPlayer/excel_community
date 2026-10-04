@@ -14,9 +14,11 @@ import 'widgets/preview_card.dart';
 import 'widgets/data_export_view.dart';
 import 'widgets/data_validation_view.dart';
 import 'widgets/fonts_styles_view.dart';
+import 'widgets/grouping_view.dart';
 import 'widgets/hyperlinks_view.dart';
 import 'widgets/number_formats_view.dart';
 import 'widgets/page_setup_view.dart';
+import 'widgets/tables_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -185,6 +187,12 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.dataValidation:
           resultStatus = await ExcelGenerator.generateDataValidation();
           break;
+        case SelectedSection.grouping:
+          resultStatus = await ExcelGenerator.generateGrouping();
+          break;
+        case SelectedSection.tables:
+          resultStatus = await ExcelGenerator.generateTables();
+          break;
       }
       setState(() {
         _status = resultStatus;
@@ -283,6 +291,18 @@ class _MyHomePageState extends State<MyHomePage> {
                     )
                   else if (_selectedSection == SelectedSection.numberFormats)
                     NumberFormatsView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.tables)
+                    TablesView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.grouping)
+                    GroupingView(
                       isGenerating: _isGenerating,
                       onGenerate: _handleGeneration,
                       status: _status,

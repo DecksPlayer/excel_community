@@ -26,3 +26,5 @@ export 'snippets/page_setup.dart';
 export 'snippets/data_export.dart';
 export 'snippets/hyperlinks.dart';
 export 'snippets/data_validation.dart';
+export 'snippets/grouping.dart';
+export 'snippets/tables.dart';

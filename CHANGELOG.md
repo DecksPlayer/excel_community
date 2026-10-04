@@ -5,52 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.5.0] - 2026-10-03
+## [2.5.1] - 2026-10-04
 ### Added
-- **Page Setup & Print Configuration (`<pageSetup>`)**: OpenXML/SpreadsheetML support for worksheet print settings.
-  - **`PageSetup` Model**: Orientation (`PageOrientation`), paper size (`PaperSize`), custom `paperWidth`/`paperHeight`, `scale`, fit-to-page (`fitToPage`, `fitToWidth`, `fitToHeight`), `firstPageNumber`/`useFirstPageNumber`, `pageOrder`, `blackAndWhite`, `draft`, `cellComments`, `errors`, `horizontalDpi`/`verticalDpi`, `copies` and `usePrinterDefaults`. Only explicitly set attributes are written.
-  - **`PaperSize`**: Named constants for common sizes (`letter`, `legal`, `tabloid`, `a3`, `a4`, `a5`, `b4`, `b5`, envelopes, ...) with millimetre dimensions; any other code is kept via `PaperSize.fromCode`.
-  - **`PageMargins`**: `<pageMargins>` in inches with `normal`, `wide` and `narrow` presets, `PageMargins.all()` and `PageMargins.fromCentimeters()`.
-  - **`PrintOptions`**: `<printOptions>` for gridlines, row/column headings and horizontal/vertical centering.
-  - **Sheet API**: `sheet.pageSetup`, `sheet.setPageOrientation()`, `sheet.setPaperSize()`, `sheet.setPrintScale()`, `sheet.fitToPages(width:, height:)`, `sheet.clearPageSetup()` / `removePageSetup()`, `sheet.hasPageSetup`, `sheet.pageMargins`, `sheet.clearPageMargins()`, `sheet.printOptions`, `sheet.setPrintGridLines()`, `sheet.setPrintHeadings()`, `sheet.setPrintCentered()`, `sheet.clearPrintOptions()`, `sheet.hasPrintOptions`.
-  - **Interactive Flutter Example**: Added a "Page Setup & Printing" wiki to `excel_flutter_example`: every paper size drawn to scale with a portrait/landscape toggle and search, plus Orientation & Scaling, Margins and Print Options tabs. Each card shows a live page preview and its own snippet. The generated workbook contains an overview plus one worksheet per paper size.
-  - **Parsing & Preservation**: The SAX worksheet parser reads `<pageSetup>`, `<pageMargins>`, `<printOptions>` and `<sheetPr><pageSetUpPr fitToPage>`. On save, the printer settings `r:id` and the `autoPageBreaks` flag are preserved, and elements are written in CT_Worksheet / CT_SheetPr schema order. Settings are kept when copying or renaming sheets.
-- **Data Export & Transformation (`rowsAsMaps`, `toJson`, `toCsv`)**: Convert worksheet data to Dart collections, JSON or CSV, and import rows from maps.
-  - **`sheet.rowsAsMaps()`**: One map per row keyed by the header row (`headerRow`, default `0`). Empty headers are named by column letter and repeated headers get a numeric suffix (`Name_2`); empty rows are skipped by default (`skipEmptyRows`).
-  - **`ExportValueMode`**: `typed` returns native Dart values (`String`, `int`, `double`, `bool`, `DateTime` (UTC) for dates, `Duration` for times, the cached value for formulas); `displayText` returns the text Excel shows with the cell's number format.
-  - **`sheet.rowsAsValues()`**: The whole grid as a list of value lists, header included.
-  - **`sheet.toJson()`** / **`excel.toJson()`** / **`excel.toMaps()`**: JSON array of objects per sheet (or an object keyed by sheet name for the workbook), with dates as `YYYY-MM-DD`, date-times as ISO 8601 and times as `HH:MM:SS`; optional `indent` for pretty printing.
-  - **`sheet.toCsv()`**: RFC 4180 CSV with configurable `separator` and `lineTerminator`; cells are written as displayed by default.
-  - **`sheet.appendRowsFromMaps()`**: Writes maps as rows, adding the header row on an empty sheet, matching existing headers and appending new columns for unknown keys. `DateTime` values without a time become date cells and `Duration` values become time cells.
-- **Data Validation & Dropdowns (`<dataValidation>`)**: Read, write and edit validation rules.
-  - **`DataValidation` Model**: `DataValidationType` (list, whole number, decimal, date, time, text length, custom, any), `DataValidationOperator` (between, notBetween, equal, notEqual, lessThan(OrEqual), greaterThan(OrEqual)), input message (`promptTitle`/`prompt`), error message (`errorTitle`/`error`) and `DataValidationErrorStyle` (stop, warning, information), plus `allowBlank` and `showDropdown`.
-  - **Factories**: `DataValidation.list([...])` (validated against Excel's comma/quote and 255-character limits), `listFromRange('A1:A10', sheetName:)` (absolute, quoted references), `wholeNumber`, `decimal`, `date` (Excel serial dates), `time`, `textLength`, `custom('formula')` and `inputMessage`; builders `withPrompt()` and `withError()`.
-  - **`accepts(CellValue)`**: Evaluates a rule in Dart (case-insensitive list matching, number/date/time/length comparisons, blanks); returns `null` for formula or range based rules.
-  - **Sheet API**: `sheet.addDataValidation(range, rule)` (one or several space-separated ranges), `setDataValidation(cell, rule)`, `getDataValidation`, `removeDataValidation(range)`, `clearDataValidations`, `dataValidations`, `hasDataValidations`, and `cell.dataValidation` getter/setter. Since a cell has one validation, a new rule's area is subtracted from overlapping rules (split into rectangles).
-  - **Parsing & Preservation**: `<dataValidations>` are read with the SAX parser and written in schema order; Excel 2010 `x14:dataValidation` rules inside `<extLst>` are kept untouched. Rules move with their cells on row/column inserts and removals.
-- **Cell Hyperlinks (`<hyperlinks>`)**: Read, write and edit hyperlinks on cells and ranges.
-  - **`Hyperlink` Model**: External `url` (web pages, `mailto:` addresses, files) and/or internal `location` (cells, ranges, defined names) with `tooltip` and `display`. Factories `Hyperlink.url()`, `Hyperlink.email(subject:)`, `Hyperlink.cell(sheet, ref)` (quotes sheet names when needed) and `Hyperlink.location()`.
-  - **Sheet API**: `sheet.setHyperlink(cell, link, text:, styled:)`, `sheet.setHyperlinkRange('A1:C1', link)`, `sheet.getHyperlink()`, `sheet.removeHyperlink()`, `sheet.clearHyperlinks()`, `sheet.hyperlinks`, `sheet.hasHyperlinks`, and `cell.hyperlink` getter/setter. Empty cells get the link text, and new links use Excel's hyperlink look (blue, underlined) unless `styled: false`.
-  - **Relationships**: External targets are written to the worksheet `.rels` with `TargetMode="External"`; on re-save, hyperlink relationships are rebuilt while every other relationship is kept.
-  - **Row/column edits**: Links move with their cells on `insertRow`, `removeRow`, `insertColumn` and `removeColumn` (links on a removed row/column are dropped, ranges shrink or grow).
-- **Example App - Interactive Wikis**: The Fonts & Styles, Number Formats and Page Setup sections of `excel_flutter_example` share one wiki layout (`widgets/wiki/wiki_components.dart`): header with the generate button, tabs, search and a grid of cards, each with a live preview and its own copyable code snippet.
-  - **Number Formats Wiki**: All built-in number formats (IDs 0-49, except the reserved 23-26) plus common custom codes (phone template, thousands/millions scaling, currency and unit suffixes, custom dates), grouped into Numbers, Currency & Accounting, Percent & Scientific, Date & Time, CJK Locale and Custom tabs, with search across categories. Previews are rendered by `NumFormat.format()` and show `[Red]`/`[Blue]` section colors. The demo workbook has one worksheet per category with the formatted cell next to the output Excel shows.
-  - **Fonts & Styles Wiki**: Migrated to the shared layout with no visual changes.
-  - **Data Validation Wiki**: Dropdown, number/date/time and text/custom examples rendering the cell's dropdown and input message, with sample values checked live by `accepts()`. The demo workbook has a "Tasks" sheet with 11 validated columns and a "Lookup Lists" source sheet.
-  - **Hyperlinks Wiki**: External, internal and management examples; each card runs its snippet, saves and reopens the workbook, and shows the resulting cell and links. The demo workbook links between a "Links" sheet and a "Q1 Sales" sheet.
-  - **Data Export Wiki**: Export and Import tabs that run `rowsAsMaps`, `rowsAsValues`, `toJson`, `toCsv` and `appendRowsFromMaps` on a sample workbook and show the live output next to each snippet. The demo workbook includes the JSON and CSV exports and a sheet imported from JSON.
+- **Excel Tables**: `sheet.addTable()`, `getTable`, `updateTable`, `removeTable`, `tableRowsAsMaps` and `appendTableRow`, with the 60 built-in table styles, totals row and structured references. Tables are read, saved and moved with row/column inserts and removals.
+- **Row & Column Grouping**: `sheet.groupRows()` / `groupColumns()` (up to 7 levels), ungroup, collapse/expand, `rowGroups` / `columnGroups` and `OutlineSettings`.
+- **Example App**: Tables and Grouping wikis.
 
 ### Fixed
-- **Worksheet relationships of reopened files**: Saving a file read from disk no longer rewrites a worksheet's `.rels` from scratch. Previously, adding a comment, image, chart or pivot table to a reopened file dropped the sheet's existing relationships (e.g. its drawing), leaving `<drawing r:id>` pointing at the wrong part, which Excel reports as a corrupted file. Existing `.rels` and drawing parts are now loaded and extended, new relationship ids never collide (`rIdN` = highest + 1), and new drawings, charts (`xl/charts/chartN.xml`) and media (`xl/media/imageN.*`) are numbered after the ones in the original file instead of overwriting them.
-- **Default sheet renaming**: A `Sheet1` that only contains images, hyperlinks or data validations is no longer renamed when another sheet is first accessed.
-- **Boolean display text**: `Data.displayText` / `NumFormat.format()` now render booleans as `TRUE` / `FALSE` (as Excel does) instead of `1` / `0`.
-- **`NumFormat.format()` / `Data.displayText` number format rendering** now matches Excel for codes that were previously rendered incorrectly:
-  - **Fractions** (`# ?/?`, `# ??/??`, `?/?`, `# ?/8`): closest fraction for the denominator digits (or the fixed denominator), Excel-style padding, blank fraction for whole numbers. Before: `1235 ?/?`; now: `1234 4/7`.
-  - **Engineering notation** (`##0.0E+0`): exponent in multiples of three (`123.5E+6`). Scientific notation no longer renders `10.00E+00` when rounding carries (`9.999` -> `1.00E+01`).
-  - **Digit templates and scaling**: literals between placeholders keep their position (`000-000-0000` -> `555-123-4567`), trailing commas scale by thousands (`#,##0,"K"` -> `1,235K`, `0.0,,"M"` -> `12.3M`), and `?` placeholders pad with spaces, so accounting zero sections (`"-"??`) render a dash instead of `-??`.
-  - **CJK dates and times**: `e` renders the era year for the locale tag (`[$-404]` Republic of China year, `[$-411]` Japanese era year; otherwise the Gregorian year). `上午/下午` and `午前/午後` work as AM/PM designators, and `AM/PM` is localized for zh, ja and ko locale tags (`115/10/3 2:30 下午`, `下午2時30分`).
-  - **Fractions of a second** (`ss.0`, `ss.00`, `ss.000`) render the milliseconds, and elapsed-time codes (`[h]`, `[mm]`, `[ss]`) count from Excel's day zero for date values and include the hours in `[mm]`/`[ss]`.
-- **Example App - Sidebar**: Menu items no longer throw "ListTile background color or ink splashes may be invisible" on every build. Each item now paints its selected background and tap ripple on its own `Material`.
+- Excel no longer reports a modified Excel-saved file as damaged: the stale `xl/calcChain.xml` is dropped on save (Excel rebuilds it).
+- `insertRow` / `removeRow` / `insertColumn` / `removeColumn` now move row heights, column widths and hidden flags, also on empty rows/columns.
+- Heights of empty rows are saved, and `<sheetFormatPr>` always has `defaultRowHeight`.
+- `Excel.createExcel()` uses Excel's default outline settings on `Sheet1`.
+- Number formats now match Excel in more cases: fractions (`0.3` with `?/?` is `1/3`), rounded seconds, no `-0.00`, Japanese eras only with `[$-411]`, and built-in format 47 is `mm:ss.0`.
+- `.xls` files with 4096-byte sectors are read correctly.
+
+## [2.5.0] - 2026-10-03
+### Added
+- **Page Setup & Printing**: `PageSetup` (orientation, paper size, scale, fit to pages), `PageMargins` and `PrintOptions` (gridlines, headings, centering) via `sheet.setPageOrientation()`, `setPaperSize()`, `fitToPages()` and more.
+- **Data Export**: `sheet.rowsAsMaps()`, `rowsAsValues()`, `toJson()`, `toCsv()`, `excel.toJson()` and `appendRowsFromMaps()`.
+- **Data Validation & Dropdowns**: `DataValidation` (list, numbers, dates, times, text length, custom formula) with input/error messages, `sheet.addDataValidation()` and `accepts()` to check values in Dart.
+- **Hyperlinks**: web, email and in-workbook links with `sheet.setHyperlink()` and `cell.hyperlink`.
+- **Example App**: new wiki layout with live previews and snippets for Fonts & Styles, Number Formats, Page Setup, Data Validation, Hyperlinks and Data Export.
+
+### Fixed
+- Adding comments, images, charts or pivot tables to a reopened file no longer breaks its existing relationships.
+- Booleans display as `TRUE` / `FALSE`.
+- Better number format rendering: fractions, engineering notation, digit templates, thousands scaling, CJK dates and fractions of a second.
+- Example app sidebar no longer throws the `ListTile` background warning.
 
 ## [2.4.2] - 2026-10-01
 ### Fixed

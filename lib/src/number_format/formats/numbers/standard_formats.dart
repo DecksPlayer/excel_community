@@ -191,8 +191,9 @@ class StandardFormats {
       StandardTimeNumFormat._(numFmtId: 45, formatCode: 'mm:ss');
   static const standard_46 =
       StandardTimeNumFormat._(numFmtId: 46, formatCode: '[h]:mm:ss');
+  // ECMA-376 lists "mmss.0", but Excel displays built-in 47 as "mm:ss.0".
   static const standard_47 =
-      StandardTimeNumFormat._(numFmtId: 47, formatCode: 'mmss.0');
+      StandardTimeNumFormat._(numFmtId: 47, formatCode: 'mm:ss.0');
 
   // --- Numeric / Text (48–49) ---
   static const standard_48 = StandardNumericNumFormat._(

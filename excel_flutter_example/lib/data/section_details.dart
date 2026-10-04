@@ -526,5 +526,33 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: dataValidationSnippet,
       );
+    case SelectedSection.grouping:
+      return SectionDetail(
+        title: 'Row & Column Grouping',
+        description: 'Nested, collapsible row and column groups like Excel\'s Data > Group.',
+        icon: Icons.account_tree_outlined,
+        themeColor: const Color(0xFFEA580C),
+        highlights: [
+          'sheet.groupRows(start, end, collapsed:) and sheet.groupColumns(...)',
+          'Up to 7 nested levels; expanding keeps collapsed inner groups',
+          'OutlineSettings for summary rows above/below and columns left/right',
+          'Groups move with inserted or removed rows and columns',
+        ],
+        codeSnippet: groupingSnippet,
+      );
+    case SelectedSection.tables:
+      return SectionDetail(
+        title: 'Excel Tables (<tableParts>)',
+        description: '"Format as Table" with built-in styles, totals rows and structured references.',
+        icon: Icons.table_chart_outlined,
+        themeColor: const Color(0xFF2563EB),
+        highlights: [
+          'sheet.addTable(range, name:, style:, showTotalsRow:, columns:)',
+          '60 built-in styles: TableStyle.light / medium / dark',
+          'Totals row labels and SUBTOTAL formulas filled in automatically',
+          'tableRowsAsMaps, appendTableRow and structured references',
+        ],
+        codeSnippet: tablesSnippet,
+      );
   }
 }

@@ -4,6 +4,7 @@ Archive _cloneArchive(
   Archive archive,
   Map<String, ArchiveFile> _archiveFiles, {
   String? excludedFile,
+  Set<String> excludedFiles = const {},
 }) {
   var clone = Archive();
   archive.files.forEach((file) {
@@ -12,6 +13,8 @@ Archive _cloneArchive(
           file.name.toLowerCase() == excludedFile.toLowerCase()) {
         return;
       }
+      // Parts dropped during save; a replacement (if any) is added below.
+      if (excludedFiles.contains(file.name)) return;
       ArchiveFile copy;
       if (_archiveFiles.containsKey(file.name)) {
         copy = _archiveFiles[file.name]!;

@@ -260,6 +260,20 @@ class Sidebar extends StatelessWidget {
               ),
               _buildSidebarItem(
                 context,
+                SelectedSection.grouping,
+                'Row & Column Grouping',
+                Icons.account_tree_outlined,
+                const Color(0xFFEA580C),
+              ),
+              _buildSidebarItem(
+                context,
+                SelectedSection.tables,
+                'Excel Tables (<tableParts>)',
+                Icons.table_chart_outlined,
+                const Color(0xFF2563EB),
+              ),
+              _buildSidebarItem(
+                context,
                 SelectedSection.cellLocking,
                 'Sheet Protection & Locks',
                 Icons.lock_outline,

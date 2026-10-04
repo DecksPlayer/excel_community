@@ -7,6 +7,9 @@ class Save {
   /// Binary (non-XML) files to include in the archive, e.g. images.
   final Map<String, List<int>> _binaryFiles = {};
   final List<CellStyle> _innerCellStyle = [];
+
+  /// Parts of the original file left out of the saved archive.
+  final Set<String> _excludedParts = {};
   final Parser parser;
   late final _ChartManager _chartManager;
   late final _ImageManager _imageManager;
@@ -16,6 +19,7 @@ class Save {
   late final _WorkbookManager _workbookManager;
   late final _CommentManager _commentManager;
   late final _HyperlinkManager _hyperlinkManager;
+  late final _TableManager _tableManager;
 
   Save._(this._excel, this.parser) {
     _chartManager = _ChartManager(_excel, this);
@@ -26,6 +30,7 @@ class Save {
     _workbookManager = _WorkbookManager(_excel);
     _commentManager = _CommentManager(_excel, this);
     _hyperlinkManager = _HyperlinkManager(_excel, this);
+    _tableManager = _TableManager(_excel, this);
   }
 
   List<int>? _save() {
@@ -34,6 +39,11 @@ class Save {
         parser._createSheet(sheetName);
       }
     });
+
+    _dropCalcChain();
+
+    // Writes table header/totals cells, so it runs before styles.
+    _tableManager.syncTables();
 
     if (_excel._styleChanges) {
       _styleManager.processStylesFile();
@@ -44,6 +54,7 @@ class Save {
     _pivotTableManager.processPivotTables();
     _commentManager.processComments();
     _hyperlinkManager.processHyperlinks();
+    _tableManager.processTables();
 
     _worksheetManager.setSheetElements();
 
@@ -81,7 +92,8 @@ class Save {
           ArchiveFile(entry.key, entry.value.length, entry.value);
     }
 
-    return ZipEncoder().encode(_cloneArchive(_excel._archive, _archiveFiles));
+    return ZipEncoder().encode(_cloneArchive(_excel._archive, _archiveFiles,
+        excludedFiles: _excludedParts));
   }
 
   _BorderSet _createBorderSetFromCellStyle(CellStyle cellStyle) => _BorderSet(
@@ -93,6 +105,31 @@ class Save {
         diagonalBorderUp: cellStyle.diagonalBorderUp,
         diagonalBorderDown: cellStyle.diagonalBorderDown,
       );
+
+  /// Leaves out Excel's calculation chain (`xl/calcChain.xml`).
+  ///
+  /// It lists formula cells by position, so inserting or removing rows,
+  /// moving tables or replacing formulas makes it stale, and Excel then
+  /// reports the file as damaged. Excel rebuilds it when it is missing.
+  void _dropCalcChain() {
+    const relType =
+        'http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain';
+    final rels = _excel._xmlFiles['xl/_rels/workbook.xml.rels'];
+    final removed = <XmlElement>[];
+    for (final rel in rels?.findAllElements('Relationship') ?? const <XmlElement>[]) {
+      if (rel.getAttribute('Type') != relType) continue;
+      removed.add(rel);
+      final target = rel.getAttribute('Target') ?? 'calcChain.xml';
+      final path = target.startsWith('/') ? target.substring(1) : 'xl/$target';
+      _excludedParts.add(path);
+      _excel._xmlFiles.remove(path);
+      _excel._xmlFiles['[Content_Types].xml']?.rootElement.children.removeWhere((node) =>
+          node is XmlElement && node.getAttribute('PartName') == '/$path');
+    }
+    for (final rel in removed) {
+      rel.parent?.children.remove(rel);
+    }
+  }
 
   /// Returns the XML part at [path]: the copy already loaded or created
   /// during this save, otherwise the part parsed from the original file

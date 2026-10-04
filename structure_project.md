@@ -32,6 +32,8 @@ excel_community/
 │   │   │   ├── code_snippets.dart         # Snippet lookup registry for UI view
 │   │   │   ├── data_export_samples.dart   # Sample workbook + JSON for the Data Export wiki
 │   │   │   ├── data_validation_samples.dart # Data validation wiki rules and sample values
+│   │   │   ├── grouping_samples.dart      # Grouping wiki sheets (interactive previews)
+│   │   │   ├── table_samples.dart         # Table styles list and table wiki examples
 │   │   │   ├── hyperlink_samples.dart     # Hyperlink wiki examples (run, saved and reopened)
 │   │   │   ├── number_format_catalog.dart # Number formats + expected Excel output (wiki & demo workbook)
 │   │   │   ├── section_details.dart       # Showcase section catalog & descriptions
@@ -51,7 +53,9 @@ excel_community/
 │   │   │       ├── page_setup.dart
 │   │   │       ├── data_export.dart
 │   │   │       ├── hyperlinks.dart
-│   │   │       └── data_validation.dart
+│   │   │       ├── data_validation.dart
+│   │   │       ├── grouping.dart
+│   │   │       └── tables.dart
 │   │   ├── models/
 │   │   │   └── section_detail.dart        # Section detail data model
 │   │   ├── services/
@@ -63,6 +67,7 @@ excel_community/
 │   │   │       ├── conditional_formatting_helper.dart
 │   │   │       ├── data_export_helper.dart
 │   │   │       ├── data_validation_helper.dart
+│   │   │       ├── grouping_helper.dart
 │   │   │       ├── hyperlinks_helper.dart
 │   │   │       ├── formulas_display_text_helper.dart
 │   │   │       ├── full_demo_helper.dart
@@ -75,6 +80,7 @@ excel_community/
 │   │   │       ├── simple_helper.dart
 │   │   │       ├── page_setup_helper.dart
 │   │   │       ├── styles_helper.dart
+│   │   │       ├── tables_helper.dart
 │   │   │       └── tab_color_helper.dart
 │   │   ├── widgets/                       # Flutter UI presentation widgets
 │   │   │   ├── about_view.dart
@@ -82,6 +88,7 @@ excel_community/
 │   │   │   ├── data_export_view.dart
 │   │   │   ├── data_validation_view.dart
 │   │   │   ├── fonts_styles_view.dart
+│   │   │   ├── grouping_view.dart
 │   │   │   ├── header_card.dart
 │   │   │   ├── hyperlinks_view.dart
 │   │   │   ├── number_formats_view.dart
@@ -89,6 +96,7 @@ excel_community/
 │   │   │   ├── preview_card.dart
 │   │   │   ├── sidebar.dart
 │   │   │   ├── spreadsheet_preview.dart
+│   │   │   ├── tables_view.dart
 │   │   │   └── wiki/
 │   │   │       └── wiki_components.dart   # Shared wiki layout: header, tabs, search, grid, cards
 │   │   └── main.dart                      # Flutter app entry point
@@ -124,6 +132,8 @@ excel_community/
 │       │   │   └── comment_manager.dart   # VML drawing & comment XML serializer
 │       │   ├── hyperlinks/
 │       │   │   └── hyperlink_manager.dart # External hyperlink relationships (TargetMode=External)
+│       │   ├── tables/
+│       │   │   └── table_manager.dart     # xl/tables/tableN.xml parts, relationships & content types
 │       │   ├── images/
 │       │   │   └── image_manager.dart     # Drawing XML image anchor & media manager
 │       │   ├── pivot_table/
@@ -169,6 +179,8 @@ excel_community/
 │       │   ├── sheet_export.dart          # SheetExport/ExcelExport: rowsAsMaps, toJson, toCsv, appendRowsFromMaps
 │       │   ├── hyperlink.dart             # Hyperlink model, SheetHyperlinks & DataHyperlink APIs
 │       │   ├── data_validation.dart       # DataValidation model, SheetDataValidations & DataDataValidation APIs
+│       │   ├── sheet_grouping.dart        # OutlineSettings, OutlineGroup & SheetGrouping (row/column groups)
+│       │   ├── excel_table.dart           # ExcelTable, TableColumn, TableStyle & SheetTables (Excel tables)
 │       │   ├── sheet_protection.dart      # SheetProtection & password hashing
 │       │   └── sheet_spans.dart           # SheetSpans extension (merge, unMerge)
 │       ├── utilities/                     # Shared helpers, colors, enums, builders
@@ -288,6 +300,17 @@ excel_community/
 - **`PageMargins`**: `<pageMargins>` in inches with Excel's `normal`, `wide` and `narrow` presets and a `fromCentimeters` factory.
 - **`PrintOptions`**: `<printOptions>` flags for gridlines, headings and horizontal/vertical centering.
 - **`PageOrientation`**, **`PageOrder`**, **`PrintCellComments`**, **`PrintErrors`** (`enum`s): OpenXML enumerations for the corresponding `<pageSetup>` attributes.
+
+#### [`lib/src/sheet/excel_table.dart`](lib/src/sheet/excel_table.dart)
+- **`ExcelTable`**: An Excel table (`xl/tables/tableN.xml`): `name`, `ref`, `columns`, `style`, header/totals rows, row/column stripes, first/last column emphasis and filter buttons; `columnReference()` builds structured references (`Sales[Revenue]`).
+- **`TableColumn`**: Column name, `totalsFunction` (`TableTotalsFunction`), `totalsLabel`, `totalsRowFormula` and `calculatedColumnFormula`.
+- **`TableStyle`**: Built-in styles (`light(1-21)`, `medium(1-28)`, `dark(1-11)`, `medium2` default) or `TableStyle.named`.
+- **`SheetTables`** (`extension` on `Sheet`): `addTable` (validates names, overlaps with tables, merged cells and the sheet AutoFilter; derives columns from the header row), `tables`, `getTable`, `tableAt`, `updateTable`, `removeTable`, `tableRowsAsMaps`, `appendTableRow`. Header and totals cells are kept in sync with the table definition, and tables shift/resize with row and column edits.
+
+#### [`lib/src/sheet/sheet_grouping.dart`](lib/src/sheet/sheet_grouping.dart)
+- **`OutlineSettings`**: `<sheetPr><outlinePr>` options: `summaryBelow`, `summaryRight`, `showOutlineSymbols`, `applyStyles` (defaults match Excel and are not written).
+- **`OutlineGroup`**: A run of grouped rows/columns (`start`, `end`, `level`, `collapsed`), computed from the outline levels.
+- **`SheetGrouping`** (`extension` on `Sheet`): `groupRows`/`groupColumns` (nesting up to 7 levels, optional `collapsed`), `ungroupRows`/`ungroupColumns`, `collapseRowGroup`/`expandRowGroup` and column equivalents (expanding keeps collapsed nested groups hidden), `rowGroups`/`columnGroups`, `get/setRowOutlineLevel`, `get/setColumnOutlineLevel`, `clearGrouping`, `outlineSettings`. Writes `outlineLevel`/`collapsed` on `<row>`/`<col>` and `outlineLevelRow`/`outlineLevelCol` on `<sheetFormatPr>`.
 
 #### [`lib/src/sheet/data_validation.dart`](lib/src/sheet/data_validation.dart)
 - **`DataValidation`**: Represents an OpenXML `<dataValidation>`: `type` (`DataValidationType`), `operator` (`DataValidationOperator`), `formula1`/`formula2`, blank/dropdown/message flags, prompt and error texts and `errorStyle` (`DataValidationErrorStyle`). Factories `list`, `listFromRange`, `wholeNumber`, `decimal`, `date`, `time`, `textLength`, `custom` and `inputMessage`; builders `withPrompt`/`withError`; `accepts(CellValue)` evaluates the rule in Dart (`null` when it depends on formulas or ranges).
@@ -472,6 +495,7 @@ excel_community/
 - **`_ImageManager`** (`lib/src/save/images/image_manager.dart`): Embeds image binaries into `xl/media/`, generates drawing XML image anchors, and merges image anchors into existing chart drawings when both exist on the same worksheet.
 - **`_PivotTableManager`** (`lib/src/save/pivot_table/pivot_table_manager.dart`): Serializes Pivot Table definitions, Pivot Cache definitions, and Pivot Cache records into their respective XML parts.
 - **`_CommentManager`** (`lib/src/save/comments/comment_manager.dart`): Generates cell comment XML parts (`xl/comments*.xml`), legacy VML drawing shapes (`xl/drawings/vmlDrawing*.vml`), and relationship links.
+- **`_TableManager`** (`lib/src/save/tables/table_manager.dart`): Makes table names unique, syncs header/totals cells before styles are collected, and rebuilds every `xl/tables/tableN.xml` part with its worksheet relationship and content type (parts from the original file are dropped, so removed tables leave nothing behind).
 - **`_HyperlinkManager`** (`lib/src/save/hyperlinks/hyperlink_manager.dart`): Rebuilds each worksheet's external hyperlink relationships (`TargetMode="External"`) from the `Hyperlink` model, keeping every other relationship of the sheet.
 - **`_StyleManager`** (`lib/src/save/styles/style_manager.dart`): Coordinates generation of the unified `xl/styles.xml` file.
 - **`_StyleResourceCollector`** (`lib/src/save/styles/style_resource_collector.dart`): Traverses all cells and conditional formatting rules to collect, deduplicate, and index all fonts, fills, borders, number formats, and differential styles.
@@ -577,6 +601,8 @@ excel_community/
   - `wiki/wiki_components.dart`: Shared building blocks for the interactive wiki sections (`WikiPage`, `WikiTab`, `WikiSearchField`, `WikiGrid`, `WikiCard`, `WikiPreviewBox`). Each `WikiCard` has a live preview and its own copyable code snippet.
   - `DataExportView`: Data export wiki: runs `rowsAsMaps`, `rowsAsValues`, `toJson`, `toCsv` and `appendRowsFromMaps` on a sample workbook and shows the library's live output next to each snippet (Export and Import tabs).
   - `DataValidationView`: Data validation wiki (Dropdown Lists, Numbers/Dates/Times, Text/Custom/Checks): each card renders the cell with its dropdown and input message and checks sample values with `DataValidation.accepts()`.
+  - `GroupingView`: Row & column grouping wiki with interactive previews: each card draws the sheet with Excel's outline bars and its +/- buttons call `collapseRowGroup`/`expandRowGroup` (and the column versions) on the sheet.
+  - `TablesView`: Excel tables wiki: gallery of the 60 built-in styles (searchable), table options and data helpers; each card draws a table created with `sheet.addTable` (style colors approximated from the Office theme).
   - `HyperlinksView`: Hyperlinks wiki (External, Inside the Workbook, Read/Style/Remove tabs): each card applies a link, shows the cell as Excel renders it and the links read back from the saved file.
   - `NumberFormatsView`: Number formats wiki: every built-in `NumFormat` (IDs 23–26 reserved) and common custom codes, grouped by category with cross-category search. Previews are rendered by `NumFormat.format()`; data comes from `data/number_format_catalog.dart`, which also drives the demo workbook.
   - `PageSetupView`: Interactive page setup & print wiki: every `PaperSize` drawn to scale with a portrait/landscape toggle, plus orientation & scaling, margin presets and print options, each with a live page preview and copyable code.

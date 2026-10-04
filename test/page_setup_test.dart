@@ -213,6 +213,7 @@ void main() {
       sheet.pageMargins = PageMargins.wide;
       sheet.setPrintGridLines(true);
       sheet.headerFooter = HeaderFooter(oddHeader: '&CReport');
+      sheet.outlineSettings = const OutlineSettings(summaryBelow: false);
 
       final xml = _sheetXml(excel.encode()!);
 
@@ -234,7 +235,8 @@ void main() {
       expect(pageMargins, lessThan(pageSetup));
       expect(pageSetup, lessThan(headerFooter));
 
-      // pageSetUpPr must come after the template's outlinePr.
+      // CT_SheetPr: outlinePr before pageSetUpPr.
+      expect(xml.indexOf('<outlinePr'), isNonNegative);
       expect(xml.indexOf('<outlinePr'), lessThan(xml.indexOf('<pageSetUpPr')));
       expect('<pageMargins'.allMatches(xml).length, 1);
     });
@@ -244,6 +246,8 @@ void main() {
       final sheet = excel['Sheet1'];
       sheet.setTabColorHex('#FF0000');
       sheet.fitToPages();
+      sheet.outlineSettings =
+          const OutlineSettings(summaryBelow: false, summaryRight: false);
       final xml = _sheetXml(excel.encode()!);
       expect(
           xml,
@@ -325,10 +329,11 @@ void main() {
           TextCellValue('x');
       final patched = _patchSheetXml(base.encode()!, (xml) {
         return xml
-            .replaceFirst(
-                '<outlinePr summaryBelow="0" summaryRight="0"/>',
-                '<outlinePr summaryBelow="0" summaryRight="0"/>'
-                    '<pageSetUpPr autoPageBreaks="0" fitToPage="1"/>')
+            .replaceFirstMapped(
+                RegExp(r'<worksheet[^>]*>'),
+                (m) => '${m[0]}<sheetPr>'
+                    '<outlinePr summaryBelow="0" summaryRight="0"/>'
+                    '<pageSetUpPr autoPageBreaks="0" fitToPage="1"/></sheetPr>')
             .replaceFirst(
                 RegExp(r'<pageMargins[^>]*/>'),
                 '<pageMargins left="0.25" right="0.25" top="0.5" '
@@ -359,6 +364,7 @@ void main() {
       final excel = Excel.createExcel();
       final sheet = excel['Sheet1'];
       sheet.fitToPages();
+      sheet.outlineSettings = const OutlineSettings(summaryBelow: false);
       final decoded = Excel.decodeBytes(excel.encode()!);
       decoded['Sheet1'].clearPageSetup();
 

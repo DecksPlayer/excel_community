@@ -173,9 +173,12 @@ extension SheetDataExt on Sheet {
     if (columnIndex < 0) {
       return;
     }
-    // Links and validations can sit on columns without values.
+    // Links, validations and column properties can sit on columns without
+    // values.
     _shiftHyperlinks(rows: false, index: columnIndex, delta: -1);
     _shiftDataValidations(rows: false, index: columnIndex, delta: -1);
+    _shiftColumnProperties(columnIndex, -1);
+    _shiftTables(rows: false, index: columnIndex, delta: -1);
     if (columnIndex >= maxColumns) {
       return;
     }
@@ -252,6 +255,8 @@ extension SheetDataExt on Sheet {
     }
     _shiftHyperlinks(rows: false, index: columnIndex, delta: 1);
     _shiftDataValidations(rows: false, index: columnIndex, delta: 1);
+    _shiftColumnProperties(columnIndex, 1);
+    _shiftTables(rows: false, index: columnIndex, delta: 1);
 
     bool updateSpanCell = false;
 
@@ -314,9 +319,11 @@ extension SheetDataExt on Sheet {
     if (rowIndex < 0) {
       return;
     }
-    // Links and validations can sit on rows without values.
+    // Links, validations and row properties can sit on rows without values.
     _shiftHyperlinks(index: rowIndex, delta: -1);
     _shiftDataValidations(index: rowIndex, delta: -1);
+    _shiftRowProperties(rowIndex, -1);
+    _shiftTables(index: rowIndex, delta: -1);
     if (rowIndex >= maxRows) {
       return;
     }
@@ -392,6 +399,8 @@ extension SheetDataExt on Sheet {
     }
     _shiftHyperlinks(index: rowIndex, delta: 1);
     _shiftDataValidations(index: rowIndex, delta: 1);
+    _shiftRowProperties(rowIndex, 1);
+    _shiftTables(index: rowIndex, delta: 1);
 
     bool updateSpanCell = false;
 

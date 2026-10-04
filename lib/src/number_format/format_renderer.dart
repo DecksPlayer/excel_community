@@ -33,7 +33,12 @@ String renderNumericValue(String formatCode, num value) {
     return _renderNumericSection(sections[2], 0);
   }
   final rendered = _renderNumericSection(sections[0], value.abs());
-  return value < 0 ? '-$rendered' : rendered;
+  // Like Excel, no minus sign when the value displays as zero (-0.001 with
+  // "0.00").
+  if (value < 0 && rendered != _renderNumericSection(sections[0], 0)) {
+    return '-$rendered';
+  }
+  return rendered;
 }
 
 String _renderGeneralNumber(num value) {
@@ -304,18 +309,26 @@ String? _renderFraction(String section, num absValue) {
     denominator = fixedDenominator;
     numerator = (fraction * denominator).round();
   } else {
-    // Closest fraction whose denominator fits the placeholders; ties keep
-    // the smaller denominator.
+    // Last continued-fraction convergent whose denominator fits the
+    // placeholders (Excel does not use other "best" approximations: 0.3 with
+    // one digit is 1/3, not 2/7).
     final maxDenominator = pow(10, denominatorSpec.length).toInt() - 1;
-    var bestError = double.infinity;
-    for (var d = 1; d <= maxDenominator; d++) {
-      final n = (fraction * d).round();
-      final error = (fraction - n / d).abs();
-      if (error < bestError - 1e-12) {
-        bestError = error;
-        numerator = n;
-        denominator = d;
-      }
+    var hPrev = 1, hPrev2 = 0, kPrev = 0, kPrev2 = 1;
+    var x = fraction.toDouble();
+    for (var i = 0; i < 64; i++) {
+      final a = x.floor();
+      final h = a * hPrev + hPrev2;
+      final k = a * kPrev + kPrev2;
+      if (k > maxDenominator) break;
+      numerator = h;
+      denominator = k;
+      hPrev2 = hPrev;
+      hPrev = h;
+      kPrev2 = kPrev;
+      kPrev = k;
+      final rest = x - a;
+      if (rest < 1e-10) break;
+      x = 1 / rest;
     }
   }
   if (hasInteger && numerator == denominator) {
@@ -395,7 +408,10 @@ String _renderScientific(String section, num absValue) {
     }
   }
 
-  final mantissaStr = mantissa.toStringAsFixed(decimalDigits);
+  // Excel fills every integer placeholder for zero ("##0.0E+0" -> 000.0E+0).
+  final mantissaStr = absValue == 0
+      ? '${'0' * integerPlaces}${decimalDigits > 0 ? '.${'0' * decimalDigits}' : ''}'
+      : mantissa.toStringAsFixed(decimalDigits);
   final expStr = exponent.abs().toString().padLeft(expDigits, '0');
   final expSignStr = exponent < 0 ? '-' : (expSign == '+' ? '+' : '');
   return '${mantissaStr}E$expSignStr$expStr';
@@ -519,9 +535,13 @@ class _DtToken {
 /// [elapsedDays] whole days plus [hour]/[minute]/[second]. An [hour] greater
 /// than 23 is also rendered as-is under `[h]`.
 ///
-/// A locale tag such as `[$-404]` selects the era used by `e` (Republic of
-/// China year for zh-TW, Japanese era year for ja-JP) and the AM/PM
-/// designators.
+/// Seconds are rounded to the precision the code shows (`ss`, `ss.0`, ...),
+/// carrying into minutes, hours and days like Excel.
+///
+/// A locale tag such as `[$-411]` selects the AM/PM designators and, for the
+/// Japanese calendar (`[$-411]` or calendar type 03, e.g. `[$-30411]`), the
+/// era shown by `e` (era year) and `g`/`gg`/`ggg` (era name). Other
+/// calendars show the Gregorian year for `e`, as Excel does.
 String renderDateTimeValue(
   String formatCode, {
   int? year,
@@ -534,20 +554,51 @@ String renderDateTimeValue(
   int elapsedDays = 0,
 }) {
   final (tokens, lcid) = _tokenizeDateTimeFormat(formatCode);
+
+  // Round to the shown precision: whole seconds, or tenths/hundredths/
+  // thousandths with ss.0 / ss.00 / ss.000.
+  final digits = tokens
+      .where((t) => t.type == 'subsec')
+      .fold<int>(0, (m, t) => max(m, min(t.length, 3)));
+  final unit = pow(10, 3 - digits).toInt();
+  var ms = (millisecond / unit).round() * unit;
+  var s = second, mi = minute, h = hour, days = elapsedDays;
+  int? y = year, mo = month, d = day;
+  if (ms >= 1000) {
+    ms -= 1000;
+    s++;
+  }
+  if (s >= 60) {
+    s -= 60;
+    mi++;
+  }
+  if (mi >= 60) {
+    mi -= 60;
+    h++;
+  }
+  if (h >= 24 && y != null && mo != null && d != null) {
+    h -= 24;
+    days++;
+    final next = DateTime.utc(y, mo, d).add(const Duration(days: 1));
+    y = next.year;
+    mo = next.month;
+    d = next.day;
+  }
+
   return _renderDateTimeTokens(_resolveMinuteVsMonth(tokens),
       lcid: lcid,
-      year: year,
-      month: month,
-      day: day,
-      hour: hour,
-      minute: minute,
-      second: second,
-      millisecond: millisecond,
-      elapsedDays: elapsedDays);
+      year: y,
+      month: mo,
+      day: d,
+      hour: h,
+      minute: mi,
+      second: s,
+      millisecond: ms,
+      elapsedDays: days);
 }
 
 (List<_DtToken>, int?) _tokenizeDateTimeFormat(String formatCode) {
-  const runChars = {'y', 'e', 'm', 'd', 'h', 's'};
+  const runChars = {'y', 'e', 'g', 'm', 'd', 'h', 's'};
   final tokens = <_DtToken>[];
   int? lcid;
   var i = 0;
@@ -584,7 +635,8 @@ String renderDateTimeValue(
         // and conditions have no rendering effect.
         final locale = RegExp(r'^\$[^-]*-([0-9A-Fa-f]+)$').firstMatch(content);
         if (locale != null) {
-          lcid = int.parse(locale.group(1)!, radix: 16) & 0xFFFF;
+          // Low 16 bits: language; next byte: calendar type.
+          lcid = int.parse(locale.group(1)!, radix: 16);
         }
       }
       i = end + 1;
@@ -632,7 +684,9 @@ String renderDateTimeValue(
       while (j < formatCode.length && formatCode[j].toLowerCase() == lower) {
         j++;
       }
-      tokens.add(_DtToken(type: lower == 'e' ? 'era' : lower, length: j - i));
+      tokens.add(_DtToken(
+          type: switch (lower) { 'e' => 'era', 'g' => 'eraName', _ => lower },
+          length: j - i));
       i = j;
       continue;
     }
@@ -667,28 +721,43 @@ List<_DtToken> _resolveMinuteVsMonth(List<_DtToken> tokens) {
   return tokens;
 }
 
-/// Year shown by the `e` code: the era year for zh-TW and ja-JP, otherwise
-/// the Gregorian year.
-int _eraYear(int year, int month, int day, int? lcid) {
-  if (lcid == 0x404) return year - 1911; // Republic of China (Minguo)
-  if (lcid == 0x411) {
-    final date = DateTime.utc(year, month, day);
-    bool from(int y, int m, int d) => !date.isBefore(DateTime.utc(y, m, d));
-    if (from(2019, 5, 1)) return year - 2018; // Reiwa
-    if (from(1989, 1, 8)) return year - 1988; // Heisei
-    if (from(1926, 12, 25)) return year - 1925; // Showa
-    if (from(1912, 7, 30)) return year - 1911; // Taisho
-    return year - 1867; // Meiji
+/// Whether [lcid] uses the Japanese emperor-era calendar: the ja-JP
+/// language or calendar type 03.
+bool _isJapaneseEraCalendar(int? lcid) =>
+    lcid != null && ((lcid & 0xFFFF) == 0x411 || ((lcid >> 16) & 0xFF) == 0x03);
+
+/// Japanese eras: start date, first year, initial, name.
+const _japaneseEras = [
+  (2019, 5, 1, 2019, 'R', '令和'),
+  (1989, 1, 8, 1989, 'H', '平成'),
+  (1926, 12, 25, 1926, 'S', '昭和'),
+  (1912, 7, 30, 1912, 'T', '大正'),
+  (1868, 1, 1, 1868, 'M', '明治'),
+];
+
+(int, String, String)? _japaneseEra(int year, int month, int day) {
+  final date = DateTime.utc(year, month, day);
+  for (final (y, m, d, first, initial, name) in _japaneseEras) {
+    if (!date.isBefore(DateTime.utc(y, m, d))) return (year - first + 1, initial, name);
   }
-  return year;
+  return null;
+}
+
+/// Year shown by the `e` code: the Japanese era year under the Japanese
+/// calendar, otherwise the Gregorian year (as Excel shows it).
+int _eraYear(int year, int month, int day, int? lcid) {
+  if (!_isJapaneseEraCalendar(lcid)) return year;
+  return _japaneseEra(year, month, day)?.$1 ?? year;
 }
 
 String _ampmDesignator(_DtToken token, bool isAm, int? lcid) {
   final style = token.text ??
       switch (lcid) {
-        0x404 || 0x804 || 0xC04 || 0x1004 || 0x1404 => 'zh',
-        0x411 => 'ja',
-        0x412 => 'ko',
+        // Language part of the locale id.
+        _ when lcid == null => null,
+        _ when const {0x404, 0x804, 0xC04, 0x1004, 0x1404}.contains(lcid & 0xFFFF) => 'zh',
+        _ when (lcid & 0xFFFF) == 0x411 => 'ja',
+        _ when (lcid & 0xFFFF) == 0x412 => 'ko',
         _ => null,
       };
   return switch (style) {
@@ -760,9 +829,21 @@ String _renderDateTimeTokens(
         final sec = t.elapsed ? totalMinutes * 60 + second : second;
         buffer.write(sec.toString().padLeft(t.length >= 2 ? 2 : 1, '0'));
       case 'subsec':
-        final unit = pow(10, t.length).toInt();
-        final fraction = min((millisecond * unit / 1000).round(), unit - 1);
-        buffer.write('.${fraction.toString().padLeft(t.length, '0')}');
+        // millisecond is already rounded to the shown precision.
+        final shown = min(t.length, 3);
+        final value = millisecond ~/ pow(10, 3 - shown).toInt();
+        buffer.write('.${value.toString().padLeft(shown, '0')}${'0' * (t.length - shown)}');
+      case 'eraName':
+        final era = _isJapaneseEraCalendar(lcid)
+            ? _japaneseEra(year ?? 1900, month ?? 1, day ?? 1)
+            : null;
+        if (era != null) {
+          buffer.write(switch (t.length) {
+            1 => era.$2,
+            2 => era.$3.substring(0, 1),
+            _ => era.$3,
+          });
+        }
       case 'ampm':
         buffer.write(_ampmDesignator(t, (hour % 24) < 12, lcid));
       default:

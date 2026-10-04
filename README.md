@@ -61,6 +61,8 @@
 - ✅ **Data Export & Transformation**: Rows as maps or value grids, JSON and CSV export, and import from maps (`rowsAsMaps`, `toJson`, `toCsv`, `appendRowsFromMaps`)
 - ✅ **Cell Hyperlinks**: Links to web pages, e-mail addresses, files and cells or defined names in the workbook (`<hyperlinks>`)
 - ✅ **Data Validation & Dropdowns**: Dropdown lists, number/date/time/text-length limits and custom formulas with input and error messages (`<dataValidations>`)
+- ✅ **Row & Column Grouping**: Nested, collapsible row and column groups (up to 7 levels) with summary position options (`outlineLevel`, `<outlinePr>`)
+- ✅ **Excel Tables**: "Format as Table" with built-in styles, filter buttons, banded rows/columns and totals rows (`<tableParts>`)
 - ✅ **Cross-platform**: Works on Flutter Web, Android, iOS, Desktop
 
 ## Road-map:
@@ -77,8 +79,8 @@
  - ✅ Data Export & Transformation (`rowsAsMaps`, `toJson`) (Implemented!)
  - ✅ Cell Hyperlinks (`<hyperlinks>`) (Implemented!)
  - ✅ Data Validation & Dropdowns (`<dataValidation>`) (Implemented!)
- - 📁 Row & Column Grouping (`<outlinePr>`)
- - 📰 Excel Structured Tables (`<tableParts>`, Table Styles)
+ - ✅ Row & Column Grouping (`<outlinePr>`) (Implemented!)
+ - ✅ Excel Structured Tables (`<tableParts>`, Table Styles) (Implemented!)
  - 🔐 Encrypt and Decrypt excel on the go.
  - Many more **features**
 
@@ -933,6 +935,75 @@ sheetObject.clearPageSetup();    // or sheetObject.removePageSetup();
 sheetObject.clearPageMargins();  // back to Excel's "Normal" margins
 sheetObject.clearPrintOptions();
 ```
+
+### Excel Tables (`<tableParts>`, Table Styles)
+
+Format a range as an Excel table ("Format as Table"): a named table with a style, filter buttons, banded rows and an optional totals row. Formulas can then use structured references such as `Sales[Revenue]`.
+
+```dart
+var sheetObject = excel['Sales'];
+sheetObject.appendRow([TextCellValue('Region'), TextCellValue('Units'), TextCellValue('Price')]);
+sheetObject.appendRow([TextCellValue('North'), IntCellValue(10), DoubleCellValue(2.5)]);
+sheetObject.appendRow([TextCellValue('South'), IntCellValue(7), DoubleCellValue(3.0)]);
+
+// 1. Column names come from the header row
+sheetObject.addTable('A1:C3', name: 'Sales', style: TableStyle.medium(9));
+
+// 2. Or define the columns, with a totals row (labels and SUBTOTAL formulas are filled in)
+excel['Q2'].addTable('A1:C10',
+    name: 'Q2_Sales',
+    showTotalsRow: true,
+    columns: const [
+      TableColumn('Region', totalsLabel: 'Total'),
+      TableColumn('Units', totalsFunction: TableTotalsFunction.sum),
+      TableColumn('Price', totalsFunction: TableTotalsFunction.average),
+    ]);
+
+// 3. Read and grow a table
+final rows = sheetObject.tableRowsAsMaps('Sales'); // [{Region: North, Units: 10, ...}, ...]
+sheetObject.appendTableRow('Sales', [TextCellValue('East'), IntCellValue(4), DoubleCellValue(1.5)]);
+
+// 4. Change options or remove (cells keep their values)
+final table = sheetObject.getTable('Sales')!;
+sheetObject.updateTable(table.copyWith(showColumnStripes: true, style: TableStyle.light(9)));
+sheetObject.removeTable('Sales');
+```
+
+Table names must be unique in the workbook and cannot contain spaces or look like cell references. Tables move and resize with inserted or removed rows and columns; tables read from a file are kept (including calculated column formulas).
+
+### Row & Column Grouping (`<outlinePr>`)
+
+Group rows or columns like Excel's *Data > Group*: groups can be nested (up to 7 levels) and collapsed or expanded. Indexes are 0-based and inclusive.
+
+```dart
+var sheetObject = excel['Report'];
+
+// 1. Rows 2-9 grouped, with a nested group for rows 3-5 that starts collapsed
+sheetObject.groupRows(1, 8);
+sheetObject.groupRows(2, 4, collapsed: true);
+
+// 2. Columns B-D grouped and collapsed
+sheetObject.groupColumns(1, 3, collapsed: true);
+
+// 3. Expand / collapse later (nested collapsed groups stay collapsed)
+sheetObject.expandColumnGroup(1, 3);
+sheetObject.collapseRowGroup(1, 8);
+
+// 4. Inspect
+for (final group in sheetObject.rowGroups) {
+  print('${group.start}..${group.end} level ${group.level} collapsed: ${group.collapsed}');
+}
+print(sheetObject.getRowOutlineLevel(3)); // 2
+
+// 5. Summary rows above the group (Excel's default is below)
+sheetObject.outlineSettings = const OutlineSettings(summaryBelow: false);
+
+// 6. Ungroup
+sheetObject.ungroupRows(2, 4);  // removes one level
+sheetObject.clearGrouping();    // removes every group and shows hidden rows/columns
+```
+
+Inserting or removing rows and columns moves groups, hidden flags, row heights and column widths with them.
 
 ### Data Validation & Dropdowns (`<dataValidation>`)
 

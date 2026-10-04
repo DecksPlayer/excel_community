@@ -37,6 +37,8 @@ enum SelectedSection {
   dataExport,
   hyperlinks,
   dataValidation,
+  grouping,
+  tables,
 }
 
 enum ChartType { column, line, pie, area, doughnut, radar, bar, scatter }

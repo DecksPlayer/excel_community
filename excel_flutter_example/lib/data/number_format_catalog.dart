@@ -408,10 +408,10 @@ final List<NumFormatEntry> numFormatCatalog = [
   ),
   const NumFormatEntry(
     category: NumFormatCategory.dateTime,
-    name: 'Minutes Seconds.Tenths',
+    name: 'Minutes:Seconds.Tenths',
     format: NumFormat.standard_47,
     constant: 'standard_47',
-    samples: [NumFormatSample(_time, '3045.0')],
+    samples: [NumFormatSample(_time, '30:45.0')],
   ),
 
   // --- CJK locale -------------------------------------------------------------
@@ -438,31 +438,31 @@ final List<NumFormatEntry> numFormatCatalog = [
   ),
   const NumFormatEntry(
     category: NumFormatCategory.cjk,
-    name: 'Taiwan Era Date',
+    name: 'Taiwan Locale Date',
     format: NumFormat.standard_27,
     constant: 'standard_27',
-    samples: [NumFormatSample(_date, '115/10/3')],
+    samples: [NumFormatSample(_date, '2026/10/3')],
   ),
   const NumFormatEntry(
     category: NumFormatCategory.cjk,
-    name: 'Taiwan Era Date and Time',
+    name: 'Taiwan Locale Date and Time',
     format: NumFormat.standard_28,
     constant: 'standard_28',
-    samples: [NumFormatSample(_dateTime, '115/10/3 2:30 下午')],
+    samples: [NumFormatSample(_dateTime, '2026/10/3 2:30 下午')],
   ),
   const NumFormatEntry(
     category: NumFormatCategory.cjk,
-    name: 'Taiwan Era Date (Kanji)',
+    name: 'Taiwan Locale Date (Kanji)',
     format: NumFormat.standard_29,
     constant: 'standard_29',
-    samples: [NumFormatSample(_date, '115年10月3日')],
+    samples: [NumFormatSample(_date, '2026年10月3日')],
   ),
   const NumFormatEntry(
     category: NumFormatCategory.cjk,
-    name: 'Taiwan Era Month-Day (Kanji)',
+    name: 'Taiwan Locale Year-Month-Day (Kanji)',
     format: NumFormat.standard_36,
     constant: 'standard_36',
-    samples: [NumFormatSample(_date, '115月10日3日')],
+    samples: [NumFormatSample(_date, '2026月10日3日')],
   ),
   const NumFormatEntry(
     category: NumFormatCategory.cjk,

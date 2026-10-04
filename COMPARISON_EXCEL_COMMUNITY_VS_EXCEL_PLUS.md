@@ -76,6 +76,8 @@ Este documento proporciona un análisis exhaustivo y de bajo nivel de la arquite
 | **Motor de Recálculo de Fórmulas** | ❌ No (solo texto) | ✅ Sí (`recalculate`) | Intérprete AST con dependencias incrementales (`changed: [...]`). |
 | **AutoFilter (`<autoFilter>`)** | ✅ Sí (`sheet.setAutoFilter`) | ❌ No disponible | Rango, columnas de filtro, valores y preservación en guardado. |
 | **Color de Pestañas (`<tabColor>`)** | ✅ Sí (`sheet.setTabColor`) | ❌ No disponible | ARGB hex, ExcelColor, temas de Office con tint y preservación `<sheetPr>`. |
+| **Tablas de Excel (`<tableParts>`)** | ✅ Sí (`sheet.addTable`) | ❌ No disponible | Tablas con nombre, estilos integrados, botones de filtro, filas/columnas con bandas, fila de totales con `SUBTOTAL` y referencias estructuradas. |
+| **Agrupamiento de Filas y Columnas (`<outlinePr>`)** | ✅ Sí (`sheet.groupRows`, `sheet.groupColumns`) | ❌ No disponible | Grupos anidados (hasta 7 niveles), contraer/expandir, posición del resumen y lectura/escritura de `outlineLevel`. |
 | **Validación de Datos (`<dataValidation>`)** | ✅ Sí (`sheet.addDataValidation`) | ❌ No disponible | Listas desplegables (fijas o desde rangos), números, fechas, horas, longitud de texto y fórmulas, con mensajes; `accepts()` valida en Dart. |
 | **Hipervínculos (`<hyperlinks>`)** | ✅ Sí (`sheet.setHyperlink`, `cell.hyperlink`) | ❌ No disponible | URLs, correos, archivos, celdas y nombres definidos; lectura, escritura y preservación de relaciones externas. |
 | **Exportación de Datos (`rowsAsMaps`, `toJson`, `toCsv`)** | ✅ Sí (`sheet.rowsAsMaps`, `excel.toJson`) | ❌ No disponible | Filas como mapas o grillas de valores, JSON y CSV (RFC 4180), e importación desde mapas (`appendRowsFromMaps`). |
@@ -334,7 +336,8 @@ graph TD
     end
     subgraph "Prioridad 3 - Configuración Avanzada"
         P3A["✅ Configuración de Página e Impresión (<pageSetup>)"]
-        P3B["Agrupamiento / Esquemas de Filas y Columnas (<outlinePr>)"]
+        P3B["✅ Agrupamiento / Esquemas de Filas y Columnas (<outlinePr>)"]
+        P3C["✅ Tablas de Excel (<tableParts>)"]
     end
 ```
 
@@ -348,4 +351,6 @@ graph TD
    * Permitir asignar un color personalizado a la pestaña inferior de cada hoja (`sheet.tabColor`).
 6. ✅ **Hipervínculos (`<hyperlinks>`)** — completado: modelo `Hyperlink` (URL, correo, celda, nombre definido), `sheet.setHyperlink`/`cell.hyperlink`, relaciones externas en el `.rels` de cada hoja y desplazamiento al insertar o eliminar filas y columnas.
 7. ✅ **Configuración de Página e Impresión (`<pageSetup>`)** — completado: modelos `PageSetup`, `PaperSize`, `PageMargins` y `PrintOptions`; orientación, tamaño de papel, escala, ajuste a N×M páginas (`<sheetPr><pageSetUpPr fitToPage>`), márgenes y líneas de cuadrícula/encabezados. Pendiente: áreas de impresión y títulos a imprimir (`definedNames` `_xlnm.Print_Area` / `_xlnm.Print_Titles`).
+9. ✅ **Tablas de Excel (`<tableParts>`)** — completado: `sheet.addTable` con estilos, fila de totales (`SUBTOTAL` + referencias estructuradas), validación de nombres y superposiciones, `tableRowsAsMaps`/`appendTableRow`, y reconstrucción de las partes `xl/tables/tableN.xml` al guardar.
+8. ✅ **Agrupamiento de Filas y Columnas (`<outlinePr>`)** — completado: `sheet.groupRows`/`groupColumns` con anidamiento hasta 7 niveles, contraer/expandir respetando grupos internos, `OutlineSettings` (resumen arriba/abajo, izquierda/derecha) y `outlineLevelRow`/`outlineLevelCol` en `<sheetFormatPr>`.
 
