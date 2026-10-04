@@ -1,0 +1,45 @@
+{
+  "name": "excel-community",
+  "version": "2.5.2",
+  "description": "High-performance Excel XLSX library for Node.js and Browser compiled directly from Dart excel_community.",
+  "main": "./index.js",
+  "module": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "index.js",
+    "index.mjs",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "prepublishOnly": "node build.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "excel",
+    "xlsx",
+    "spreadsheet",
+    "workbook",
+    "charts",
+    "tables",
+    "formulas",
+    "node",
+    "browser"
+  ],
+  "author": "DecksPlayer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/decksplayer/excel_community.git"
+  }
+}
