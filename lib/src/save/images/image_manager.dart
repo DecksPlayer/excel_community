@@ -16,7 +16,11 @@ class _ImageManager {
   // -----------------------------------------------------------------------
 
   void processImages() {
-    int imageCount = 0;
+    // Continue after the media of the original file so it is not
+    // overwritten.
+    int imageCount = _save._highestPartIndex(
+        RegExp(r'^xl/media/image(\d+)\.\w+$'),
+        originalOnly: true);
 
     _excel._sheetMap.forEach((sheetName, sheet) {
       if (sheet.images.isEmpty) return;
@@ -38,23 +42,21 @@ class _ImageManager {
         drawingRelsPath = existing.$2;
         drawingIsNew = false;
       } else {
-        final idx = _countExistingDrawings() + 1;
+        final idx =
+            _save._highestPartIndex(RegExp(r'^xl/drawings/drawing(\d+)\.xml$')) + 1;
         drawingPath = 'xl/drawings/drawing$idx.xml';
         drawingRelsPath = 'xl/drawings/_rels/drawing$idx.xml.rels';
         drawingIsNew = true;
       }
 
       // --- Ensure drawing rels XML exists ---
-      var drawingRels = _excel._xmlFiles[drawingRelsPath];
-      if (drawingRels == null) {
-        drawingRels = _buildEmptyRelationships();
-        _excel._xmlFiles[drawingRelsPath] = drawingRels;
-      }
+      final drawingRels = _save._relationshipsPart(drawingRelsPath);
       final relsRoot = drawingRels.findAllElements('Relationships').first;
-      int nextRId = relsRoot.children.whereType<XmlElement>().length + 1;
+      int nextRId =
+          int.parse(_save._nextRelationshipId(relsRoot).substring(3));
 
       // --- Ensure drawing XML exists ---
-      var drawingDoc = _excel._xmlFiles[drawingPath];
+      var drawingDoc = _save._loadXmlPart(drawingPath);
       if (drawingDoc == null) {
         drawingDoc = _buildEmptyDrawing();
         _excel._xmlFiles[drawingPath] = drawingDoc;
@@ -103,15 +105,9 @@ class _ImageManager {
         );
 
         // Add drawing relationship to the sheet's rels file
-        var sheetRels = _excel._xmlFiles[sheetRelsPath];
-        if (sheetRels == null) {
-          sheetRels = _buildEmptyRelationships();
-          _excel._xmlFiles[sheetRelsPath] = sheetRels;
-        }
+        final sheetRels = _save._relationshipsPart(sheetRelsPath);
         final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
-        final drawingRIdIndex =
-            sheetRelsRoot.children.whereType<XmlElement>().length + 1;
-        final drawingRId = 'rId$drawingRIdIndex';
+        final drawingRId = _save._nextRelationshipId(sheetRelsRoot);
         final drawingFileName = drawingPath.split('/').last;
 
         sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
@@ -135,7 +131,7 @@ class _ImageManager {
   /// Looks for an existing drawing relationship in the sheet's rels file.
   /// Returns (drawingPath, drawingRelsPath) or null.
   (String, String)? _findExistingDrawing(String sheetRelsPath) {
-    final sheetRels = _excel._xmlFiles[sheetRelsPath];
+    final sheetRels = _save._loadXmlPart(sheetRelsPath);
     if (sheetRels == null) return null;
 
     for (final rel in sheetRels.findAllElements('Relationship')) {
@@ -154,26 +150,7 @@ class _ImageManager {
   }
 
   /// Counts drawing XML files already present in [_xmlFiles].
-  int _countExistingDrawings() {
-    return _excel._xmlFiles.keys
-        .where((k) =>
-            k.startsWith('xl/drawings/drawing') &&
-            k.endsWith('.xml') &&
-            !k.contains('/_rels/'))
-        .length;
-  }
 
-  XmlDocument _buildEmptyRelationships() {
-    final b = XmlBuilder();
-    b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('Relationships',
-        attributes: {
-          'xmlns':
-              'http://schemas.openxmlformats.org/package/2006/relationships',
-        },
-        nest: () {});
-    return b.buildDocument();
-  }
 
   XmlDocument _buildEmptyDrawing() {
     final b = XmlBuilder();

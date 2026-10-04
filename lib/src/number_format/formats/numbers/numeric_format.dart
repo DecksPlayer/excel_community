@@ -47,10 +47,11 @@ sealed class NumericNumFormat extends NumFormat {
   @override
   String format(CellValue? value) {
     final resolved = _resolveDisplayValue(value);
+    // Excel shows booleans as TRUE/FALSE whatever the number format.
+    if (resolved is BoolCellValue) return resolved.value ? 'TRUE' : 'FALSE';
     final num? n = switch (resolved) {
       IntCellValue(value: final v) => v,
       DoubleCellValue(value: final v) => v,
-      BoolCellValue(value: final v) => v ? 1 : 0,
       _ => null,
     };
     if (n == null) {

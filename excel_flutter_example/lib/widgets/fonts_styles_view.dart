@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import 'wiki/wiki_components.dart';
 
 class FontsStylesView extends StatefulWidget {
   final bool isGenerating;
@@ -176,566 +177,109 @@ cell.cellStyle = cellStyle;
     super.dispose();
   }
 
-  Widget _buildTabButton(String label, String tabKey) {
-    final isActive = _selectedTab == tabKey;
-    return Container(
-      decoration: BoxDecoration(
-        color: isActive ? Colors.indigo : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _selectedTab = tabKey;
-          });
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isActive ? Colors.white : const Color(0xFF475569),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isCompact = screenWidth < 700;
-
+    final query = _searchQuery.toLowerCase();
     final filteredFonts = _fonts.where((font) {
-      final name = font['name']!.toLowerCase();
-      final enumName = font['enum']!.toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      return name.contains(query) || enumName.contains(query);
+      return font['name']!.toLowerCase().contains(query) ||
+          font['enum']!.toLowerCase().contains(query);
     }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title & Generate Header
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: isCompact
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.indigo.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.font_download_outlined,
-                              color: Colors.indigo,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Text(
-                              'Fonts & Styles Wiki',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'A comprehensive guide of supported fonts and styles. Select and copy code snippets for font families or text decoration styles below.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: widget.isGenerating ? null : widget.onGenerate,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.indigo,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          icon: widget.isGenerating
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.file_download_outlined, size: 16),
-                          label: Text(
-                            widget.isGenerating ? 'Generating...' : 'Generate Demo Sheet',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.indigo.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.font_download_outlined,
-                          color: Colors.indigo,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Fonts & Styles Wiki',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'A comprehensive guide of supported fonts and styles. Select and copy code snippets for font families or text decoration styles below.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton.icon(
-                        onPressed: widget.isGenerating ? null : widget.onGenerate,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                        icon: widget.isGenerating
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.file_download_outlined, size: 16),
-                        label: Text(
-                          widget.isGenerating ? 'Generating...' : 'Generate Demo Sheet',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Generation Status
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.info_outline, size: 14, color: Colors.indigo),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  widget.status,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF334155),
-                  ),
+    return WikiPage(
+      icon: Icons.font_download_outlined,
+      title: 'Fonts & Styles Wiki',
+      description:
+          'A comprehensive guide of supported fonts and styles. Select and copy code snippets for font families or text decoration styles below.',
+      accent: Colors.indigo,
+      isGenerating: widget.isGenerating,
+      onGenerate: widget.onGenerate,
+      status: widget.status,
+      tabs: const [
+        WikiTab('fonts', 'Font Families (48)'),
+        WikiTab('styles', 'Styles & Decorations'),
+      ],
+      selectedTab: _selectedTab,
+      onTabSelected: (tab) => setState(() => _selectedTab = tab),
+      child: _selectedTab == 'fonts'
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WikiSearchField(
+                  controller: _searchController,
+                  hint: 'Search fonts by name or enum...',
+                  accent: Colors.indigo,
+                  onChanged: (val) => setState(() => _searchQuery = val),
                 ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        // Tab Header Selector
-        Row(
-          children: [
-            _buildTabButton('Font Families (48)', 'fonts'),
-            const SizedBox(width: 12),
-            _buildTabButton('Styles & Decorations', 'styles'),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        if (_selectedTab == 'fonts') ...[
-          // Search Bar
-          TextField(
-            controller: _searchController,
-            onChanged: (val) {
-              setState(() {
-                _searchQuery = val;
-              });
-            },
-            decoration: InputDecoration(
-              hintText: 'Search fonts by name or enum...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _searchQuery = '';
-                        });
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.indigo, width: 1.5),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Font Grid
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width >= 1100 ? 3 : (MediaQuery.of(context).size.width >= 750 ? 2 : 1),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              mainAxisExtent: 220,
-            ),
-            itemCount: filteredFonts.length,
-            itemBuilder: (context, index) {
-              final font = filteredFonts[index];
-              final fontName = font['name']!;
-              final fontEnum = font['enum']!;
-
-              final codeSnippet = '''
+                const SizedBox(height: 16),
+                WikiGrid(
+                  itemCount: filteredFonts.length,
+                  extent: 220,
+                  itemBuilder: (context, index) {
+                    final fontName = filteredFonts[index]['name']!;
+                    final fontEnum = filteredFonts[index]['enum']!;
+                    return WikiCard(
+                      title: fontName,
+                      subtitle: fontEnum,
+                      accent: Colors.indigo,
+                      code: '''
 var cellStyle = CellStyle(
   fontFamily: getFontFamily($fontEnum), // Mapped to '$fontName'
   fontSize: 12,
   bold: true,
 );
 cell.cellStyle = cellStyle;
-''';
-
-              return Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  fontName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                Text(
-                                  fontEnum,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade500,
-                                    fontFamily: 'monospace',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy, size: 16, color: Colors.indigo),
-                            tooltip: 'Copy CellStyle Code',
-                            onPressed: () {
-                              Clipboard.setData(ClipboardData(text: codeSnippet));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 16),
-                                      const SizedBox(width: 8),
-                                      Text('Copied $fontName snippet to clipboard!'),
-                                    ],
-                                  ),
-                                  backgroundColor: const Color(0xFF1E293B),
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Live Font Preview:',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
-                      ),
-                      const SizedBox(height: 4),
-                      Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'The quick brown fox jumps over the lazy dog.',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: fontName,
-                              fontSize: 12,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+''',
+                      codeSummary: 'CellStyle(fontFamily: getFontFamily($fontEnum))',
+                      previewLabel: 'Live Font Preview:',
+                      preview: WikiPreviewBox(
+                        alignment: Alignment.centerLeft,
                         child: Text(
-                          "CellStyle(fontFamily: getFontFamily($fontEnum))",
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 8.5,
-                            color: Color(0xFF38BDF8),
+                          'The quick brown fox jumps over the lazy dog.',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: fontName,
+                            fontSize: 12,
+                            color: const Color(0xFF1E293B),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-        ] else ...[
-          // Styles & Decorations Grid
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width >= 1100 ? 3 : (MediaQuery.of(context).size.width >= 750 ? 2 : 1),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              mainAxisExtent: 220,
+              ],
+            )
+          : WikiGrid(
+              itemCount: _styles.length,
+              extent: 220,
+              itemBuilder: (context, index) {
+                final item = _styles[index];
+                final styleName = item['name'] as String;
+                final styleCode = item['code'] as String;
+                final textStyle = item['style'] as TextStyle;
+                final background = item['background'] as Color?;
+                return WikiCard(
+                  title: styleName,
+                  subtitle: item['detail'] as String,
+                  accent: Colors.indigo,
+                  code: styleCode,
+                  codeSummary: '${styleCode.split(';')[0].trim()};',
+                  previewLabel: 'Live Style Preview:',
+                  preview: WikiPreviewBox(
+                    color: background ?? const Color(0xFFF8FAFC),
+                    border: background == null ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                    child: Text(
+                      'Styled Sample Text',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textStyle.copyWith(
+                        color: background != null ? Colors.white : (textStyle.color ?? const Color(0xFF1E293B)),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            itemCount: _styles.length,
-            itemBuilder: (context, index) {
-              final item = _styles[index];
-              final styleName = item['name'] as String;
-              final styleDetail = item['detail'] as String;
-              final styleCode = item['code'] as String;
-              final textStyle = item['style'] as TextStyle;
-              final background = item['background'] as Color?;
-
-              return Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  styleName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                Text(
-                                  styleDetail,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade500,
-                                    fontFamily: 'monospace',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy, size: 16, color: Colors.indigo),
-                            tooltip: 'Copy Style Code',
-                            onPressed: () {
-                              Clipboard.setData(ClipboardData(text: styleCode));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 16),
-                                      const SizedBox(width: 8),
-                                      Text('Copied $styleName style snippet!'),
-                                    ],
-                                  ),
-                                  backgroundColor: const Color(0xFF1E293B),
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Live Style Preview:',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
-                      ),
-                      const SizedBox(height: 4),
-                      Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: background ?? const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(6),
-                            border: background == null ? null : Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: Text(
-                            'Styled Sample Text',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: textStyle.copyWith(
-                              color: background != null ? Colors.white : (textStyle.color ?? const Color(0xFF1E293B)),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Short Preview of Code
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          "${styleCode.split(';')[0].trim()};",
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 9,
-                            color: Color(0xFF38BDF8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ],
     );
   }
 }

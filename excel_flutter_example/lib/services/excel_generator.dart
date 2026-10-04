@@ -16,6 +16,14 @@ import 'helpers/chart_colors_helper.dart';
 import 'helpers/new_charts_helper.dart';
 import 'helpers/read_asset_helper.dart';
 import 'helpers/formulas_display_text_helper.dart';
+import 'helpers/autofilter_helper.dart';
+import 'helpers/tab_color_helper.dart';
+import 'helpers/page_setup_helper.dart';
+import 'helpers/data_export_helper.dart';
+import 'helpers/hyperlinks_helper.dart';
+import 'helpers/data_validation_helper.dart';
+import 'helpers/grouping_helper.dart';
+import 'helpers/tables_helper.dart';
 
 class ExcelGenerator {
   static Future<String> generateExcelWithImage() =>
@@ -72,4 +80,28 @@ class ExcelGenerator {
 
   static Future<String> generateFormulasDisplayText() =>
       generateFormulasDisplayTextHelper();
+
+  static Future<String> generateAutoFilter() =>
+      generateAutoFilterHelper();
+
+  static Future<String> generateTabColors() =>
+      generateTabColorHelper();
+
+  static Future<String> generatePageSetup() =>
+      generatePageSetupHelper();
+
+  static Future<String> generateDataExport() =>
+      generateDataExportHelper();
+
+  static Future<String> generateHyperlinks() =>
+      generateHyperlinksHelper();
+
+  static Future<String> generateDataValidation() =>
+      generateDataValidationHelper();
+
+  static Future<String> generateGrouping() =>
+      generateGroupingHelper();
+
+  static Future<String> generateTables() =>
+      generateTablesHelper();
 }

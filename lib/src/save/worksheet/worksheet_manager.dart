@@ -49,18 +49,28 @@ class _WorksheetManager {
     List<xml_events.XmlEvent>? currentCapturedEvents;
     String? currentTagName;
     int depth = 0;
+    String? originalSheetPrXml;
+    String? originalPageSetupRId;
 
     const replacedTags = {
+      'sheetPr',
       'sheetViews',
       'sheetFormatPr',
       'cols',
       'sheetData',
       'sheetProtection',
+      'autoFilter',
       'mergeCells',
       'conditionalFormatting',
+      'dataValidations',
+      'hyperlinks',
+      'printOptions',
+      'pageMargins',
+      'pageSetup',
       'headerFooter',
       'drawing',
       'pivotTableParts',
+      'tableParts',
     };
 
     for (final event in events) {
@@ -74,8 +84,17 @@ class _WorksheetManager {
         if (depth == 0) {
           currentTagName = tagName;
           currentCapturedEvents = [event];
+          if (tagName == 'pageSetup') {
+            // Keep the link to an existing printer settings part.
+            for (final attr in event.attributes) {
+              if (attr.name == 'r:id') originalPageSetupRId = attr.value;
+            }
+          }
           if (event.isSelfClosing) {
             final xmlString = event.toString();
+            if (currentTagName == 'sheetPr') {
+              originalSheetPrXml = xmlString;
+            }
             if (!replacedTags.contains(currentTagName)) {
               originalElements
                   .putIfAbsent(currentTagName, () => [])
@@ -104,6 +123,9 @@ class _WorksheetManager {
           if (depth == 0) {
             final xmlString =
                 currentCapturedEvents.map((e) => e.toString()).join();
+            if (currentTagName == 'sheetPr') {
+              originalSheetPrXml = xmlString;
+            }
             if (!replacedTags.contains(currentTagName)) {
               originalElements
                   .putIfAbsent(currentTagName!, () => [])
@@ -126,6 +148,11 @@ class _WorksheetManager {
     for (final attr in worksheetAttributes) {
       out.write(' ${attr.name}="${attr.value}"');
     }
+    // r:id attributes (drawings, hyperlinks, ...) need the relationships
+    // namespace even when the original file did not declare it.
+    if (!worksheetAttributes.any((a) => a.name == 'xmlns:r')) {
+      out.write(' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"');
+    }
     out.write('>');
 
     final printedTags = <String>{};
@@ -142,7 +169,8 @@ class _WorksheetManager {
 
     // Write in schema-compliant order:
     // 1. sheetPr
-    writeOriginal('sheetPr');
+    out.write(_buildSheetPrXml(sheetObject, originalSheetPrXml));
+    printedTags.add('sheetPr');
     // 2. dimension
     writeOriginal('dimension');
     // 3. sheetViews
@@ -162,7 +190,10 @@ class _WorksheetManager {
     if (sheetObject.sheetProtection.sheet) {
       out.write(sheetObject.sheetProtection.toXmlString());
     }
-    writeOriginal('autoFilter');
+    if (sheetObject.autoFilter != null) {
+      out.write(sheetObject.autoFilter!.toXmlString());
+    }
+    printedTags.add('autoFilter');
     writeOriginal('sortState');
     writeOriginal('dataConsolidate');
     writeOriginal('customSheetViews');
@@ -175,11 +206,14 @@ class _WorksheetManager {
     out.write(_buildConditionalFormattingXml(sheetObject));
     printedTags.add('conditionalFormatting');
 
-    writeOriginal('dataValidations');
-    writeOriginal('hyperlinks');
-    writeOriginal('printOptions');
-    writeOriginal('pageMargins');
-    writeOriginal('pageSetup');
+    out.write(_buildDataValidationsXml(sheetObject));
+    printedTags.add('dataValidations');
+    out.write(_buildHyperlinksXml(sheetObject));
+    printedTags.add('hyperlinks');
+    out.write(sheetObject.printOptions?.toXmlString() ?? '');
+    out.write((sheetObject.pageMargins ?? PageMargins.normal).toXmlString());
+    out.write((sheetObject.pageSetup ?? const PageSetup())
+        .toXmlString(relationshipId: originalPageSetupRId));
 
     // 9. headerFooter
     out.write(_buildHeaderFooterXml(sheetObject));
@@ -219,6 +253,16 @@ class _WorksheetManager {
     }
     printedTags.add('pivotTableParts');
 
+    // tableParts (rebuilt from the sheet's tables)
+    if (sheetObject._tableRIds.isNotEmpty) {
+      out.write('<tableParts count="${sheetObject._tableRIds.length}">');
+      for (final rId in sheetObject._tableRIds) {
+        out.write('<tablePart r:id="$rId"/>');
+      }
+      out.write('</tableParts>');
+    }
+    printedTags.add('tableParts');
+
     // 10. extLst
     writeOriginal('extLst');
 
@@ -233,6 +277,81 @@ class _WorksheetManager {
 
     out.write('</worksheet>');
     return out.toString();
+  }
+
+  String _buildSheetPrXml(Sheet sheetObject, String? originalSheetPrXml) {
+    final tabColorXml = sheetObject.tabColor?.toXmlString() ?? '';
+    final fitToPage = sheetObject.pageSetup?.fitToPage;
+
+    String qualifiedName = 'sheetPr';
+    final attributes = <XmlAttribute>[];
+    final otherChildren = <String>[];
+    // Attributes of the original <pageSetUpPr> other than fitToPage
+    // (e.g. autoPageBreaks), which are preserved.
+    final pageSetUpPrAttributes = <XmlAttribute>[];
+    String pageSetUpPrName = 'pageSetUpPr';
+
+    if (originalSheetPrXml != null) {
+      try {
+        final root = XmlDocument.parse(originalSheetPrXml).rootElement;
+        qualifiedName = root.name.qualified;
+        attributes.addAll(root.attributes);
+        for (final node in root.children) {
+          if (node is XmlElement) {
+            final local = node.name.local;
+            if (local == 'tabColor' || local == 'outlinePr') continue;
+            if (local == 'pageSetUpPr') {
+              pageSetUpPrName = node.name.qualified;
+              pageSetUpPrAttributes.addAll(
+                  node.attributes.where((a) => a.name.local != 'fitToPage'));
+              continue;
+            }
+            otherChildren.add(node.toXmlString());
+          } else if (node is XmlText && node.value.trim().isEmpty) {
+            continue;
+          } else {
+            otherChildren.add(node.toXmlString());
+          }
+        }
+      } catch (_) {
+        // Ignore a malformed original <sheetPr> and rebuild from the model.
+        qualifiedName = 'sheetPr';
+        attributes.clear();
+        otherChildren.clear();
+        pageSetUpPrAttributes.clear();
+      }
+    }
+
+    String pageSetUpPrXml = '';
+    if (fitToPage != null || pageSetUpPrAttributes.isNotEmpty) {
+      final sb = StringBuffer('<$pageSetUpPrName');
+      for (final attr in pageSetUpPrAttributes) {
+        sb.write(' ${attr.name.qualified}="${_escapeXml(attr.value)}"');
+      }
+      if (fitToPage != null) {
+        sb.write(' fitToPage="${fitToPage ? 1 : 0}"');
+      }
+      sb.write('/>');
+      pageSetUpPrXml = sb.toString();
+    }
+
+    // CT_SheetPr child order: tabColor, outlinePr, pageSetUpPr.
+    final outlinePrXml = sheetObject.outlineSettings.toXmlString();
+    final childrenXml =
+        tabColorXml + outlinePrXml + otherChildren.join() + pageSetUpPrXml;
+
+    if (childrenXml.isEmpty && attributes.isEmpty) return '';
+
+    final sb = StringBuffer('<$qualifiedName');
+    for (final attr in attributes) {
+      sb.write(' ${attr.name.qualified}="${_escapeXml(attr.value)}"');
+    }
+    if (childrenXml.isEmpty) {
+      sb.write('/>');
+    } else {
+      sb.write('>$childrenXml</$qualifiedName>');
+    }
+    return sb.toString();
   }
 
   String _buildSheetViewsXml(Sheet sheetObject, {required bool isActiveSheet}) {
@@ -309,20 +428,29 @@ class _WorksheetManager {
   String _buildSheetFormatPrXml(Sheet sheetObject) {
     final defaultRowHeight = sheetObject.defaultRowHeight;
     final defaultColumnWidth = sheetObject.defaultColumnWidth;
+    final rowLevels = sheetObject._rowOutlineLevels.values;
+    final columnLevels = sheetObject._columnOutlineLevels.values;
+    final outlineLevelRow = rowLevels.isEmpty ? 0 : rowLevels.reduce(max);
+    final outlineLevelCol = columnLevels.isEmpty ? 0 : columnLevels.reduce(max);
 
-    if (defaultRowHeight == null && defaultColumnWidth == null) {
+    if (defaultRowHeight == null &&
+        defaultColumnWidth == null &&
+        outlineLevelRow == 0 &&
+        outlineLevelCol == 0) {
       return '';
     }
     final buffer = StringBuffer();
     buffer.write('<sheetFormatPr');
-    if (defaultRowHeight != null) {
-      buffer
-          .write(' defaultRowHeight="${defaultRowHeight.toStringAsFixed(2)}"');
-    }
+    // defaultRowHeight is a required attribute.
+    buffer.write(' defaultRowHeight='
+        '"${(defaultRowHeight ?? _excelDefaultRowHeight).toStringAsFixed(2)}"');
     if (defaultColumnWidth != null) {
       buffer
           .write(' defaultColWidth="${defaultColumnWidth.toStringAsFixed(2)}"');
     }
+    // Excel needs the deepest levels to draw the outline bar.
+    if (outlineLevelRow > 0) buffer.write(' outlineLevelRow="$outlineLevelRow"');
+    if (outlineLevelCol > 0) buffer.write(' outlineLevelCol="$outlineLevelCol"');
     buffer.write('/>');
     return buffer.toString();
   }
@@ -331,15 +459,24 @@ class _WorksheetManager {
     final autoFits = sheetObject.getColumnAutoFits;
     final customWidths = sheetObject.getColumnWidths;
     final hiddenCols = sheetObject.getHiddenColumns;
+    final outlineLevels = sheetObject._columnOutlineLevels;
+    final collapsedCols = sheetObject._collapsedColumns;
 
-    if (customWidths.isEmpty && autoFits.isEmpty && hiddenCols.isEmpty) {
+    if (customWidths.isEmpty &&
+        autoFits.isEmpty &&
+        hiddenCols.isEmpty &&
+        outlineLevels.isEmpty &&
+        collapsedCols.isEmpty) {
       return '';
     }
 
-    final columnCount = max(
-        max(autoFits.isEmpty ? 0 : autoFits.keys.reduce(max) + 1,
-            customWidths.isEmpty ? 0 : customWidths.keys.reduce(max) + 1),
-        hiddenCols.isEmpty ? 0 : hiddenCols.reduce(max) + 1);
+    final columnCount = [
+      if (autoFits.isNotEmpty) autoFits.keys.reduce(max) + 1,
+      if (customWidths.isNotEmpty) customWidths.keys.reduce(max) + 1,
+      if (hiddenCols.isNotEmpty) hiddenCols.reduce(max) + 1,
+      if (outlineLevels.isNotEmpty) outlineLevels.keys.reduce(max) + 1,
+      if (collapsedCols.isNotEmpty) collapsedCols.reduce(max) + 1,
+    ].reduce(max);
 
     final buffer = StringBuffer();
     buffer.write('<cols>');
@@ -362,6 +499,13 @@ class _WorksheetManager {
           '<col min="${index + 1}" max="${index + 1}" width="${width.toStringAsFixed(2)}" bestFit="1" customWidth="1"');
       if (isHidden) {
         buffer.write(' hidden="1"');
+      }
+      final outlineLevel = outlineLevels[index];
+      if (outlineLevel != null) {
+        buffer.write(' outlineLevel="$outlineLevel"');
+      }
+      if (collapsedCols.contains(index)) {
+        buffer.write(' collapsed="1"');
       }
       buffer.write('/>');
     }
@@ -407,17 +551,18 @@ class _WorksheetManager {
       }
     }
 
-    // Collect all rows that need writing: rows with data, hidden rows, and
-    // rows that only have non-origin merged-cell style entries.
-    final Set<int> rowsToWrite = {};
-    for (var i = 0; i < sheetObject._maxRows; i++) {
-      final rowData = sheetObject._sheetData[i];
-      if ((rowData != null && rowData.isNotEmpty) ||
-          hiddenRows.contains(i) ||
-          mergedNonOriginStyles.containsKey(i)) {
-        rowsToWrite.add(i);
-      }
-    }
+    // Collect all rows that need writing: rows with data, rows that only
+    // have non-origin merged-cell style entries, and rows with properties
+    // (height, hidden, outline) even when they hold no values.
+    final Set<int> rowsToWrite = {
+      for (final entry in sheetObject._sheetData.entries)
+        if (entry.value.isNotEmpty) entry.key,
+      ...hiddenRows,
+      ...customHeights.keys,
+      ...mergedNonOriginStyles.keys,
+      ...sheetObject._rowOutlineLevels.keys,
+      ...sheetObject._collapsedRows,
+    };
 
     for (final rowIndex in rowsToWrite.toList()..sort()) {
       final rowData = sheetObject._sheetData[rowIndex];
@@ -430,6 +575,13 @@ class _WorksheetManager {
       }
       if (isRowHidden) {
         buffer.write(' hidden="1"');
+      }
+      final outlineLevel = sheetObject._rowOutlineLevels[rowIndex];
+      if (outlineLevel != null) {
+        buffer.write(' outlineLevel="$outlineLevel"');
+      }
+      if (sheetObject._collapsedRows.contains(rowIndex)) {
+        buffer.write(' collapsed="1"');
       }
       buffer.write('>');
 
@@ -592,6 +744,27 @@ class _WorksheetManager {
     }
     buffer.write('</mergeCells>');
     return buffer.toString();
+  }
+
+  String _buildDataValidationsXml(Sheet sheetObject) {
+    final validations = sheetObject._dataValidations;
+    if (validations.isEmpty) return '';
+    final sb = StringBuffer('<dataValidations count="${validations.length}">');
+    validations.forEach((sqref, validation) {
+      sb.write(validation._toXmlString(sqref));
+    });
+    sb.write('</dataValidations>');
+    return sb.toString();
+  }
+
+  String _buildHyperlinksXml(Sheet sheetObject) {
+    if (sheetObject._hyperlinks.isEmpty) return '';
+    final sb = StringBuffer('<hyperlinks>');
+    sheetObject._hyperlinks.forEach((ref, link) {
+      sb.write(link._toXmlString(ref, sheetObject._hyperlinkRIds[ref]));
+    });
+    sb.write('</hyperlinks>');
+    return sb.toString();
   }
 
   String _buildHeaderFooterXml(Sheet sheetObject) {

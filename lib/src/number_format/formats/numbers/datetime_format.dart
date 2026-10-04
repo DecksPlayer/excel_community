@@ -58,7 +58,9 @@ sealed class DateTimeNumFormat extends NumFormat {
             day: resolved.day,
             hour: 0,
             minute: 0,
-            second: 0);
+            second: 0,
+            elapsedDays:
+                _excelDayNumber(resolved.year, resolved.month, resolved.day));
       }
       if (resolved is DateTimeCellValue) {
         return renderDateTimeValue(formatCode,
@@ -68,7 +70,9 @@ sealed class DateTimeNumFormat extends NumFormat {
             hour: resolved.hour,
             minute: resolved.minute,
             second: resolved.second,
-            millisecond: resolved.millisecond);
+            millisecond: resolved.millisecond,
+            elapsedDays:
+                _excelDayNumber(resolved.year, resolved.month, resolved.day));
       }
     } catch (_) {
       return resolved?.toString() ?? '';
@@ -125,3 +129,7 @@ class CustomDateTimeNumFormat extends DateTimeNumFormat
     return 'CustomDateTimeNumFormat("$formatCode")';
   }
 }
+
+/// Whole days since Excel's day zero (1899-12-30), as used by `[h]`.
+int _excelDayNumber(int year, int month, int day) =>
+    DateTime.utc(year, month, day).difference(DateTime.utc(1899, 12, 30)).inDays;

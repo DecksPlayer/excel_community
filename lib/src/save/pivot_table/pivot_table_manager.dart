@@ -20,20 +20,7 @@ class _PivotTableManager {
       sheet._pivotTableRIds.clear();
 
       // Ensure worksheet rels XML exists
-      var sheetRels = _excel._xmlFiles[sheetRelsPath];
-      if (sheetRels == null) {
-        final relsBuilder = XmlBuilder();
-        relsBuilder.processing(
-            'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-        relsBuilder.element('Relationships',
-            attributes: {
-              'xmlns':
-                  'http://schemas.openxmlformats.org/package/2006/relationships',
-            },
-            nest: () {});
-        sheetRels = relsBuilder.buildDocument();
-        _excel._xmlFiles[sheetRelsPath] = sheetRels;
-      }
+      final sheetRels = _save._relationshipsPart(sheetRelsPath);
       final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
 
       for (final pt in sheet.pivotTables) {
@@ -90,9 +77,7 @@ class _PivotTableManager {
         );
 
         // Wire to worksheet relationships
-        final nextRIdIndex =
-            sheetRelsRoot.children.whereType<XmlElement>().length + 1;
-        final ptRId = 'rId$nextRIdIndex';
+        final ptRId = _save._nextRelationshipId(sheetRelsRoot);
 
         sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
           XmlAttribute(XmlName.parts('Id'), ptRId),

@@ -433,5 +433,126 @@ SectionDetail getSectionDetail(SelectedSection section) {
         ],
         codeSnippet: formulasDisplayTextSnippet,
       );
+    case SelectedSection.autoFilter:
+      return SectionDetail(
+        title: 'AutoFilter (<autoFilter>)',
+        description:
+            'Enable native Excel interactive dropdown filter buttons across a range of cells, configure criteria per column (filterValues, blanks, customFilters), and preserve existing filters on reload.',
+        icon: Icons.filter_alt_outlined,
+        themeColor: const Color(0xFF2563EB), // Royal Blue
+        highlights: [
+          'Enable AutoFilter with sheet.setAutoFilter(start, end) or sheet.setAutoFilterByString("A1:G9")',
+          'Native ECMA-376 OpenXML <autoFilter ref="A1:G9"/> serialization in compliant schema sequence',
+          'Inspect filter dimensions, row count, column count, and cell containment (containsCell)',
+          'Add column filters with sheet.addFilterColumn(FilterColumn(colId: ..., filterValues: [...]))',
+          'Fast SAX streaming parser preserves existing filter criteria on save without memory overhead',
+        ],
+        codeSnippet: autoFilterSnippet,
+      );
+    case SelectedSection.tabColor:
+      return SectionDetail(
+        title: 'Sheet Tab Colors (<tabColor>)',
+        description:
+            'Assign vibrant, custom tab colors to any worksheet using ARGB hex codes, ExcelColor presets, or Office theme indices. Full ECMA-376 schema compliance inside <sheetPr> with read/write preservation.',
+        icon: Icons.color_lens_outlined,
+        themeColor: const Color(0xFF10B981), // Emerald
+        highlights: [
+          'Set custom tab colors with sheet.setTabColorHex("#2563EB") or sheet.setTabColor(ExcelColor.green)',
+          'Supports #RRGGBB, RRGGBB, #AARRGGBB, 3-char shorthand #RGB, and Office themes with tint',
+          'Fully schema-compliant: serialized inside <sheetPr> as the first child before outlinePr',
+          'Preserves existing sheetPr attributes (codeName, filterMode) and child elements during re-save',
+          'Fast SAX streaming parser reads <tabColor> on workbook load with zero overhead',
+        ],
+        codeSnippet: tabColorSnippet,
+      );
+    case SelectedSection.pageSetup:
+      return SectionDetail(
+        title: 'Page Setup & Printing (<pageSetup>)',
+        description:
+            'Configure how each worksheet prints: orientation, paper size, scaling or fit-to-pages, margins, gridlines and headings. Settings are read from existing files and preserved on save.',
+        icon: Icons.print_outlined,
+        themeColor: const Color(0xFF0EA5E9), // Sky
+        highlights: [
+          'Orientation and paper size: sheet.setPageOrientation(PageOrientation.landscape), sheet.setPaperSize(PaperSize.a4)',
+          'Scale to a percentage with sheet.setPrintScale(80) or fit to N x M pages with sheet.fitToPages(width: 1, height: 0)',
+          'Margins in inches or centimetres with Normal / Wide / Narrow presets (<pageMargins>)',
+          'Print gridlines, row/column headings and centered content (<printOptions>)',
+          'Page numbering, page order, copies, draft / black & white and error printing via the PageSetup model',
+        ],
+        codeSnippet: pageSetupSnippet,
+      );
+    case SelectedSection.dataExport:
+      return SectionDetail(
+        title: 'Data Export & Transformation',
+        description:
+            'Convert worksheets to Dart maps, value grids, JSON or CSV, and import maps back as rows.',
+        icon: Icons.data_object,
+        themeColor: const Color(0xFF7C3AED), // Violet
+        highlights: [
+          'sheet.rowsAsMaps() with native Dart values or ExportValueMode.displayText',
+          'sheet.toJson() / excel.toJson() with ISO dates and HH:MM:SS times',
+          'sheet.toCsv() with RFC 4180 quoting and custom separators',
+          'sheet.appendRowsFromMaps() writes maps as rows, matching or adding header columns',
+        ],
+        codeSnippet: dataExportSnippet,
+      );
+    case SelectedSection.hyperlinks:
+      return SectionDetail(
+        title: 'Cell Hyperlinks (<hyperlinks>)',
+        description:
+            'Link cells to web pages, e-mail addresses, files, or other cells and defined names in the workbook.',
+        icon: Icons.link,
+        themeColor: const Color(0xFF2563EB),
+        highlights: [
+          'Hyperlink.url / .email / .cell / .location factories',
+          'sheet.setHyperlink(cell, link, text:) and cell.hyperlink getter/setter',
+          'External links stored as worksheet relationships (TargetMode="External")',
+          'Links move with their cells when rows or columns are inserted or removed',
+        ],
+        codeSnippet: hyperlinksSnippet,
+      );
+    case SelectedSection.dataValidation:
+      return SectionDetail(
+        title: 'Data Validation & Dropdowns',
+        description:
+            'Dropdown lists, number, date, time and text-length limits or custom formulas, with input and error messages.',
+        icon: Icons.fact_check_outlined,
+        themeColor: const Color(0xFF0D9488),
+        highlights: [
+          'DataValidation.list / listFromRange / wholeNumber / decimal / date / time / textLength / custom',
+          'withPrompt() and withError() with stop, warning or information styles',
+          'sheet.addDataValidation(range, rule) subtracts overlapping rules',
+          'rule.accepts(value) checks values in Dart',
+        ],
+        codeSnippet: dataValidationSnippet,
+      );
+    case SelectedSection.grouping:
+      return SectionDetail(
+        title: 'Row & Column Grouping',
+        description: 'Nested, collapsible row and column groups like Excel\'s Data > Group.',
+        icon: Icons.account_tree_outlined,
+        themeColor: const Color(0xFFEA580C),
+        highlights: [
+          'sheet.groupRows(start, end, collapsed:) and sheet.groupColumns(...)',
+          'Up to 7 nested levels; expanding keeps collapsed inner groups',
+          'OutlineSettings for summary rows above/below and columns left/right',
+          'Groups move with inserted or removed rows and columns',
+        ],
+        codeSnippet: groupingSnippet,
+      );
+    case SelectedSection.tables:
+      return SectionDetail(
+        title: 'Excel Tables (<tableParts>)',
+        description: '"Format as Table" with built-in styles, totals rows and structured references.',
+        icon: Icons.table_chart_outlined,
+        themeColor: const Color(0xFF2563EB),
+        highlights: [
+          'sheet.addTable(range, name:, style:, showTotalsRow:, columns:)',
+          '60 built-in styles: TableStyle.light / medium / dark',
+          'Totals row labels and SUBTOTAL formulas filled in automatically',
+          'tableRowsAsMaps, appendTableRow and structured references',
+        ],
+        codeSnippet: tablesSnippet,
+      );
   }
 }

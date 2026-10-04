@@ -11,7 +11,14 @@ import 'widgets/header_card.dart';
 import 'widgets/about_view.dart';
 import 'widgets/code_view_card.dart';
 import 'widgets/preview_card.dart';
+import 'widgets/data_export_view.dart';
+import 'widgets/data_validation_view.dart';
 import 'widgets/fonts_styles_view.dart';
+import 'widgets/grouping_view.dart';
+import 'widgets/hyperlinks_view.dart';
+import 'widgets/number_formats_view.dart';
+import 'widgets/page_setup_view.dart';
+import 'widgets/tables_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -162,6 +169,30 @@ class _MyHomePageState extends State<MyHomePage> {
         case SelectedSection.formulasDisplayText:
           resultStatus = await ExcelGenerator.generateFormulasDisplayText();
           break;
+        case SelectedSection.autoFilter:
+          resultStatus = await ExcelGenerator.generateAutoFilter();
+          break;
+        case SelectedSection.tabColor:
+          resultStatus = await ExcelGenerator.generateTabColors();
+          break;
+        case SelectedSection.pageSetup:
+          resultStatus = await ExcelGenerator.generatePageSetup();
+          break;
+        case SelectedSection.dataExport:
+          resultStatus = await ExcelGenerator.generateDataExport();
+          break;
+        case SelectedSection.hyperlinks:
+          resultStatus = await ExcelGenerator.generateHyperlinks();
+          break;
+        case SelectedSection.dataValidation:
+          resultStatus = await ExcelGenerator.generateDataValidation();
+          break;
+        case SelectedSection.grouping:
+          resultStatus = await ExcelGenerator.generateGrouping();
+          break;
+        case SelectedSection.tables:
+          resultStatus = await ExcelGenerator.generateTables();
+          break;
       }
       setState(() {
         _status = resultStatus;
@@ -254,6 +285,48 @@ class _MyHomePageState extends State<MyHomePage> {
                     const AboutView()
                   else if (_selectedSection == SelectedSection.fontsStyles)
                     FontsStylesView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.numberFormats)
+                    NumberFormatsView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.tables)
+                    TablesView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.grouping)
+                    GroupingView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.dataValidation)
+                    DataValidationView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.hyperlinks)
+                    HyperlinksView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.dataExport)
+                    DataExportView(
+                      isGenerating: _isGenerating,
+                      onGenerate: _handleGeneration,
+                      status: _status,
+                    )
+                  else if (_selectedSection == SelectedSection.pageSetup)
+                    PageSetupView(
                       isGenerating: _isGenerating,
                       onGenerate: _handleGeneration,
                       status: _status,

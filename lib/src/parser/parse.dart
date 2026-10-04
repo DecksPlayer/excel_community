@@ -300,7 +300,9 @@ class Parser {
         ' <dimension ref="A1"/>'
         ' <sheetViews><sheetView workbookViewId="0"/></sheetViews>'
         ' <sheetData/>'
-        ' <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>'
+        // <pageMargins> is written on save from Sheet.pageMargins (defaults
+        // to PageMargins.normal). Keeping it here would overwrite margins set
+        // before save, because this template is parsed into the sheet.
         ' </worksheet>');
 
     _excel._archive.addFile(ArchiveFile(

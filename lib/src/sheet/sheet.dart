@@ -27,6 +27,24 @@ class Sheet {
   Set<int> _hiddenColumns = {};
   Set<int> _hiddenRows = {};
   final List<ConditionalFormattingGroup> _conditionalFormattings = [];
+  AutoFilter? _autoFilter;
+  TabColor? _tabColor;
+  PageSetup? _pageSetup;
+  PageMargins? _pageMargins;
+  PrintOptions? _printOptions;
+  final Map<String, Hyperlink> _hyperlinks = {};
+  final Map<String, DataValidation> _dataValidations = {};
+  OutlineSettings? _outlineSettings;
+  Map<int, int> _rowOutlineLevels = {};
+  Map<int, int> _columnOutlineLevels = {};
+  // Summary rows/columns marked collapsed="1".
+  Set<int> _collapsedRows = {};
+  Set<int> _collapsedColumns = {};
+  final List<ExcelTable> _tables = [];
+  // Relationship id of each table part, assigned while saving.
+  final List<String> _tableRIds = [];
+  // Relationship id of each external hyperlink, assigned while saving.
+  final Map<String, String> _hyperlinkRIds = {};
 
   Sheet._clone(Excel excel, String sheetName, Sheet oldSheetObject)
       : this._(excel, sheetName,
@@ -50,6 +68,19 @@ class Sheet {
             hiddenColumnsVal: oldSheetObject._hiddenColumns,
             hiddenRowsVal: oldSheetObject._hiddenRows,
             conditionalFormattingsVal: oldSheetObject._conditionalFormattings,
+            autoFilterVal: oldSheetObject._autoFilter,
+            tabColorVal: oldSheetObject._tabColor,
+            pageSetupVal: oldSheetObject._pageSetup,
+            pageMarginsVal: oldSheetObject._pageMargins,
+            printOptionsVal: oldSheetObject._printOptions,
+            hyperlinksVal: oldSheetObject._hyperlinks,
+            dataValidationsVal: oldSheetObject._dataValidations,
+            outlineSettingsVal: oldSheetObject._outlineSettings,
+            rowOutlineLevelsVal: oldSheetObject._rowOutlineLevels,
+            columnOutlineLevelsVal: oldSheetObject._columnOutlineLevels,
+            collapsedRowsVal: oldSheetObject._collapsedRows,
+            collapsedColumnsVal: oldSheetObject._collapsedColumns,
+            tablesVal: oldSheetObject._tables,
             drawingRId: oldSheetObject._drawingRId,
             legacyDrawingRId: oldSheetObject._legacyDrawingRId);
 
@@ -74,8 +105,48 @@ class Sheet {
       Set<int>? hiddenColumnsVal,
       Set<int>? hiddenRowsVal,
       List<ConditionalFormattingGroup>? conditionalFormattingsVal,
+      AutoFilter? autoFilterVal,
+      TabColor? tabColorVal,
+      PageSetup? pageSetupVal,
+      PageMargins? pageMarginsVal,
+      PrintOptions? printOptionsVal,
+      Map<String, Hyperlink>? hyperlinksVal,
+      Map<String, DataValidation>? dataValidationsVal,
+      OutlineSettings? outlineSettingsVal,
+      Map<int, int>? rowOutlineLevelsVal,
+      Map<int, int>? columnOutlineLevelsVal,
+      Set<int>? collapsedRowsVal,
+      Set<int>? collapsedColumnsVal,
+      List<ExcelTable>? tablesVal,
       String? drawingRId,
       String? legacyDrawingRId}) {
+    _autoFilter = autoFilterVal;
+    _tabColor = tabColorVal;
+    _pageSetup = pageSetupVal;
+    _pageMargins = pageMarginsVal;
+    _printOptions = printOptionsVal;
+    if (hyperlinksVal != null) {
+      _hyperlinks.addAll(hyperlinksVal);
+    }
+    if (dataValidationsVal != null) {
+      _dataValidations.addAll(dataValidationsVal);
+    }
+    _outlineSettings = outlineSettingsVal;
+    if (rowOutlineLevelsVal != null) {
+      _rowOutlineLevels = Map<int, int>.from(rowOutlineLevelsVal);
+    }
+    if (columnOutlineLevelsVal != null) {
+      _columnOutlineLevels = Map<int, int>.from(columnOutlineLevelsVal);
+    }
+    if (collapsedRowsVal != null) {
+      _collapsedRows = Set<int>.from(collapsedRowsVal);
+    }
+    if (collapsedColumnsVal != null) {
+      _collapsedColumns = Set<int>.from(collapsedColumnsVal);
+    }
+    if (tablesVal != null) {
+      _tables.addAll(tablesVal);
+    }
     _drawingRId = drawingRId;
     _legacyDrawingRId = legacyDrawingRId;
     this.sheetProtection = sheetProtection ?? SheetProtection();
@@ -145,6 +216,25 @@ class Sheet {
       });
     }
     _countRowsAndColumns();
+  }
+
+  /// Moves per-row properties (height, hidden, outline) after inserting or
+  /// removing the row at [index].
+  void _shiftRowProperties(int index, int delta) {
+    _rowHeights = _shiftIndexMap(_rowHeights, index, delta);
+    _hiddenRows = _shiftIndexSet(_hiddenRows, index, delta);
+    _rowOutlineLevels = _shiftIndexMap(_rowOutlineLevels, index, delta);
+    _collapsedRows = _shiftIndexSet(_collapsedRows, index, delta);
+  }
+
+  /// Moves per-column properties (width, auto-fit, hidden, outline) after
+  /// inserting or removing the column at [index].
+  void _shiftColumnProperties(int index, int delta) {
+    _columnWidths = _shiftIndexMap(_columnWidths, index, delta);
+    _columnAutoFit = _shiftIndexMap(_columnAutoFit, index, delta);
+    _hiddenColumns = _shiftIndexSet(_hiddenColumns, index, delta);
+    _columnOutlineLevels = _shiftIndexMap(_columnOutlineLevels, index, delta);
+    _collapsedColumns = _shiftIndexSet(_collapsedColumns, index, delta);
   }
 
   void _removeCell(int rowIndex, int columnIndex) {
@@ -418,5 +508,228 @@ class Sheet {
   /// Clears all conditional formatting rules from this sheet.
   void clearConditionalFormatting() {
     _conditionalFormattings.clear();
+  }
+
+  /// The AutoFilter configuration for this worksheet, or `null` if none is set.
+  AutoFilter? get autoFilter => _autoFilter;
+
+  set autoFilter(AutoFilter? filter) {
+    _autoFilter = filter;
+  }
+
+  /// Sets an AutoFilter on the range from [start] to [end].
+  ///
+  /// Example:
+  /// ```dart
+  /// sheet.setAutoFilter(CellIndex.indexByString("A1"), CellIndex.indexByString("D10"));
+  /// ```
+  void setAutoFilter(CellIndex start, CellIndex end,
+      {List<FilterColumn>? filterColumns}) {
+    _autoFilter = AutoFilter.fromRange(
+      start: start,
+      end: end,
+      filterColumns: filterColumns,
+    );
+  }
+
+  /// Sets an AutoFilter using a cell range string (e.g. `"A1:D10"`).
+  void setAutoFilterByString(String range,
+      {List<FilterColumn>? filterColumns}) {
+    _autoFilter = AutoFilter(
+      ref: range,
+      filterColumns: filterColumns,
+    );
+  }
+
+  /// Removes / clears any AutoFilter on this sheet.
+  void clearAutoFilter() {
+    _autoFilter = null;
+  }
+
+  /// Removes / clears any AutoFilter on this sheet (alias for [clearAutoFilter]).
+  void removeAutoFilter() => clearAutoFilter();
+
+  /// Whether this worksheet has an active AutoFilter.
+  bool get hasAutoFilter => _autoFilter != null;
+
+  /// Adds or replaces a [FilterColumn] in the current [autoFilter].
+  ///
+  /// If no [autoFilter] is set on this sheet, this method is a no-op.
+  void addFilterColumn(FilterColumn filterColumn) {
+    if (_autoFilter == null) return;
+    final updated = List<FilterColumn>.from(_autoFilter!.filterColumns);
+    final idx = updated.indexWhere((c) => c.colId == filterColumn.colId);
+    if (idx >= 0) {
+      updated[idx] = filterColumn;
+    } else {
+      updated.add(filterColumn);
+      updated.sort((a, b) => a.colId.compareTo(b.colId));
+    }
+    _autoFilter = _autoFilter!.copyWith(filterColumns: updated);
+  }
+
+  /// The sheet tab color configuration for this worksheet, or `null` if none is set.
+  TabColor? get tabColor => _tabColor;
+
+  set tabColor(TabColor? color) {
+    _tabColor = color;
+  }
+
+  /// Sets the sheet tab color using an [ExcelColor].
+  ///
+  /// Example:
+  /// ```dart
+  /// sheet.setTabColor(ExcelColor.green);
+  /// ```
+  void setTabColor(ExcelColor color) {
+    _tabColor = TabColor.fromColor(color);
+  }
+
+  /// Sets the sheet tab color using a hex string (e.g. `'#FF0000'`, `'4CAF50'`, or `'FF4CAF50'`).
+  ///
+  /// Example:
+  /// ```dart
+  /// sheet.setTabColorHex('#4CAF50');
+  /// ```
+  void setTabColorHex(String hex) {
+    _tabColor = TabColor.fromHex(hex);
+  }
+
+  /// Clears/removes any custom tab color from this sheet.
+  void clearTabColor() {
+    _tabColor = null;
+  }
+
+  /// Clears/removes any custom tab color from this sheet (alias for [clearTabColor]).
+  void removeTabColor() => clearTabColor();
+
+  /// Whether this worksheet has a custom tab color set.
+  bool get hasTabColor => _tabColor != null;
+
+  /// The print page setup (`<pageSetup>`) of this worksheet, or `null` if
+  /// none is set.
+  PageSetup? get pageSetup => _pageSetup;
+
+  set pageSetup(PageSetup? value) {
+    _pageSetup = value;
+  }
+
+  /// Whether this worksheet has a page setup configured.
+  bool get hasPageSetup => _pageSetup != null;
+
+  /// Sets the print orientation, keeping the rest of the page setup.
+  ///
+  /// ```dart
+  /// sheet.setPageOrientation(PageOrientation.landscape);
+  /// ```
+  void setPageOrientation(PageOrientation orientation) {
+    _pageSetup = (_pageSetup ?? const PageSetup())
+        .copyWith(orientation: orientation);
+  }
+
+  /// Sets the print paper size, keeping the rest of the page setup.
+  ///
+  /// ```dart
+  /// sheet.setPaperSize(PaperSize.a4);
+  /// ```
+  void setPaperSize(PaperSize paperSize) {
+    _pageSetup =
+        (_pageSetup ?? const PageSetup()).copyWith(paperSize: paperSize);
+  }
+
+  /// Prints the sheet at [percent] % of its normal size (10–400) and turns
+  /// off fit-to-page.
+  ///
+  /// Throws a [RangeError] if [percent] is outside 10–400.
+  void setPrintScale(int percent) {
+    RangeError.checkValueInInterval(percent, 10, 400, 'percent');
+    _pageSetup = (_pageSetup ?? const PageSetup())
+        .copyWith(scale: percent, fitToPage: false);
+  }
+
+  /// Scales the printout to fit [width] pages wide by [height] pages tall.
+  ///
+  /// Use `0` for either dimension to let it grow as needed, e.g.
+  /// `fitToPages(width: 1, height: 0)` fits all columns on one page width.
+  ///
+  /// Throws a [RangeError] if either value is negative.
+  void fitToPages({int width = 1, int height = 1}) {
+    RangeError.checkNotNegative(width, 'width');
+    RangeError.checkNotNegative(height, 'height');
+    _pageSetup = (_pageSetup ?? const PageSetup()).copyWith(
+      fitToPage: true,
+      fitToWidth: width,
+      fitToHeight: height,
+    );
+  }
+
+  /// Removes the page setup from this sheet.
+  void clearPageSetup() {
+    _pageSetup = null;
+  }
+
+  /// Removes the page setup from this sheet (alias for [clearPageSetup]).
+  void removePageSetup() => clearPageSetup();
+
+  /// The print margins (`<pageMargins>`) of this worksheet, in inches.
+  ///
+  /// When `null`, [PageMargins.normal] is written on save.
+  PageMargins? get pageMargins => _pageMargins;
+
+  /// Throws an [ArgumentError] if any margin is negative.
+  set pageMargins(PageMargins? value) {
+    if (value != null &&
+        [
+          value.left,
+          value.right,
+          value.top,
+          value.bottom,
+          value.header,
+          value.footer,
+        ].any((m) => m < 0)) {
+      throw ArgumentError.value(value, 'pageMargins', 'must not be negative');
+    }
+    _pageMargins = value;
+  }
+
+  /// Resets the print margins to Excel's "Normal" defaults.
+  void clearPageMargins() {
+    _pageMargins = null;
+  }
+
+  /// The print options (`<printOptions>`) of this worksheet, or `null` if
+  /// none are set.
+  PrintOptions? get printOptions => _printOptions;
+
+  set printOptions(PrintOptions? value) {
+    _printOptions = (value == null || value.isEmpty) ? null : value;
+  }
+
+  /// Whether this worksheet has print options configured.
+  bool get hasPrintOptions => _printOptions != null;
+
+  /// Prints (or stops printing) cell gridlines.
+  void setPrintGridLines(bool enabled) {
+    _printOptions =
+        (_printOptions ?? const PrintOptions()).copyWith(gridLines: enabled);
+  }
+
+  /// Prints (or stops printing) row and column headings.
+  void setPrintHeadings(bool enabled) {
+    _printOptions =
+        (_printOptions ?? const PrintOptions()).copyWith(headings: enabled);
+  }
+
+  /// Centers the printed content on the page.
+  void setPrintCentered({bool? horizontally, bool? vertically}) {
+    _printOptions = (_printOptions ?? const PrintOptions()).copyWith(
+      horizontalCentered: horizontally,
+      verticalCentered: vertically,
+    );
+  }
+
+  /// Removes all print options from this sheet.
+  void clearPrintOptions() {
+    _printOptions = null;
   }
 }

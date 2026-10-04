@@ -3,199 +3,86 @@ import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel_community/excel_community.dart';
 
-Future<String> generateNumberFormatsHelper() async {
-  var excel = Excel.createExcel();
-  var sheet = excel['Number Formats'];
-  excel.delete('Sheet1');
+import '../../data/number_format_catalog.dart';
 
-  sheet.updateCell(
-    CellIndex.indexByString('A1'),
-    TextCellValue('DEMO DE FORMATOS DE NÚMERO (BUILT-IN IDs)'),
-    cellStyle: CellStyle(
-      bold: true,
-      fontSize: 16,
-      fontColorHex: ExcelColor.blue,
-      horizontalAlign: HorizontalAlign.Center,
-    ),
+/// Builds the Number Formats demo workbook from [numFormatCatalog]: one
+/// worksheet per category, one row per sample value.
+Excel buildNumberFormatsWorkbook() {
+  final excel = Excel.createExcel();
+
+  final border = Border(borderStyle: BorderStyle.Thin);
+  final cellStyle = CellStyle(
+    leftBorder: border,
+    rightBorder: border,
+    topBorder: border,
+    bottomBorder: border,
   );
-  sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('D1'));
-
-  int row = 3;
-
-  final headerStyle = CellStyle(
-    bold: true,
-    backgroundColorHex: ExcelColor.blue300,
-    fontColorHex: ExcelColor.white,
-    horizontalAlign: HorizontalAlign.Center,
-    leftBorder: Border(borderStyle: BorderStyle.Thin),
-    rightBorder: Border(borderStyle: BorderStyle.Thin),
-    topBorder: Border(borderStyle: BorderStyle.Thin),
-    bottomBorder: Border(borderStyle: BorderStyle.Thin),
+  final headerStyle = cellStyle.copyWith(
+    boldVal: true,
+    backgroundColorHexVal: ExcelColor.fromHexString('#0D9488'),
+    fontColorHexVal: ExcelColor.white,
+    horizontalAlignVal: HorizontalAlign.Center,
   );
+  const headers = ['ID', 'Name', 'Format Code', 'Sample', 'Formatted Cell', 'Excel Shows', 'Dart'];
 
-  sheet.updateCell(CellIndex.indexByString('A$row'), TextCellValue('ID de Formato'), cellStyle: headerStyle);
-  sheet.updateCell(CellIndex.indexByString('B$row'), TextCellValue('Nombre / Descripción'), cellStyle: headerStyle);
-  sheet.updateCell(CellIndex.indexByString('C$row'), TextCellValue('Valor de Ejemplo'), cellStyle: headerStyle);
-  sheet.updateCell(CellIndex.indexByString('D$row'), TextCellValue('Formateado'), cellStyle: headerStyle);
-  row++;
+  for (final category in NumFormatCategory.values) {
+    final sheet = excel[category.label];
+    sheet.updateCell(
+      CellIndex.indexByString('A1'),
+      TextCellValue('${category.label} - Number Formats'),
+      cellStyle: CellStyle(bold: true, fontSize: 16, fontColorHex: ExcelColor.fromHexString('#0D9488')),
+    );
+    for (var col = 0; col < headers.length; col++) {
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: col, rowIndex: 2),
+        TextCellValue(headers[col]),
+        cellStyle: headerStyle,
+      );
+    }
 
-  final cellBorderStyle = CellStyle(
-    leftBorder: Border(borderStyle: BorderStyle.Thin),
-    rightBorder: Border(borderStyle: BorderStyle.Thin),
-    topBorder: Border(borderStyle: BorderStyle.Thin),
-    bottomBorder: Border(borderStyle: BorderStyle.Thin),
-  );
+    var row = 3;
+    for (final entry in numFormatCatalog.where((e) => e.category == category)) {
+      for (final sample in entry.samples) {
+        void put(int col, CellValue value, [CellStyle? style]) => sheet.updateCell(
+              CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
+              value,
+              cellStyle: style ?? cellStyle,
+            );
+        final id = entry.numFmtId;
+        put(0, id != null ? IntCellValue(id) : TextCellValue('custom'));
+        put(1, TextCellValue(entry.name));
+        put(2, TextCellValue(entry.format.formatCode));
+        put(3, TextCellValue(sampleLabel(sample.value)));
+        put(4, sample.value, cellStyle.copyWith(numberFormat: entry.format, horizontalAlignVal: HorizontalAlign.Right));
+        put(5, TextCellValue(sample.expected));
+        put(6, TextCellValue(entry.dartExpression));
+        row++;
+      }
+    }
 
-  final formats = [
-    {
-      'id': 0,
-      'desc': 'General (Sin formato)',
-      'value': DoubleCellValue(1234.567),
-      'format': NumFormat.standard_0,
-    },
-    {
-      'id': 1,
-      'desc': 'Integer (0)',
-      'value': IntCellValue(1234),
-      'format': NumFormat.standard_1,
-    },
-    {
-      'id': 2,
-      'desc': 'Float (0.00)',
-      'value': DoubleCellValue(1234.567),
-      'format': NumFormat.standard_2,
-    },
-    {
-      'id': 3,
-      'desc': 'Integer con comas (#,##0)',
-      'value': IntCellValue(1234567),
-      'format': NumFormat.standard_3,
-    },
-    {
-      'id': 4,
-      'desc': 'Float con comas (#,##0.00)',
-      'value': DoubleCellValue(1234567.89),
-      'format': NumFormat.standard_4,
-    },
-    {
-      'id': 9,
-      'desc': 'Porcentaje (0%)',
-      'value': DoubleCellValue(0.756),
-      'format': NumFormat.standard_9,
-    },
-    {
-      'id': 10,
-      'desc': 'Porcentaje con decimales (0.00%)',
-      'value': DoubleCellValue(0.7563),
-      'format': NumFormat.standard_10,
-    },
-    {
-      'id': 11,
-      'desc': 'Científico (0.00E+00)',
-      'value': DoubleCellValue(123456789),
-      'format': NumFormat.standard_11,
-    },
-    {
-      'id': 14,
-      'desc': 'Fecha corta (mm-dd-yy)',
-      'value': DateCellValue(year: 2026, month: 5, day: 31),
-      'format': NumFormat.standard_14,
-    },
-    {
-      'id': 15,
-      'desc': 'Fecha larga (d-mmm-yy)',
-      'value': DateCellValue(year: 2026, month: 5, day: 31),
-      'format': NumFormat.standard_15,
-    },
-    {
-      'id': 18,
-      'desc': 'Hora 12h (h:mm AM/PM)',
-      'value': DateTimeCellValue(year: 2026, month: 5, day: 31, hour: 14, minute: 30, second: 0),
-      'format': NumFormat.standard_18,
-    },
-    {
-      'id': 20,
-      'desc': 'Hora 24h (h:mm)',
-      'value': DateTimeCellValue(year: 2026, month: 5, day: 31, hour: 14, minute: 30, second: 0),
-      'format': NumFormat.standard_20,
-    },
-    {
-      'id': 22,
-      'desc': 'Fecha y Hora (m/d/yy h:mm)',
-      'value': DateTimeCellValue(year: 2026, month: 5, day: 31, hour: 14, minute: 30, second: 0),
-      'format': NumFormat.standard_22,
-    },
-    {
-      'id': 37,
-      'desc': 'Contabilidad entera con parént. (#,##0 ;(#,##0))',
-      'value': DoubleCellValue(-1234.5),
-      'format': NumFormat.standard_37,
-    },
-    {
-      'id': 38,
-      'desc': 'Contabilidad entera en rojo (#,##0 ;[Red](#,##0))',
-      'value': DoubleCellValue(-1234.5),
-      'format': NumFormat.standard_38,
-    },
-    {
-      'id': 39,
-      'desc': 'Contabilidad float con parént. (#,##0.00;(#,##0.00))',
-      'value': DoubleCellValue(-1234.56),
-      'format': NumFormat.standard_39,
-    },
-    {
-      'id': 40,
-      'desc': 'Contabilidad float en rojo (#,##0.00;[Red](#,##0.00))',
-      'value': DoubleCellValue(-1234.56),
-      'format': NumFormat.standard_40,
-    },
-    {
-      'id': 44,
-      'desc': 'Contabilidad (Moneda) con sangría (Accounting ID 44!)',
-      'value': DoubleCellValue(1234.56),
-      'format': NumFormat.standard_44,
-    },
-  ];
-
-  for (var f in formats) {
-    sheet.updateCell(
-      CellIndex.indexByString('A$row'),
-      IntCellValue(f['id'] as int),
-      cellStyle: cellBorderStyle.copyWith(horizontalAlignVal: HorizontalAlign.Center),
-    );
-    sheet.updateCell(
-      CellIndex.indexByString('B$row'),
-      TextCellValue(f['desc'] as String),
-      cellStyle: cellBorderStyle,
-    );
-    sheet.updateCell(
-      CellIndex.indexByString('C$row'),
-      TextCellValue(f['value'].toString()),
-      cellStyle: cellBorderStyle,
-    );
-    sheet.updateCell(
-      CellIndex.indexByString('D$row'),
-      f['value'] as CellValue,
-      cellStyle: cellBorderStyle.copyWith(
-        numberFormat: f['format'] as NumFormat,
-        horizontalAlignVal: HorizontalAlign.Right,
-      ),
-    );
-    row++;
+    const widths = [8.0, 30.0, 42.0, 22.0, 26.0, 30.0, 58.0];
+    for (var col = 0; col < widths.length; col++) {
+      sheet.setColumnWidth(col, widths[col]);
+    }
+    sheet.frozenRows = 3;
   }
+  return excel;
+}
 
-  sheet.setColumnWidth(0, 15.0);
-  sheet.setColumnWidth(1, 45.0);
-  sheet.setColumnWidth(2, 25.0);
-  sheet.setColumnWidth(3, 25.0);
+Future<String> generateNumberFormatsHelper() async {
+  final excel = buildNumberFormatsWorkbook();
+  final summary = '${NumFormatCategory.values.length} worksheets, '
+      '${numFormatCatalog.length} formats';
 
   if (kIsWeb) {
     final bytes = excel.save(fileName: 'number_formats_example.xlsx');
     if (bytes != null && bytes.isNotEmpty) {
       return '✅ Number Formats Example generated successfully!\n'
+          '$summary\n'
           'File size: ${(bytes.length / 1024).toStringAsFixed(2)} KB\n'
           'The download should start automatically.\n'
-          '📌 File: number_formats_example.xlsx';
+          '📌 File: number_formats_example.xlsx\n'
+          '💡 Compare the "Formatted Cell" column with "Excel Shows".';
     }
     throw Exception('Failed to generate Excel file for Web.');
   } else {
@@ -217,6 +104,7 @@ Future<String> generateNumberFormatsHelper() async {
       final savedFileSize = await file.length();
       return '✅ Number Formats Example saved successfully!\n'
           'Location: $outputFile\n'
+          '$summary\n'
           'Size: ${(savedFileSize / 1024).toStringAsFixed(2)} KB';
     }
     return 'Save cancelled.';

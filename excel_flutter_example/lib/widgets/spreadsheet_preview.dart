@@ -122,7 +122,8 @@ class SpreadsheetPreview extends StatelessWidget {
                 ],
               ),
             ),
-            if (selectedSection == SelectedSection.multiSheets) ...[
+            if (selectedSection == SelectedSection.multiSheets ||
+                selectedSection == SelectedSection.tabColor) ...[
               const Divider(height: 1, color: Color(0xFFCBD5E1)),
               Container(
                 color: const Color(0xFFF8FAFC),
@@ -132,9 +133,17 @@ class SpreadsheetPreview extends StatelessWidget {
                   children: [
                     const Icon(Icons.playlist_add, size: 14, color: Color(0xFF64748B)),
                     const SizedBox(width: 8),
-                    _buildSheetTab("Summary", isActive: true),
-                    _buildSheetTab("Revenues", isActive: false),
-                    _buildSheetTab("Expenses", isActive: false),
+                    if (selectedSection == SelectedSection.tabColor) ...[
+                      _buildSheetTab("Executive", isActive: true, tabColor: const Color(0xFF2563EB)),
+                      _buildSheetTab("Marketing", isActive: false, tabColor: const Color(0xFF10B981)),
+                      _buildSheetTab("Finance", isActive: false, tabColor: const Color(0xFFF59E0B)),
+                      _buildSheetTab("Operations", isActive: false, tabColor: const Color(0xFFEC4899)),
+                      _buildSheetTab("Notes", isActive: false),
+                    ] else ...[
+                      _buildSheetTab("Summary", isActive: true),
+                      _buildSheetTab("Revenues", isActive: false),
+                      _buildSheetTab("Expenses", isActive: false),
+                    ],
                   ],
                 ),
               ),
@@ -145,37 +154,163 @@ class SpreadsheetPreview extends StatelessWidget {
     );
   }
 
-  Widget _buildSheetTab(String name, {required bool isActive}) {
+  Widget _buildSheetTab(String name, {required bool isActive, Color? tabColor}) {
     return Container(
       margin: const EdgeInsets.only(top: 4, right: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.transparent,
+        color: isActive ? Colors.white : (tabColor != null ? tabColor.withValues(alpha: 0.12) : Colors.transparent),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(4),
           topRight: Radius.circular(4),
         ),
         border: isActive
-            ? const fp.Border(
-                left: fp.BorderSide(color: Color(0xFFCBD5E1)),
-                right: fp.BorderSide(color: Color(0xFFCBD5E1)),
-                top: fp.BorderSide(color: Color(0xFF10B981), width: 2),
+            ? fp.Border(
+                left: const fp.BorderSide(color: Color(0xFFCBD5E1)),
+                right: const fp.BorderSide(color: Color(0xFFCBD5E1)),
+                top: fp.BorderSide(color: tabColor ?? const Color(0xFF10B981), width: 2),
+                bottom: tabColor != null ? fp.BorderSide(color: tabColor, width: 2.5) : fp.BorderSide.none,
               )
-            : null,
+            : (tabColor != null
+                ? fp.Border(
+                    bottom: fp.BorderSide(color: tabColor, width: 3),
+                  )
+                : null),
       ),
-      child: Text(
-        name,
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (tabColor != null) ...[
+            Container(
+              width: 7,
+              height: 7,
+              margin: const EdgeInsets.only(right: 4),
+              decoration: BoxDecoration(
+                color: tabColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMockCellContent(int rowIndex, int colIndex) {
-    if (selectedSection == SelectedSection.freezePanes) {
+    if (selectedSection == SelectedSection.autoFilter) {
+      final headers = ['ID', 'Product', 'Category', 'Region', 'Units', 'Price'];
+      if (rowIndex == 0) {
+        if (colIndex < headers.length) {
+          final isFilteredCol = colIndex == 2;
+          return Container(
+            color: const Color(0xFF1E3A8A),
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    headers[colIndex],
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 6,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Icon(
+                  isFilteredCol ? Icons.filter_alt : Icons.arrow_drop_down,
+                  size: 9,
+                  color: isFilteredCol ? Colors.amberAccent : Colors.white70,
+                ),
+              ],
+            ),
+          );
+        }
+      } else if (rowIndex >= 1 && rowIndex <= 8) {
+        final data = [
+          ['101', 'MacBook', 'Electronics', 'North', '18', '\$2,499'],
+          ['102', 'Desk', 'Furniture', 'Europe', '45', '\$680'],
+          ['103', 'Monitor', 'Electronics', 'APAC', '60', '\$520'],
+          ['104', 'Chair', 'Furniture', 'North', '85', '\$340'],
+          ['105', 'Audio', 'Electronics', 'LATAM', '120', '\$199'],
+          ['106', 'Table', 'Furniture', 'Europe', '12', '\$1,250'],
+          ['107', 'Keyboard', 'Electronics', 'APAC', '150', '\$129'],
+          ['108', 'Cabinet', 'Furniture', 'North', '35', '\$210'],
+        ];
+        final rowData = data[rowIndex - 1];
+        if (colIndex < rowData.length) {
+          final isElectronics = rowData[2] == 'Electronics';
+          return Container(
+            color: isElectronics ? const Color(0xFFEFF6FF) : Colors.transparent,
+            alignment: Alignment.center,
+            child: Text(
+              rowData[colIndex],
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 6,
+                fontWeight: colIndex == 1 ? FontWeight.w600 : FontWeight.normal,
+                color: isElectronics ? const Color(0xFF1E40AF) : const Color(0xFF334155),
+              ),
+            ),
+          );
+        }
+      }
+      return const SizedBox.shrink();
+    } else if (selectedSection == SelectedSection.tabColor) {
+      final headers = ['Metric', 'Target', 'Actual', 'Variance', 'Status', 'Notes'];
+      if (rowIndex == 0) {
+        if (colIndex < headers.length) {
+          return Container(
+            color: const Color(0xFF2563EB),
+            alignment: Alignment.center,
+            child: Text(
+              headers[colIndex],
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 6,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          );
+        }
+      } else if (rowIndex >= 1 && rowIndex <= 5) {
+        final data = [
+          ['Gross ARR', '\$12.5M', '\$13.2M', '+\$700K', 'Exceeded', 'Q3 Outperformed'],
+          ['Net Retention', '115%', '118%', '+3%', 'Healthy', 'Expansion surge'],
+          ['CAC Payback', '12 mos', '10.5 mos', '-1.5 mos', 'Optimized', 'Lower CPA'],
+          ['Active Users', '850K', '920K', '+70K', 'Surpassed', 'Mobile launch'],
+          ['CSAT Score', '92%', '94.5%', '+2.5%', 'Top Tier', '24/7 SLA'],
+        ];
+        final rowData = data[rowIndex - 1];
+        if (colIndex < rowData.length) {
+          return Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              rowData[colIndex],
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 6.5,
+                color: colIndex == 4 ? const Color(0xFF10B981) : const Color(0xFF1E293B),
+                fontWeight: colIndex == 4 || colIndex == 0 ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          );
+        }
+      }
+      return const SizedBox.shrink();
+    } else if (selectedSection == SelectedSection.freezePanes) {
       if (rowIndex == 0) {
         if (colIndex == 0) {
           return Container(
@@ -631,7 +766,8 @@ class SpreadsheetPreview extends StatelessWidget {
         selectedSection == SelectedSection.numberFormats ||
         selectedSection == SelectedSection.cellComments ||
         selectedSection == SelectedSection.mergedCells ||
-        selectedSection == SelectedSection.readAsset) {
+        selectedSection == SelectedSection.readAsset ||
+        selectedSection == SelectedSection.autoFilter) {
       return const SizedBox.shrink();
     }
 

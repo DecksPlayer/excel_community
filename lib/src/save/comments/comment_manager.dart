@@ -57,20 +57,7 @@ class _CommentManager {
       final sheetRelsPath = 'xl/worksheets/_rels/$sheetFileName.rels';
 
       // Find or create sheet rels document
-      var sheetRels = _excel._xmlFiles[sheetRelsPath];
-      if (sheetRels == null) {
-        final relsBuilder = XmlBuilder();
-        relsBuilder.processing(
-            'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-        relsBuilder.element('Relationships',
-            attributes: {
-              'xmlns':
-                  'http://schemas.openxmlformats.org/package/2006/relationships',
-            },
-            nest: () {});
-        sheetRels = relsBuilder.buildDocument();
-        _excel._xmlFiles[sheetRelsPath] = sheetRels;
-      }
+      final sheetRels = _save._relationshipsPart(sheetRelsPath);
 
       final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
 
@@ -87,9 +74,7 @@ class _CommentManager {
       }
 
       if (commentsRId == null) {
-        final nextRIdIndex =
-            sheetRelsRoot.children.whereType<XmlElement>().length + 1;
-        commentsRId = 'rId$nextRIdIndex';
+        commentsRId = _save._nextRelationshipId(sheetRelsRoot);
         
         final commentsFileName = commentsPath.split('/').last;
         sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
@@ -103,9 +88,7 @@ class _CommentManager {
       }
 
       if (vmlRId == null) {
-        final nextRIdIndex =
-            sheetRelsRoot.children.whereType<XmlElement>().length + 1;
-        vmlRId = 'rId$nextRIdIndex';
+        vmlRId = _save._nextRelationshipId(sheetRelsRoot);
         
         final vmlFileName = vmlPath.split('/').last;
         sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
@@ -167,7 +150,7 @@ class _CommentManager {
   }
 
   (String?, String?, String?, String?) _findExistingCommentsAndVml(String sheetRelsPath) {
-    final sheetRels = _excel._xmlFiles[sheetRelsPath];
+    final sheetRels = _save._loadXmlPart(sheetRelsPath);
     if (sheetRels == null) return (null, null, null, null);
 
     String? commentsPath;

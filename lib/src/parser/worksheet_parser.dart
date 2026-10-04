@@ -51,6 +51,8 @@ class _WorksheetParser {
     final events = xml_events.parseEvents(contentString);
 
     List<xml_events.XmlEvent>? currentHeaderFooterEvents;
+    List<xml_events.XmlEvent>? currentAutoFilterEvents;
+    String? autoFilterRef;
     int? currentWorksheetRowIndex;
 
     // SAX cell parsing state
@@ -68,12 +70,113 @@ class _WorksheetParser {
     String? inlineText;
 
     bool insideSheetView = false;
+    bool? fitToPage;
+    Map<String, String>? relationshipTargets;
+    // <dataValidation> being read: attributes and formula text.
+    Map<String, String>? validationAttrs;
+    final validationFormulas = <String, StringBuffer>{};
+    String? validationFormula;
 
     for (final event in events) {
       if (event is xml_events.XmlStartElementEvent) {
         final tagName = event.name;
 
-        if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
+        if (tagName == 'tabColor' || tagName.endsWith(':tabColor')) {
+          final rgb = _getAttr(event, 'rgb');
+          final themeStr = _getAttr(event, 'theme');
+          final tintStr = _getAttr(event, 'tint');
+          final indexedStr = _getAttr(event, 'indexed');
+          final autoStr = _getAttr(event, 'auto');
+
+          final theme = themeStr != null ? int.tryParse(themeStr) : null;
+          final tint = tintStr != null ? double.tryParse(tintStr) : null;
+          final indexed = indexedStr != null ? int.tryParse(indexedStr) : null;
+          final auto =
+              autoStr != null ? (autoStr == '1' || autoStr == 'true') : null;
+
+          sheetObject.tabColor = TabColor(
+            rgb: rgb != null ? _normalizeColorHex(rgb) : null,
+            color: rgb != null ? ExcelColor.fromHexString(rgb) : null,
+            theme: theme,
+            tint: tint,
+            indexed: indexed,
+            auto: auto,
+          );
+        } else if (tagName == 'outlinePr' || tagName.endsWith(':outlinePr')) {
+          bool flag(String name, bool fallback) {
+            final value = _getAttr(event, name);
+            return value == null ? fallback : (value == '1' || value == 'true');
+          }
+
+          sheetObject.outlineSettings = OutlineSettings(
+            summaryBelow: flag('summaryBelow', true),
+            summaryRight: flag('summaryRight', true),
+            showOutlineSymbols: flag('showOutlineSymbols', true),
+            applyStyles: flag('applyStyles', false),
+          );
+        } else if (tagName == 'pageSetUpPr' ||
+            tagName.endsWith(':pageSetUpPr')) {
+          fitToPage = _parseBoolAttr(event, 'fitToPage');
+        } else if (tagName == 'pageMargins' ||
+            tagName.endsWith(':pageMargins')) {
+          sheetObject._pageMargins = _parsePageMargins(event);
+        } else if (tagName == 'printOptions' ||
+            tagName.endsWith(':printOptions')) {
+          sheetObject.printOptions = PrintOptions(
+            gridLines: _parseBoolAttr(event, 'gridLines'),
+            headings: _parseBoolAttr(event, 'headings'),
+            horizontalCentered: _parseBoolAttr(event, 'horizontalCentered'),
+            verticalCentered: _parseBoolAttr(event, 'verticalCentered'),
+            gridLinesSet: _parseBoolAttr(event, 'gridLinesSet'),
+          );
+        } else if ((tagName == 'dataValidation' ||
+                tagName.endsWith(':dataValidation')) &&
+            !tagName.startsWith('x14:')) {
+          // Excel 2010 x14:dataValidation (in extLst) is kept as raw XML.
+          validationAttrs = {
+            for (final attr in event.attributes)
+              attr.name.split(':').last: attr.value,
+          };
+          validationFormulas.clear();
+          if (event.isSelfClosing) {
+            _addParsedValidation(sheetObject, validationAttrs, validationFormulas);
+            validationAttrs = null;
+          }
+        } else if (validationAttrs != null &&
+            (tagName == 'formula1' || tagName == 'formula2')) {
+          validationFormula = tagName;
+          validationFormulas[tagName] = StringBuffer();
+        } else if (tagName == 'tablePart' || tagName.endsWith(':tablePart')) {
+          final rId = _getAttr(event, 'id');
+          if (rId != null) {
+            relationshipTargets ??= _relationshipTargets(path);
+            final target = relationshipTargets[rId];
+            if (target != null) _addParsedTable(sheetObject, path, target);
+          }
+        } else if (tagName == 'hyperlink' || tagName.endsWith(':hyperlink')) {
+          final ref = _getAttr(event, 'ref');
+          final rId = _getAttr(event, 'id');
+          String? url;
+          if (rId != null) {
+            relationshipTargets ??= _relationshipTargets(path);
+            url = relationshipTargets[rId];
+          }
+          final location = _getAttr(event, 'location');
+          if (ref != null && (url != null || location != null)) {
+            try {
+              sheetObject._hyperlinks[_CellRect.parse(ref).ref] = Hyperlink(
+                url: url,
+                location: location,
+                tooltip: _getAttr(event, 'tooltip'),
+                display: _getAttr(event, 'display'),
+              );
+            } catch (_) {
+              // Ignore malformed references.
+            }
+          }
+        } else if (tagName == 'pageSetup' || tagName.endsWith(':pageSetup')) {
+          sheetObject.pageSetup = _parsePageSetup(event);
+        } else if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
           final rtl = _getAttr(event, 'rightToLeft');
           sheetObject.isRTL = rtl == '1';
           insideSheetView = true;
@@ -104,6 +207,8 @@ class _WorksheetParser {
           final width = double.tryParse(_getAttr(event, 'width') ?? '');
           final hiddenVal = _getAttr(event, 'hidden');
           final isHidden = hiddenVal == '1' || hiddenVal == 'true';
+          final outlineLevel = int.tryParse(_getAttr(event, 'outlineLevel') ?? '') ?? 0;
+          final isCollapsed = _parseBoolAttr(event, 'collapsed') ?? false;
           if (min != null) {
             final end = maxVal ?? min;
             for (int col = min; col <= end; col++) {
@@ -114,6 +219,13 @@ class _WorksheetParser {
                 }
                 if (isHidden) {
                   sheetObject._hiddenColumns.add(zeroBasedCol);
+                }
+                if (outlineLevel > 0) {
+                  sheetObject._columnOutlineLevels[zeroBasedCol] =
+                      outlineLevel.clamp(1, _maxOutlineLevel);
+                }
+                if (isCollapsed) {
+                  sheetObject._collapsedColumns.add(zeroBasedCol);
                 }
               }
             }
@@ -131,6 +243,15 @@ class _WorksheetParser {
               }
               if (isHidden) {
                 sheetObject._hiddenRows.add(currentWorksheetRowIndex);
+              }
+              final outlineLevel =
+                  int.tryParse(_getAttr(event, 'outlineLevel') ?? '') ?? 0;
+              if (outlineLevel > 0) {
+                sheetObject._rowOutlineLevels[currentWorksheetRowIndex] =
+                    outlineLevel.clamp(1, _maxOutlineLevel);
+              }
+              if (_parseBoolAttr(event, 'collapsed') ?? false) {
+                sheetObject._collapsedRows.add(currentWorksheetRowIndex);
               }
             }
           }
@@ -227,6 +348,17 @@ class _WorksheetParser {
           if (pw != null) {
             sheetObject.sheetProtection.password = pw;
           }
+        } else if (tagName == 'autoFilter' ||
+            tagName.endsWith(':autoFilter')) {
+          final ref = _getAttr(event, 'ref');
+          if (event.isSelfClosing) {
+            if (ref != null && ref.isNotEmpty) {
+              sheetObject.autoFilter = AutoFilter(ref: ref);
+            }
+          } else {
+            autoFilterRef = ref;
+            currentAutoFilterEvents = [event];
+          }
         } else if (tagName == 'mergeCell' || tagName.endsWith(':mergeCell')) {
           final ref = _getAttr(event, 'ref');
           if (ref != null && ref.contains(':') && ref.split(':').length == 2) {
@@ -262,6 +394,8 @@ class _WorksheetParser {
           }
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       } else if (event is xml_events.XmlTextEvent) {
         if (insideCell) {
@@ -272,8 +406,12 @@ class _WorksheetParser {
           } else if (insideInlineText) {
             inlineText = (inlineText ?? '') + event.value;
           }
+        } else if (validationFormula != null) {
+          validationFormulas[validationFormula]!.write(event.value);
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       } else if (event is xml_events.XmlEndElementEvent) {
         final tagName = event.name;
@@ -303,6 +441,13 @@ class _WorksheetParser {
           } else if (tagName == 't' || tagName.endsWith(':t')) {
             insideInlineText = false;
           }
+        } else if (validationFormula != null &&
+            (tagName == 'formula1' || tagName == 'formula2')) {
+          validationFormula = null;
+        } else if (validationAttrs != null &&
+            (tagName == 'dataValidation' || tagName.endsWith(':dataValidation'))) {
+          _addParsedValidation(sheetObject, validationAttrs, validationFormulas);
+          validationAttrs = null;
         } else if (tagName == 'sheetView' || tagName.endsWith(':sheetView')) {
           insideSheetView = false;
         } else if ((tagName == 'headerFooter' ||
@@ -314,20 +459,162 @@ class _WorksheetParser {
           final hfNode = XmlDocument.parse(hfXml).rootElement;
           sheetObject.headerFooter = HeaderFooter.fromXmlElement(hfNode);
           currentHeaderFooterEvents = null;
+        } else if ((tagName == 'autoFilter' ||
+                tagName.endsWith(':autoFilter')) &&
+            currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
+          final afXml =
+              currentAutoFilterEvents.map((e) => e.toString()).join();
+          sheetObject.autoFilter = _parseAutoFilterXml(autoFilterRef, afXml);
+          currentAutoFilterEvents = null;
+          autoFilterRef = null;
         } else if (tagName == 'row' || tagName.endsWith(':row')) {
           currentWorksheetRowIndex = null;
         } else if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       } else {
         if (currentHeaderFooterEvents != null) {
           currentHeaderFooterEvents.add(event);
+        } else if (currentAutoFilterEvents != null) {
+          currentAutoFilterEvents.add(event);
         }
       }
     }
 
+    if (fitToPage != null) {
+      sheetObject.pageSetup = (sheetObject.pageSetup ?? const PageSetup())
+          .copyWith(fitToPage: fitToPage);
+    }
+
     _parseConditionalFormatting(sheetObject, contentString);
     normalizeTable(sheetObject);
+  }
+
+  void _addParsedValidation(Sheet sheetObject, Map<String, String> attrs,
+      Map<String, StringBuffer> formulas) {
+    final sqref = attrs['sqref'];
+    if (sqref == null || sqref.trim().isEmpty) return;
+    bool flag(String name) => attrs[name] == '1' || attrs[name] == 'true';
+    final validation = DataValidation(
+      type: DataValidationType.fromXmlValue(attrs['type']),
+      operator: DataValidationOperator.fromXmlValue(attrs['operator']),
+      formula1: formulas['formula1']?.toString(),
+      formula2: formulas['formula2']?.toString(),
+      allowBlank: flag('allowBlank'),
+      showDropdown: !flag('showDropDown'),
+      showInputMessage: flag('showInputMessage'),
+      showErrorMessage: flag('showErrorMessage'),
+      promptTitle: attrs['promptTitle'],
+      prompt: attrs['prompt'],
+      errorTitle: attrs['errorTitle'],
+      error: attrs['error'],
+      errorStyle: DataValidationErrorStyle.fromXmlValue(attrs['errorStyle']),
+    );
+    try {
+      final key = _CellRect.parseList(sqref).map((r) => r.ref).join(' ');
+      sheetObject._dataValidations[key] = validation;
+    } catch (_) {
+      // Ignore malformed ranges.
+    }
+  }
+
+  /// Reads the table part [target] (relative to the worksheet) into
+  /// [sheetObject].
+  void _addParsedTable(Sheet sheetObject, String worksheetPath, String target) {
+    var partPath = target;
+    if (partPath.startsWith('/')) {
+      partPath = partPath.substring(1);
+    } else {
+      final segments = worksheetPath.split('/')..removeLast();
+      for (final part in target.split('/')) {
+        if (part == '..') {
+          if (segments.isNotEmpty) segments.removeLast();
+        } else if (part != '.') {
+          segments.add(part);
+        }
+      }
+      partPath = segments.join('/');
+    }
+    final file = _excel._archive.findFile(partPath);
+    if (file == null) return;
+    try {
+      file.decompress();
+      final table = ExcelTable._fromXml(XmlDocument.parse(utf8.decode(file.content)));
+      if (table != null) sheetObject._tables.add(table);
+    } catch (_) {
+      // Ignore unreadable table parts.
+    }
+  }
+
+  /// Targets of the worksheet's relationships (`.rels`), keyed by id.
+  Map<String, String> _relationshipTargets(String worksheetPath) {
+    final slash = worksheetPath.lastIndexOf('/');
+    final relsPath = '${worksheetPath.substring(0, slash)}/_rels/'
+        '${worksheetPath.substring(slash + 1)}.rels';
+    final file = _excel._archive.findFile(relsPath);
+    if (file == null) return const {};
+    file.decompress();
+    final document = XmlDocument.parse(utf8.decode(file.content));
+    return {
+      for (final rel in document.findAllElements('Relationship'))
+        if (rel.getAttribute('Id') != null && rel.getAttribute('Target') != null)
+          rel.getAttribute('Id')!: rel.getAttribute('Target')!,
+    };
+  }
+
+  bool? _parseBoolAttr(xml_events.XmlStartElementEvent event, String name) {
+    final value = _getAttr(event, name);
+    if (value == null) return null;
+    return value == '1' || value.toLowerCase() == 'true';
+  }
+
+  int? _parseIntAttr(xml_events.XmlStartElementEvent event, String name) {
+    final value = _getAttr(event, name);
+    return value != null ? int.tryParse(value) : null;
+  }
+
+  PageMargins _parsePageMargins(xml_events.XmlStartElementEvent event) {
+    double attr(String name, double fallback) =>
+        double.tryParse(_getAttr(event, name) ?? '') ?? fallback;
+    const d = PageMargins.normal;
+    return PageMargins(
+      left: attr('left', d.left),
+      right: attr('right', d.right),
+      top: attr('top', d.top),
+      bottom: attr('bottom', d.bottom),
+      header: attr('header', d.header),
+      footer: attr('footer', d.footer),
+    );
+  }
+
+  PageSetup? _parsePageSetup(xml_events.XmlStartElementEvent event) {
+    final paperSizeCode = _parseIntAttr(event, 'paperSize');
+    final setup = PageSetup(
+      orientation: PageOrientation.fromXmlValue(_getAttr(event, 'orientation')),
+      paperSize:
+          paperSizeCode != null ? PaperSize.fromCode(paperSizeCode) : null,
+      paperWidth: _getAttr(event, 'paperWidth'),
+      paperHeight: _getAttr(event, 'paperHeight'),
+      scale: _parseIntAttr(event, 'scale'),
+      fitToWidth: _parseIntAttr(event, 'fitToWidth'),
+      fitToHeight: _parseIntAttr(event, 'fitToHeight'),
+      firstPageNumber: _parseIntAttr(event, 'firstPageNumber'),
+      useFirstPageNumber: _parseBoolAttr(event, 'useFirstPageNumber'),
+      pageOrder: PageOrder.fromXmlValue(_getAttr(event, 'pageOrder')),
+      blackAndWhite: _parseBoolAttr(event, 'blackAndWhite'),
+      draft: _parseBoolAttr(event, 'draft'),
+      cellComments:
+          PrintCellComments.fromXmlValue(_getAttr(event, 'cellComments')),
+      errors: PrintErrors.fromXmlValue(_getAttr(event, 'errors')),
+      horizontalDpi: _parseIntAttr(event, 'horizontalDpi'),
+      verticalDpi: _parseIntAttr(event, 'verticalDpi'),
+      copies: _parseIntAttr(event, 'copies'),
+      usePrinterDefaults: _parseBoolAttr(event, 'usePrinterDefaults'),
+    );
+    return setup.hasPageSetupAttributes ? setup : null;
   }
 
   void _parseConditionalFormatting(Sheet sheetObject, String contentString) {
@@ -379,6 +666,93 @@ class _WorksheetParser {
         }
       }
     } catch (_) {}
+  }
+
+  AutoFilter _parseAutoFilterXml(String? refAttr, String xmlString) {
+    try {
+      final doc = XmlDocument.parse(xmlString);
+      final root = doc.rootElement;
+      final ref = refAttr ?? root.getAttribute('ref') ?? '';
+      final filterCols = <FilterColumn>[];
+
+      for (final fc in root.findAllElements('filterColumn')) {
+        final colId = int.tryParse(fc.getAttribute('colId') ?? '0') ?? 0;
+        final hb = fc.getAttribute('hiddenButton');
+        final sb = fc.getAttribute('showButton');
+        final hiddenButton = hb == null ? null : (hb == '1' || hb == 'true');
+        final showButton = sb == null ? null : (sb == '1' || sb == 'true');
+
+        final filterValues = <String>[];
+        bool blank = false;
+        final filtersElem = fc.findElements('filters').firstOrNull;
+        if (filtersElem != null) {
+          blank = filtersElem.getAttribute('blank') == '1' ||
+              filtersElem.getAttribute('blank') == 'true';
+          for (final f in filtersElem.findElements('filter')) {
+            final val = f.getAttribute('val');
+            if (val != null) {
+              filterValues.add(val);
+            }
+          }
+        }
+
+        final customFilters = <CustomFilterRule>[];
+        bool customFiltersAnd = false;
+        final cfElem = fc.findElements('customFilters').firstOrNull;
+        if (cfElem != null) {
+          customFiltersAnd = cfElem.getAttribute('and') == '1' ||
+              cfElem.getAttribute('and') == 'true';
+          for (final cf in cfElem.findElements('customFilter')) {
+            final opStr = cf.getAttribute('operator') ?? 'equal';
+            final val = cf.getAttribute('val') ?? '';
+            customFilters.add(CustomFilterRule(
+              operator: FilterOperator.fromValue(opStr),
+              val: val,
+            ));
+          }
+        }
+
+        bool hasComplex = false;
+        for (final child in fc.childElements) {
+          final localName = child.name.local;
+          if (localName != 'filters' && localName != 'customFilters') {
+            hasComplex = true;
+            break;
+          }
+          if (localName == 'filters') {
+            for (final sub in child.childElements) {
+              if (sub.name.local != 'filter') {
+                hasComplex = true;
+                break;
+              }
+            }
+          }
+        }
+
+        final innerChildren =
+            hasComplex ? fc.children.map((c) => c.toXmlString()).join() : null;
+
+        filterCols.add(FilterColumn(
+          colId: colId,
+          hiddenButton: hiddenButton,
+          showButton: showButton,
+          filterValues: filterValues,
+          blank: blank,
+          customFilters: customFilters,
+          customFiltersAnd: customFiltersAnd,
+          customXml: innerChildren,
+        ));
+      }
+
+      final innerXml = root.children.map((c) => c.toXmlString()).join();
+      return AutoFilter(
+        ref: ref,
+        filterColumns: filterCols,
+        customXml: filterCols.isEmpty && innerXml.isNotEmpty ? innerXml : null,
+      );
+    } catch (_) {
+      return AutoFilter(ref: refAttr ?? '');
+    }
   }
 
   // ---------------------------------------------------------------------------

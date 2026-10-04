@@ -44,6 +44,7 @@ part 'src/sheet/excel_image.dart';
 
 /// Utilities
 part 'src/utilities/span.dart';
+part 'src/utilities/cell_rect.dart';
 part 'src/utilities/fast_list.dart';
 part 'src/utilities/utility.dart';
 part 'src/utilities/constants.dart';
@@ -77,6 +78,8 @@ part 'src/utilities/chart_builders/chart_style_builder_factory.dart';
 part 'src/save/save_file.dart';
 part 'src/save/charts/chart_manager.dart';
 part 'src/save/comments/comment_manager.dart';
+part 'src/save/hyperlinks/hyperlink_manager.dart';
+part 'src/save/tables/table_manager.dart';
 part 'src/save/images/image_manager.dart';
 part 'src/save/pivot_table/pivot_table_manager.dart';
 part 'src/save/styles/style_manager.dart';
@@ -114,3 +117,11 @@ part 'src/sheet/font_style.dart';
 part 'src/sheet/header_footer.dart';
 part 'src/sheet/border_style.dart';
 part 'src/sheet/conditional_formatting.dart';
+part 'src/sheet/auto_filter.dart';
+part 'src/sheet/tab_color.dart';
+part 'src/sheet/page_setup.dart';
+part 'src/sheet/sheet_export.dart';
+part 'src/sheet/hyperlink.dart';
+part 'src/sheet/data_validation.dart';
+part 'src/sheet/sheet_grouping.dart';
+part 'src/sheet/excel_table.dart';

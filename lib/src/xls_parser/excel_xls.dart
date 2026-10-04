@@ -57,7 +57,7 @@ class CfbFile {
     if (numDifatSectors > 0 && difatStartSector < 0xFFFFFFFC) {
       int currentDifatSector = difatStartSector;
       while (currentDifatSector >= 0 && currentDifatSector < 0xFFFFFFFC) {
-        int offset = 512 + currentDifatSector * sectorSize;
+        int offset = (currentDifatSector + 1) * sectorSize;
         int numEntries = (sectorSize ~/ 4) - 1;
         for (int i = 0; i < numEntries; i++) {
           int sec = view.getUint32(offset + i * 4, Endian.little);
@@ -72,7 +72,7 @@ class CfbFile {
     // Build standard FAT
     fat = [];
     for (int fatSec in fatSectors) {
-      int offset = 512 + fatSec * sectorSize;
+      int offset = (fatSec + 1) * sectorSize;
       int numInts = sectorSize ~/ 4;
       for (int i = 0; i < numInts; i++) {
         fat.add(view.getUint32(offset + i * 4, Endian.little));
@@ -130,7 +130,7 @@ class CfbFile {
     List<int> chain = [];
     int currentSector = startSector;
     while (currentSector >= 0 && currentSector < 0xFFFFFFFC) {
-      int offset = 512 + currentSector * sectorSize;
+      int offset = (currentSector + 1) * sectorSize;
       if (offset + sectorSize > bytes.length) {
         chain.addAll(bytes.sublist(offset, bytes.length));
         break;

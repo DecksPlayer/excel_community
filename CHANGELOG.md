@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-10-04
+### Added
+- **Excel Tables**: `sheet.addTable()`, `getTable`, `updateTable`, `removeTable`, `tableRowsAsMaps` and `appendTableRow`, with the 60 built-in table styles, totals row and structured references. Tables are read, saved and moved with row/column inserts and removals.
+- **Row & Column Grouping**: `sheet.groupRows()` / `groupColumns()` (up to 7 levels), ungroup, collapse/expand, `rowGroups` / `columnGroups` and `OutlineSettings`.
+- **Example App**: Tables and Grouping wikis.
+
+### Fixed
+- Excel no longer reports a modified Excel-saved file as damaged: the stale `xl/calcChain.xml` is dropped on save (Excel rebuilds it).
+- `insertRow` / `removeRow` / `insertColumn` / `removeColumn` now move row heights, column widths and hidden flags, also on empty rows/columns.
+- Heights of empty rows are saved, and `<sheetFormatPr>` always has `defaultRowHeight`.
+- `Excel.createExcel()` uses Excel's default outline settings on `Sheet1`.
+- Number formats now match Excel in more cases: fractions (`0.3` with `?/?` is `1/3`), rounded seconds, no `-0.00`, Japanese eras only with `[$-411]`, and built-in format 47 is `mm:ss.0`.
+- `.xls` files with 4096-byte sectors are read correctly.
+
+## [2.5.0] - 2026-10-03
+### Added
+- **Page Setup & Printing**: `PageSetup` (orientation, paper size, scale, fit to pages), `PageMargins` and `PrintOptions` (gridlines, headings, centering) via `sheet.setPageOrientation()`, `setPaperSize()`, `fitToPages()` and more.
+- **Data Export**: `sheet.rowsAsMaps()`, `rowsAsValues()`, `toJson()`, `toCsv()`, `excel.toJson()` and `appendRowsFromMaps()`.
+- **Data Validation & Dropdowns**: `DataValidation` (list, numbers, dates, times, text length, custom formula) with input/error messages, `sheet.addDataValidation()` and `accepts()` to check values in Dart.
+- **Hyperlinks**: web, email and in-workbook links with `sheet.setHyperlink()` and `cell.hyperlink`.
+- **Example App**: new wiki layout with live previews and snippets for Fonts & Styles, Number Formats, Page Setup, Data Validation, Hyperlinks and Data Export.
+
+### Fixed
+- Adding comments, images, charts or pivot tables to a reopened file no longer breaks its existing relationships.
+- Booleans display as `TRUE` / `FALSE`.
+- Better number format rendering: fractions, engineering notation, digit templates, thousands scaling, CJK dates and fractions of a second.
+- Example app sidebar no longer throws the `ListTile` background warning.
+
+## [2.4.2] - 2026-10-01
+### Fixed
+- **`Sheet.getColumnWidth()` / `Sheet.getRowHeight()` no longer throw** `Null check operator used on a null value` on sheets without a default width/height (e.g. sheets created with `excel['New sheet']` or decoded from files without `<sheetFormatPr>` defaults). They now fall back to the sheet default and then to Excel's defaults (column width `8.43`, row height `15.0`), the same values already used when saving.
+
+## [2.4.1] - 2026-09-25
+### Added
+- **Sheet Tab Colors (`<tabColor>`)**: Full OpenXML/SpreadsheetML support for colored worksheet tabs.
+  - **`TabColor` Domain Model**: Encapsulates `<tabColor>` element with support for 8-digit ARGB hex (`#RRGGBB`, `RRGGBB`, `#AARRGGBB`, `AARRGGBB`, and 3-char shorthand `#RGB`), `ExcelColor` presets, Office theme color indices (`theme`), tints (`tint`), indexed colors (`indexed`), and auto colors (`auto`).
+  - **Sheet API**:
+    - `sheet.tabColor` (getter and setter)
+    - `sheet.setTabColor(ExcelColor color)`
+    - `sheet.setTabColorHex(String hex)`
+    - `sheet.clearTabColor()` and alias `sheet.removeTabColor()`
+    - `sheet.hasTabColor` (boolean getter)
+  - **SAX Streaming Parser**: Event-based streaming parser in `_WorksheetParser` extracts `<tabColor>` attributes (`rgb`, `theme`, `tint`, `indexed`, `auto`) directly with zero memory overhead.
+  - **Schema Compliance**: Serialized inside `<sheetPr>` as the very first child element preceding `<outlinePr>` and `<pageSetUpPr>` in strict compliance with ECMA-376 Part 4 CT_SheetPr sequence rules.
+  - **Attribute & Element Preservation**: Preserves existing `<sheetPr>` attributes (`codeName`, `filterMode`, etc.) and non-color child elements (`<outlinePr>`, `<pageSetUpPr>`) across read/write cycles.
+  - **Multi-Sheet Management**: Setting tab color marks a sheet as customized, preventing it from being inadvertently renamed or discarded when adding additional sheets.
+  - **Interactive Flutter Example**: Added "Sheet Tab Colors (`<tabColor>`)" section to `excel_flutter_example` with real-time UI preview showing colored tabs, source code snippets, and live XLSX file generation.
+
+- **AutoFilter (`<autoFilter>`)**: Full OpenXML/SpreadsheetML support for worksheet auto-filters.
+  - **`AutoFilter` Model**: Represents `<autoFilter ref="...">` with normalized coordinates, start/end cells (`startCell`, `endCell`), dimensions (`rowCount`, `columnCount`), and containment checks (`containsCell`, `containsCellId`).
+  - **`FilterColumn` & `CustomFilterRule`**: Column criteria configuration (`<filterColumn>`), button visibility flags (`hiddenButton`, `showButton`), matching values (`<filters><filter val="..."/></filters>`), blank filtering, and custom comparison rules (`<customFilters>`).
+  - **Sheet API**:
+    - `sheet.setAutoFilter(CellIndex start, CellIndex end, {List<FilterColumn>? filterColumns})`
+    - `sheet.setAutoFilterByString(String range, {List<FilterColumn>? filterColumns})`
+    - `sheet.clearAutoFilter()` and alias `sheet.removeAutoFilter()`
+    - `sheet.hasAutoFilter` (boolean getter)
+    - `sheet.addFilterColumn(FilterColumn filterColumn)`
+  - **SAX Streaming Parser**: Event-based parsing in `_WorksheetParser` supporting self-closing `<autoFilter ref="..."/>` and child elements with zero memory overhead.
+  - **Schema Compliance**: Serialized in exact ECMA-376 schema order (immediately following `sheetProtection` and preceding `sortState` and `mergeCells`).
+  - **Round-Trip Preservation**: Full round-trip preservation of filter ranges and custom/advanced filter XML when opening, modifying, and saving existing spreadsheets.
+  - **Flutter Example**: Added new "AutoFilter (`<autoFilter>`)" showcase section in `excel_flutter_example` with live code, interactive preview, and downloadable XLSX file.
+
 ## [2.4.0] - 2026-09-09
 ### Added
 - **`FormulaCellValue.cachedValue`**: formula cells now retain the pre-calculated `<v>` result found in the source file (instead of discarding it), so the last value Excel computed can be read without recalculating the formula.
