@@ -1,6 +1,6 @@
 {
   "name": "excel-community",
-  "version": "2.5.2",
+  "version": "2.5.3",
   "description": "High-performance Excel XLSX library for Node.js and Browser compiled directly from Dart excel_community.",
   "main": "./index.js",
   "module": "./dist/excel_community.mjs",
