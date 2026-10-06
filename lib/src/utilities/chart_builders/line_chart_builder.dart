@@ -6,7 +6,7 @@ class LineChartBuilder implements ChartStyleBuilder {
   void buildProperties(XmlBuilder builder, Chart chart) {
     final lineChart = chart as LineChart;
     builder.element('c:grouping',
-        attributes: {'val': lineChart.grouping.ooxmlValue});
+        attributes: {'val': lineChart.grouping.lineAreaOoxmlValue});
   }
 
   @override

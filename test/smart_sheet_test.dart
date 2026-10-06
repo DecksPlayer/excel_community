@@ -25,4 +25,15 @@ void main() {
     expect(excel.sheets.containsKey('MySheet'), isTrue);
     expect(excel.sheets.containsKey('AnotherSheet'), isTrue);
   });
+
+  test('Sheet1 requested explicitly is not renamed by a later new sheet', () {
+    final excel = Excel.createExcel();
+    final sheet1 = excel['Sheet1'];
+    excel['Other'];
+    sheet1.updateCell(CellIndex.indexByString('A1'), TextCellValue('kept'));
+
+    expect(excel.sheets.keys, ['Sheet1', 'Other']);
+    final decoded = Excel.decodeBytes(excel.encode()!);
+    expect(decoded['Sheet1'].cell(CellIndex.indexByString('A1')).value, TextCellValue('kept'));
+  });
 }

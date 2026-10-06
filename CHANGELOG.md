@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- Saving the same workbook more than once (`encode()`/`save()`) no longer duplicates chart and image anchors, relationships and styles, which made Excel repair the file.
+- **npm package**: works in browsers and bundlers (Vite, webpack, esbuild, minified builds, and local installs linked with `npm install <folder>`), accepts JS `Date` values and chart/table config objects, and no longer defines `window`/`self` globals in Node.
+- **npm package**: `sheet.unmerge('A1')` now unmerges the range containing the cell (it silently did nothing).
+- Line and area charts no longer write the invalid `clustered` grouping, which kept Excel from opening the file.
+- Pivot tables with several values now add the "Values" column field Excel needs to open the file.
+- Pivot tables are saved already computed (values in the cells, cache records and layout), like Excel does: they no longer show up empty in Protected View, Excel Online, LibreOffice or Google Sheets.
+- Header and footer text is no longer escaped twice (`&C` was saved as `&amp;C`, and `amp` in the text became `&`).
+- A `Sheet1` requested with `excel['Sheet1']` is no longer renamed when another sheet is added, which detached it and lost its later changes.
+
+### Changed
+- **npm package**: `cell.setStyle()` keeps the options it is not given, and `sheet.protect(password, options)` options now mean "allow" (`true` allows the action), as documented.
+
+### Added
+- **npm package**: standalone `<script>` build (`dist/excel_community.browser.js`) and a browser example page with tests, a demo workbook, an `.xlsx` viewer and a playground.
+- **npm package**: the rest of the Dart API: conditional formatting, data validation, page setup and printing, pivot tables, 11 chart types with data labels and series styles, full tables, export/import (objects, JSON, CSV), row/column insert and remove, find & replace, all hyperlink types, grouping, filter criteria, cell locking, times and linked sheets.
+
 ## [2.5.1] - 2026-10-04
 ### Added
 - **Excel Tables**: `sheet.addTable()`, `getTable`, `updateTable`, `removeTable`, `tableRowsAsMaps` and `appendTableRow`, with the 60 built-in table styles, totals row and structured references. Tables are read, saved and moved with row/column inserts and removals.

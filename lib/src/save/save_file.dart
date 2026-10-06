@@ -40,10 +40,32 @@ class Save {
       }
     });
 
+    // Saving appends drawings, relationships, styles and content types to the
+    // workbook's XML parts. Work on copies so the workbook itself is left
+    // unchanged: otherwise every save appended them again, duplicating chart
+    // and image anchors, and Excel had to repair the file.
+    final xmlFiles = Map.of(_excel._xmlFiles);
+    final sheetXmls = Map.of(_excel._sheetXmls);
+    _excel._xmlFiles.updateAll((_, document) => document.copy());
+    try {
+      return _writeArchive();
+    } finally {
+      _excel._xmlFiles
+        ..clear()
+        ..addAll(xmlFiles);
+      _excel._sheetXmls
+        ..clear()
+        ..addAll(sheetXmls);
+    }
+  }
+
+  List<int>? _writeArchive() {
     _dropCalcChain();
 
-    // Writes table header/totals cells, so it runs before styles.
+    // Write table header/totals cells and pivot table results, so they run
+    // before styles.
     _tableManager.syncTables();
+    _pivotTableManager.renderPivotTables();
 
     if (_excel._styleChanges) {
       _styleManager.processStylesFile();

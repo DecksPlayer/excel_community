@@ -1,4 +1,3 @@
+export * from './index.js';
 import { Excel } from './index.js';
-
-export { Excel };
 export default Excel;

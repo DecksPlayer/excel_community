@@ -3,27 +3,45 @@
   "version": "2.5.2",
   "description": "High-performance Excel XLSX library for Node.js and Browser compiled directly from Dart excel_community.",
   "main": "./index.js",
-  "module": "./index.mjs",
+  "module": "./dist/excel_community.mjs",
   "types": "./index.d.ts",
+  "browser": {
+    "fs": false
+  },
+  "unpkg": "./dist/excel_community.browser.js",
+  "jsdelivr": "./dist/excel_community.browser.js",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./index.mjs",
-      "require": "./index.js"
-    }
+      "browser": {
+        "types": "./index.d.mts",
+        "default": "./dist/excel_community.mjs"
+      },
+      "import": {
+        "types": "./index.d.mts",
+        "default": "./index.mjs"
+      },
+      "require": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      }
+    },
+    "./browser": "./dist/excel_community.browser.js"
   },
   "files": [
     "dist/",
     "index.js",
     "index.mjs",
+    "wrapper.js",
     "index.d.ts",
+    "index.d.mts",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "node build.js",
     "prepublishOnly": "node build.js",
-    "test": "node test.js"
+    "test": "node test.js && node test-features.js",
+    "example": "node example/serve.js"
   },
   "keywords": [
     "excel",
@@ -41,5 +59,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/decksplayer/excel_community.git"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

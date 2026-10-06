@@ -8,7 +8,7 @@ class AreaChartBuilder implements ChartStyleBuilder {
   void buildProperties(XmlBuilder builder, Chart chart) {
     final areaChart = chart as AreaChart;
     builder.element('c:grouping',
-        attributes: {'val': areaChart.grouping.ooxmlValue});
+        attributes: {'val': areaChart.grouping.lineAreaOoxmlValue});
   }
 
   @override

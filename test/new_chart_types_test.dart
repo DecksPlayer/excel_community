@@ -279,4 +279,24 @@ void main() {
       expect(xml2.contains('ofPieType val="bar"'), isTrue);
     });
   });
+
+  test('line and area charts write "standard" instead of "clustered" grouping', () {
+    String groupingOf(Chart chart) {
+      final excel = Excel.createExcel();
+      excel['Sheet1'].addChart(chart);
+      final file = ZipDecoder().decodeBytes(excel.encode()!).findFile('xl/charts/chart1.xml')!;
+      return RegExp(r'<c:grouping val="(\w+)"/>').firstMatch(utf8.decode(file.content))!.group(1)!;
+    }
+
+    final series = [
+      ChartSeries(name: 'S', categoriesRange: r'Sheet1!$A$1:$A$2', valuesRange: r'Sheet1!$B$1:$B$2'),
+    ];
+    final anchor = ChartAnchor.at(column: 3, row: 1);
+    expect(groupingOf(LineChart(title: 'L', series: series, anchor: anchor)), 'standard');
+    expect(groupingOf(AreaChart(title: 'A', series: series, anchor: anchor)), 'standard');
+    expect(
+        groupingOf(LineChart(title: 'L', series: series, anchor: anchor, grouping: ChartGrouping.stacked)),
+        'stacked');
+    expect(groupingOf(ColumnChart(title: 'C', series: series, anchor: anchor)), 'clustered');
+  });
 }

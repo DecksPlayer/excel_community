@@ -68,7 +68,11 @@ sheet.setColumnAutoFit(1);
 // 6. Merging and unmerging
 sheet.merge('F1', 'G1');
 assert.ok(sheet.spannedItems.includes('F1:G1'));
-sheet.unmerge('F1');
+sheet.unmerge('G1');
+assert.ok(!sheet.spannedItems.includes('F1:G1'));
+sheet.merge('F1', 'G1');
+sheet.unmerge('F1:G1');
+assert.ok(!sheet.spannedItems.includes('F1:G1'));
 
 // 7. AutoFilter & Tab color & RTL
 sheet.setAutoFilter('A1:E2');
@@ -127,5 +131,29 @@ assert.strictEqual(loadedSheet.cell('D1').value, true);
 
 // Cleanup
 fs.unlinkSync(testFile);
+
+// 14. Dates, appendRow column positions, config objects, plain arrays
+const wb2 = Excel.create();
+const s2 = wb2.sheet('Sheet1');
+assert.deepStrictEqual(wb2.sheets, ['Sheet1']);
+s2.appendRow(['a', new Date(2024, 0, 15), {}, 'd', new Date(2024, 0, 15, 10, 30)]);
+assert.deepStrictEqual(
+  s2.rows[0].map((c) => c && c.type),
+  ['string', 'date', 'null', 'string', 'datetime']
+);
+s2.cell('A3').value = new Date(2026, 9, 4);
+s2.addChart({ type: 'line', series: [{ categoriesRange: 'Sheet1!$A$1:$A$2', valuesRange: 'Sheet1!$B$1:$B$2' }] });
+s2.addTable('A10:B12', 'ObjTable', ['X', 'Y']);
+const s2back = Excel.read(wb2.encode()).sheet('Sheet1');
+assert.strictEqual(s2back.cell('B1').value, '2024-01-15');
+assert.strictEqual(s2back.cell('E1').value, '2024-01-15T10:30:00.000');
+assert.strictEqual(s2back.cell('A3').value, '2026-10-04');
+
+// 15. Encoding twice gives the same file (no duplicated drawings or styles)
+assert.deepStrictEqual(Buffer.from(wb2.encode()), Buffer.from(wb2.encode()));
+
+// 16. No browser globals leaked into Node
+assert.strictEqual(typeof window, 'undefined');
+assert.strictEqual(typeof self, 'undefined');
 
 console.log('🎉 ALL functional tests for excel_community passed successfully!');

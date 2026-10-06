@@ -107,4 +107,41 @@ void main() {
     expect(types['rId2'], 'drawing');
     expect(types.length, 3, reason: 'drawing + comments + vml, no duplicate ids');
   });
+
+  test('saving twice writes the same file (no duplicated anchors or styles)', () {
+    final excel = Excel.createExcel();
+    final sheet = excel['Sheet1'];
+    sheet.appendRow([TextCellValue('a'), IntCellValue(1)]);
+    sheet.appendRow([TextCellValue('b'), IntCellValue(2)]);
+    sheet.cell(CellIndex.indexByString('A1')).cellStyle =
+        CellStyle(bold: true, backgroundColorHex: ExcelColor.fromHexString('#1F4E78'));
+    sheet.cell(CellIndex.indexByString('C1')).value =
+        DateCellValue(year: 2026, month: 1, day: 1);
+    sheet.addChart(ColumnChart(
+      title: 'Chart',
+      series: [
+        ChartSeries(
+          name: 'S1',
+          categoriesRange: r'Sheet1!$A$1:$A$2',
+          valuesRange: r'Sheet1!$B$1:$B$2',
+        ),
+      ],
+      anchor: ChartAnchor.at(column: 4, row: 1, width: 6, height: 10),
+    ));
+    sheet.addImage(_image(_red, 0));
+    sheet.addTable('A1:B2', name: 'Data');
+
+    final first = _zip(excel.encode()!);
+    final second = _zip(excel.encode()!);
+
+    expect(second.files.map((f) => f.name).toList(),
+        first.files.map((f) => f.name).toList());
+    for (final file in first.files) {
+      expect(second.findFile(file.name)!.content, file.content,
+          reason: '${file.name} changed on the second save');
+    }
+    final drawing = _part(second, 'xl/drawings/drawing1.xml');
+    expect('<xdr:twoCellAnchor'.allMatches(drawing).length, 1);
+    expect('<xdr:oneCellAnchor'.allMatches(drawing).length, 1);
+  });
 }

@@ -26,6 +26,11 @@ class Excel {
   bool _styleChanges = false;
   bool _isRenamingDefaultSheet = false;
 
+  /// Set once `Sheet1` is requested explicitly. The empty default sheet is
+  /// then never renamed, so a `Sheet` object obtained for it stays attached
+  /// to the workbook instead of silently losing every later change.
+  bool _defaultSheetClaimed = false;
+
   Archive _archive;
 
   final Map<String, XmlNode> _sheets = {};
@@ -159,6 +164,9 @@ class Excel {
   ///If the `sheet` does not exist then it will create `sheet` with `New Sheet Object`
   ///
   Sheet operator [](String sheet) {
+    if (sheet == 'Sheet1' && !_isRenamingDefaultSheet) {
+      _defaultSheetClaimed = true;
+    }
     _availSheet(sheet);
     return _sheetMap[sheet]!;
   }
@@ -577,7 +585,8 @@ class Excel {
     if (_sheetMap[sheet] == null) {
       if (_sheetMap.length == 1 &&
           _sheetMap.containsKey('Sheet1') &&
-          !_isRenamingDefaultSheet) {
+          !_isRenamingDefaultSheet &&
+          !_defaultSheetClaimed) {
         Sheet s = _sheetMap['Sheet1']!;
         if (s._sheetData.isEmpty &&
             s._spanList.isEmpty &&

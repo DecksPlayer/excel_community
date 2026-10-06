@@ -31,6 +31,8 @@
    - [Cell Coordinates & Addressing](#cell-coordinates--addressing)
    - [Reading All Rows & Cells (`sheet.rows`)](#reading-all-rows--cells-sheetrows)
    - [Batch Row Appending (`sheet.appendRow`)](#batch-row-appending-sheetappendrow)
+   - [Inserting, Removing & Clearing Rows and Columns](#inserting-removing--clearing-rows-and-columns)
+   - [Ranges and Find & Replace](#ranges-and-find--replace)
    - [Dimensions (Width, Height, Auto-Fit)](#dimensions-width-height-auto-fit)
    - [Freeze Panes (Lock Rows & Columns)](#freeze-panes-lock-rows--columns)
    - [Hidden Rows & Hidden Columns](#hidden-rows--hidden-columns)
@@ -40,8 +42,13 @@
    - [Sheet Protection & Password Hashing](#sheet-protection--password-hashing)
    - [Row & Column Grouping (Outlining)](#row--column-grouping-outlining)
    - [Embedding Images](#embedding-images)
-   - [Adding Charts](#adding-charts-7-types)
+   - [Adding Charts](#adding-charts-11-types)
    - [Structured Tables ("Format as Table")](#structured-tables-format-as-table)
+   - [Conditional Formatting](#conditional-formatting)
+   - [Data Validation & Dropdowns](#data-validation--dropdowns)
+   - [Page Setup & Printing](#page-setup--printing)
+   - [Pivot Tables](#pivot-tables)
+   - [Export & Import (Objects, JSON, CSV)](#export--import-objects-json-csv)
 8. [Cells (`Cell`)](#-cells-cell)
    - [Reading & Writing Values](#reading--writing-values)
    - [Data Types Supported](#data-types-supported)
@@ -111,6 +118,27 @@ import { Excel } from 'excel-community';
 
 // TypeScript
 import { Excel, Workbook, Sheet, Cell, CellStyleOptions } from 'excel-community';
+```
+
+Without a bundler, load the standalone browser build with a `<script>` tag. It exposes `ExcelCommunity.Excel`:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/excel-community/dist/excel_community.browser.js"></script>
+<script>
+  const { Excel } = ExcelCommunity;
+  const wb = Excel.create();
+  wb.sheet('Sheet1').cell('A1').value = 'Hello';
+  wb.save('hello.xlsx'); // triggers a download
+</script>
+```
+
+### Example page
+
+[`example/`](example/) contains a browser page that runs automated tests for every feature, downloads a demo workbook, previews any `.xlsx` file and has a code playground. From this folder:
+
+```bash
+npm run build     # compile the Dart core (requires the Dart SDK)
+npm run example   # then open http://localhost:8080/example/
 ```
 
 ---
@@ -226,14 +254,19 @@ const wb = Excel.create();
 // List all sheet names (Array of strings)
 console.log(wb.sheets); // ['Sheet1']
 
-// Access an existing sheet or create it if it doesn't exist
-const salesSheet = wb.sheet('Sales');
-
-// Explicitly create a new sheet
-const inventorySheet = wb.createSheet('Inventory');
-
 // Rename a sheet
 wb.renameSheet('Sheet1', 'Executive Summary');
+
+// Access an existing sheet or create it if it doesn't exist
+// (on a new workbook whose 'Sheet1' is still empty, 'Sheet1' is renamed instead)
+const salesSheet = wb.sheet('Sales');
+
+// Explicitly add a new sheet (never renames 'Sheet1')
+const inventorySheet = wb.createSheet('Inventory');
+
+// Link two sheets: changes to either one apply to both
+wb.linkSheet('Sales_View', 'Sales');
+wb.unlinkSheet('Sales_View'); // give it its own copy again
 
 // Copy / Duplicate a sheet with all its data, styles, merges and formulas
 wb.copySheet('Sales', 'Sales_Q1_Backup');
@@ -324,6 +357,36 @@ console.log(`Max Rows: ${sheet.maxRows}, Max Columns: ${sheet.maxColumns}`);
 
 ---
 
+### Inserting, Removing & Clearing Rows and Columns
+
+Indexes are 0-based. Merged cells, tables, validations, links, groups, row heights and column widths move with their cells:
+
+```javascript
+sheet.insertRow(1);       // new empty row 2; rows below move down
+sheet.removeRow(5);       // row 6 is deleted; rows below move up
+sheet.insertColumn(0);    // new empty column A
+sheet.removeColumn(3);    // column D is deleted
+sheet.clearRow(2);        // empties row 3 and keeps it in place
+
+// Write values into an existing row, starting at a column
+sheet.insertRowIterables(['Q1', 100, 200], 7, { startingColumn: 1 }); // B8:D8
+```
+
+---
+
+### Ranges and Find & Replace
+
+```javascript
+// Values of a range as a 2D array
+sheet.rangeValues('A1:C3'); // [['Region', 'Units', 'Price'], ['North', 10, 2.5], ...]
+
+// Replace text in every text cell; returns the number of replacements
+sheet.findAndReplace('Flutter', 'Dart');
+sheet.findAndReplace(/draft/i, 'Final', { startingRow: 1, endingRow: 99, first: 10 });
+```
+
+---
+
 ### Dimensions (Width, Height, Auto-Fit)
 
 ```javascript
@@ -391,11 +454,15 @@ console.log(sheet.isRowHidden(4)); // true
 sheet.cell('A1').value = 'Annual Financial Statement';
 sheet.merge('A1', 'E1');
 
-// Inspect merged areas in this sheet
-console.log(sheet.spannedItems); // ['A1:E1']
+// Or merge and set the content in one call
+sheet.merge('A3', 'E3', 'Quarterly Breakdown');
 
-// Unmerge
-sheet.unmerge('A1');
+// Inspect merged areas in this sheet
+console.log(sheet.spannedItems); // ['A1:E1', 'A3:E3']
+
+// Unmerge by range or by any cell inside it
+sheet.unmerge('A1:E1');
+sheet.unmerge('B3');
 ```
 
 ---
@@ -406,6 +473,9 @@ sheet.unmerge('A1');
 // Assign color to sheet tab (shown at bottom of Excel / Sheets)
 sheet.tabColor = '#E63946'; // Red
 // sheet.tabColor = null;   // Remove color
+
+// Or an Office theme color (0-11) with an optional tint (-1 to 1)
+sheet.setTabColorTheme(4, 0.4);
 
 // Enable Right-To-Left (RTL) reading order (Arabic, Hebrew)
 sheet.rightToLeft = true;
@@ -423,6 +493,11 @@ Enable Excel filter dropdowns across a range:
 sheet.setAutoFilter('A1:E50');
 console.log(sheet.hasAutoFilter); // true
 
+// Active criteria; `column` is the 0-based offset inside the range
+sheet.addFilterColumn({ column: 1, values: ['Completed', 'In Progress'] });
+sheet.addFilterColumn({ column: 3, custom: [{ operator: 'greaterThan', value: 1000 }] });
+console.log(sheet.autoFilter); // { ref: 'A1:E50', columns: [...] }
+
 // Remove AutoFilter
 sheet.clearAutoFilter();
 console.log(sheet.hasAutoFilter); // false
@@ -435,18 +510,21 @@ console.log(sheet.hasAutoFilter); // false
 Lock worksheets with password protection and configure granular user permissions:
 
 ```javascript
-// Protect sheet with password and custom permissions
+// Protect sheet with password. Each option set to true ALLOWS that action
+// while the sheet is protected; anything left out is blocked.
 sheet.protect('SecurePassword123', {
-  formatCells: false,      // Prevent cell formatting
-  formatColumns: false,    // Prevent column resizing
-  formatRows: false,       // Prevent row resizing
-  insertColumns: false,    // Prevent adding columns
-  insertRows: false,       // Prevent adding rows
-  deleteColumns: false,    // Prevent deleting columns
-  deleteRows: false,       // Prevent deleting rows
-  autoFilter: true,        // Allow using AutoFilter
-  sort: true,              // Allow sorting
+  formatColumns: true,      // Allow resizing columns
+  autoFilter: true,         // Allow using AutoFilter
+  sort: true,               // Allow sorting
+  selectUnlockedCells: true,
+  selectLockedCells: false, // Only unlocked cells can be selected
 });
+console.log(sheet.isProtected); // true
+
+// Cells are locked by default; unlock the ones users may edit,
+// or hide a formula from the formula bar
+sheet.cell('B2').setStyle({ locked: false });
+sheet.cell('C2').setStyle({ hidden: true });
 
 // Remove protection
 sheet.unprotect();
@@ -459,15 +537,27 @@ sheet.unprotect();
 Create nested, collapsible hierarchical outlines (up to 7 levels):
 
 ```javascript
-// Group detail rows 2 through 10
+// Group detail rows 2 through 10, with a nested group that starts collapsed
 sheet.groupRows(1, 9);
+sheet.groupRows(2, 4, { collapsed: true });
 
 // Group columns B through D
 sheet.groupColumns(1, 3);
 
-// Ungroup when needed
-sheet.ungroupRows(1, 9);
-sheet.ungroupColumns(1, 3);
+// Expand / collapse later
+sheet.expandRowGroup(2, 4);
+sheet.collapseColumnGroup(1, 3);
+
+// Inspect
+console.log(sheet.rowGroups);             // [{ start: 1, end: 9, level: 1, collapsed: false }, ...]
+console.log(sheet.getRowOutlineLevel(3)); // 2
+
+// Summary rows above the details (Excel's default is below)
+sheet.outlineSettings = { summaryBelow: false };
+
+// Ungroup one level, or remove every group
+sheet.ungroupRows(2, 4);
+sheet.clearGrouping();
 ```
 
 ---
@@ -487,13 +577,14 @@ sheet.addImage(
   0,           // Column anchor (0 = Column A)
   0,           // Row anchor (0 = Row 1)
   220,         // Width in pixels
-  80           // Height in pixels
+  80,          // Height in pixels
+  { colOffset: 5, rowOffset: 5 } // Optional offset inside the cell, in pixels
 );
 ```
 
 ---
 
-### Adding Charts (7 Types)
+### Adding Charts (11 Types)
 
 `excel-community` includes an advanced native chart builder producing OpenXML `<c:chartSpace>` definitions:
 
@@ -505,9 +596,9 @@ sheet.appendRow(['Q2', 62000, 31000]);
 sheet.appendRow(['Q3', 58000, 29000]);
 sheet.appendRow(['Q4', 85000, 39000]);
 
-// 2. Add a Column Chart
-sheet.addChart(JSON.stringify({
-  type: 'column', // 'column' | 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'radar'
+// 2. Add a Column Chart (a config object or its JSON string)
+sheet.addChart({
+  type: 'column', // see Chart Types & Configuration below
   title: '2026 Financial Overview',
   showLegend: true,
   grouping: 'clustered', // 'clustered' | 'stacked' | 'percentStacked'
@@ -531,8 +622,45 @@ sheet.addChart(JSON.stringify({
     toCol: 13,   // Extends to column N
     toRow: 16,   // Extends to row 17
   },
-}));
+});
+
+// 3. Data labels, series styles and the short anchor form
+sheet.addChart({
+  type: 'line',
+  title: 'Revenue trend',
+  smooth: true,
+  dataLabels: { value: true, labelPosition: 't' },
+  series: [{
+    name: 'Revenue',
+    categoriesRange: 'Sheet1!$A$2:$A$5',
+    valuesRange: 'Sheet1!$B$2:$B$5',
+    style: { fillColor: '#2E86AB', fillType: 'transparent', fillAlpha: 40, borderColor: '#1A5276', borderWidth: 28575 },
+  }],
+  anchor: { column: 4, row: 18, width: 9, height: 15 }, // in cells
+});
+
+// Pie / doughnut: percentages on each slice
+sheet.addChart({
+  type: 'doughnut',
+  dataLabels: { value: true, percentage: true, separator: '\n' },
+  series: [{ name: 'Share', categoriesRange: 'Sheet1!$A$2:$A$5', valuesRange: 'Sheet1!$B$2:$B$5' }],
+});
+
+// Bubble: a third range with the bubble sizes
+sheet.addChart({
+  type: 'bubble',
+  series: [{ name: 'Deals', categoriesRange: 'Sheet1!$B$2:$B$5', valuesRange: 'Sheet1!$C$2:$C$5', bubbleSizeRange: 'Sheet1!$D$2:$D$5' }],
+});
+
+// Stock: open, high, low and close series in that order
+sheet.addChart({
+  type: 'stock',
+  series: ['B', 'C', 'D', 'E'].map((c) => ({ categoriesRange: 'Prices!$A$2:$A$30', valuesRange: `Prices!$${c}$2:$${c}$30` })),
+});
 ```
+
+> [!NOTE]
+> Pie, doughnut and of-pie charts without custom colors pick their slice colors from a shuffled palette, so two saves of the same workbook can differ in those colors.
 
 ---
 
@@ -544,8 +672,175 @@ Format ranges with native Excel TableML, automatic banded stripes, filter button
 sheet.addTable(
   'A1:C5',        // Table range
   'Financials',   // Unique table identifier
-  JSON.stringify(['Quarter', 'Revenue', 'Operating Cost']) // Column titles
+  ['Quarter', 'Revenue', 'Operating Cost'] // Column titles (array or JSON string)
 );
+
+// Style, options and a totals row (labels and SUBTOTAL formulas are filled in)
+sheet.addTable('A1:C10', 'Q2_Sales', [
+  { name: 'Region', totalsLabel: 'Total' },
+  { name: 'Units', totalsFunction: 'sum' },   // sum | average | count | countNumbers | min | max | stdDev | variance
+  { name: 'Price', totalsFunction: 'average' },
+], { style: 'medium9', showTotalsRow: true, showColumnStripes: true });
+
+// Read, grow, change and remove tables
+sheet.tableRowsAsMaps('Q2_Sales');                  // [{ Region: 'North', Units: 10, Price: 2.5 }, ...]
+sheet.appendTableRow('Q2_Sales', ['East', 4, 1.5]);  // the table grows by one row
+sheet.updateTable('Q2_Sales', { style: 'light9', showRowStripes: false });
+console.log(sheet.getTable('Q2_Sales'), sheet.tables);
+sheet.removeTable('Q2_Sales');                       // cells keep their values
+```
+
+Table names must be unique in the workbook and cannot contain spaces or look like cell references (`'T2'` is rejected).
+
+---
+
+### Conditional Formatting
+
+Highlight cells with native Excel rules. Add one rule object or an array of rules to a range:
+
+```javascript
+// Compare with a value or formula
+sheet.addConditionalFormatting('C2:C100', {
+  type: 'cellIs',
+  operator: 'greaterThan', // equal | notEqual | greaterThan | greaterThanOrEqual | lessThan | lessThanOrEqual | between | notBetween
+  value: 1000,
+  style: { backgroundColor: '#C6EFCE', fontColor: '#006100', bold: true },
+});
+
+sheet.addConditionalFormatting('D2:D100', [
+  { type: 'cellIs', operator: 'between', value: 0, value2: 50, style: { fontColor: '#9C0006' } },
+  // A formula relative to the first cell of the range
+  { type: 'expression', formula: '$E2="Late"', style: { italic: true, strikethrough: true }, priority: 2 },
+]);
+
+// Text, duplicate and unique values
+sheet.addConditionalFormatting('A2:A100', { type: 'containsText', text: 'urgent', style: { bold: true } });
+sheet.addConditionalFormatting('B2:B100', { type: 'duplicateValues', style: { backgroundColor: '#FFC7CE' } });
+sheet.addConditionalFormatting('B2:B100', { type: 'uniqueValues', style: { underline: 'single' } });
+
+console.log(sheet.conditionalFormattings); // [{ range: 'C2:C100', rules: [...] }, ...]
+sheet.clearConditionalFormatting();
+```
+
+---
+
+### Data Validation & Dropdowns
+
+Restrict what users can type, with optional input and error messages:
+
+```javascript
+// Dropdown with fixed values
+sheet.addDataValidation('C2:C100', {
+  type: 'list',
+  items: ['Open', 'In progress', 'Done'],
+  prompt: { title: 'Status', message: 'Pick a status from the list' },
+  error: { title: 'Invalid status', message: 'Choose one of the listed values', style: 'stop' }, // stop | warning | information
+});
+
+// Dropdown from a range, on the same or another sheet
+sheet.addDataValidation('D2:D100', { type: 'listFromRange', range: 'A1:A20', sheet: 'Lookup Lists' });
+
+// Numbers, dates, times and text length
+sheet.addDataValidation('E2:E100', { type: 'wholeNumber', operator: 'between', value: 1, value2: 10 });
+sheet.addDataValidation('F2:F100', { type: 'decimal', operator: 'greaterThan', value: 0 });
+sheet.addDataValidation('G2:G100', { type: 'date', operator: 'greaterThanOrEqual', value: new Date(2026, 0, 1) });
+sheet.addDataValidation('H2:H100', { type: 'time', operator: 'lessThan', value: '18:00' });
+sheet.addDataValidation('I2:I100', { type: 'textLength', operator: 'lessThanOrEqual', value: 50 });
+
+// Custom formula (without '='), relative to the first cell of the range
+sheet.addDataValidation('J2:J100', { type: 'custom', formula: 'J2>E2' });
+
+// Check values in JavaScript before writing them
+sheet.cell('C5').validates('Done'); // true
+sheet.cell('E5').validates(42);     // false
+console.log(sheet.getDataValidation('C5'), sheet.dataValidations);
+
+sheet.removeDataValidation('C50:C100'); // other cells keep the rule
+sheet.clearDataValidations();
+```
+
+A cell has one validation: adding a rule to a range removes that area from earlier rules.
+
+---
+
+### Page Setup & Printing
+
+```javascript
+// Orientation, paper, scaling (only the given options change)
+sheet.setPageSetup({
+  orientation: 'landscape',      // portrait | landscape
+  paperSize: 'a4',               // letter | legal | a3 | a4 | a5 | ... or Excel's numeric code
+  fitToWidth: 1, fitToHeight: 0, // all columns on one page width (or use `scale: 80`)
+  firstPageNumber: 3,
+  blackAndWhite: true,
+  copies: 2,
+});
+
+// Margins: presets or values in inches / centimetres
+sheet.setPageMargins('narrow');                          // normal | wide | narrow
+sheet.setPageMargins({ left: 2, right: 2, unit: 'cm' });
+
+// Print options
+sheet.setPrintOptions({ gridLines: true, headings: true, horizontalCentered: true });
+
+// Header and footer with Excel codes: &L &C &R sections, &P page, &N pages, &D date, &A sheet name
+sheet.setHeaderFooter({ header: '&CQuarterly report', footer: '&LConfidential&RPage &P of &N' });
+
+console.log(sheet.pageSetup, sheet.pageMargins, sheet.printOptions, sheet.headerFooter);
+sheet.clearPageSetup();
+sheet.clearPageMargins();
+sheet.clearPrintOptions();
+sheet.clearHeaderFooter();
+```
+
+---
+
+### Pivot Tables
+
+Summarize a data range on another sheet. The pivot table is saved already computed (its cells hold the results), so it also shows in Protected View and in other spreadsheet apps; Excel refreshes it when the file is opened:
+
+```javascript
+wb.sheet('Report').addPivotTable({
+  name: 'SalesByRegion',
+  sourceSheet: 'Sales Data',
+  sourceRange: 'A1:C100',   // headers included
+  targetCell: 'A3',         // top-left corner on 'Report'
+  rows: ['Region'],         // header names
+  columns: ['Product'],
+  values: [
+    { field: 'Amount', function: 'sum', customName: 'Total Sales' },
+    { field: 'Amount', function: 'average' }, // sum | count | average | max | min | product | countNums | stdDev | stdDevp | var | varp
+  ],
+});
+```
+
+---
+
+### Export & Import (Objects, JSON, CSV)
+
+The first row (or `headerRow`) gives the keys:
+
+```javascript
+// Rows as objects with native values (numbers, booleans, Date objects)
+sheet.rowsAsMaps();                        // [{ Name: 'Ana', Age: 31, Joined: Date }, ...]
+sheet.rowsAsMaps({ mode: 'displayText' }); // values as Excel displays them
+sheet.rowsAsMaps({ headerRow: 1 });        // header below a title row
+
+// The whole grid, header included
+sheet.rowsAsValues();
+
+// JSON and CSV (RFC 4180 quoting; CSV uses the displayed text by default)
+const json = sheet.toJson({ indent: '  ' });
+const csv = sheet.toCsv({ separator: ';' });
+
+// Every sheet at once
+wb.toMaps(); // { Customers: [...], Orders: [...] }
+wb.toJson();
+
+// Import objects as rows: the header is written on an empty sheet, matched otherwise
+wb.sheet('Imported').appendRowsFromMaps([
+  { Name: 'Eva', Age: 40, Joined: new Date(2026, 0, 15) },
+]);
 ```
 
 ---
@@ -589,9 +884,14 @@ console.log(sheet.cell('A3').type); // 'double'
 sheet.cell('A4').value = true;
 console.log(sheet.cell('A4').type); // 'bool'
 
-// Dates & DateTimes (ISO string or Date object)
-sheet.cell('A5').value = '2026-10-04';
-sheet.cell('A6').value = new Date();
+// Dates & DateTimes (Date objects, stored with their local time)
+sheet.cell('A5').value = new Date(2026, 9, 4);  // type 'date', value '2026-10-04'
+sheet.cell('A6').value = new Date();            // type 'datetime', ISO string value
+console.log(sheet.cell('A5').dateValue);        // a JS Date again
+
+// Times of day
+sheet.cell('A7').setTime('14:30');              // type 'time', value '14:30:00'
+sheet.cell('A8').setTime(8, 15, 0);
 ```
 
 ---
@@ -621,7 +921,12 @@ sheet.cell('C2').value = '=AVERAGE(A1:B1)';
 
 console.log(sheet.cell('C1').formula); // '=SUM(A1:B1)'
 console.log(sheet.cell('C1').type);    // 'formula'
+
+// For files saved by Excel: the result Excel cached for the formula
+console.log(Excel.fromFile('report.xlsx').sheet('Sheet1').cell('C1').cachedValue);
 ```
+
+Formulas are not calculated by the library; Excel calculates them when the file is opened.
 
 ---
 
@@ -649,20 +954,31 @@ sheet.cell('A1').setHyperlink(
   'Visit excel_community'   // Display text
 );
 
+// Or pass a target object: url, email, a cell of the workbook or a defined name
+sheet.cell('A2').setHyperlink({ email: 'sales@example.com', subject: 'Q3 report' }, { text: 'Contact sales' });
+sheet.cell('A3').setHyperlink({ sheet: 'Q1 Sales', cell: 'B4' }, { text: 'Go to Q1' });
+sheet.cell('A4').setHyperlink({ location: 'TotalSales', tooltip: 'Named range' });
+sheet.cell('A5').setHyperlink({ url: 'https://dart.dev' }, { styled: false }); // keep the cell style
+
+// The same link over a range
+sheet.setHyperlinkRange('B5:D5', { url: 'https://pub.dev' });
+
 // Read hyperlink
 const link = sheet.cell('A1').getHyperlink();
 console.log(link.url);     // 'https://github.com/...'
 console.log(link.tooltip); // 'Open GitHub Repository'
+console.log(sheet.hyperlinks); // { A1: {...}, 'B5:D5': {...}, ... }
 
-// Remove hyperlink
+// Remove one or all hyperlinks
 sheet.cell('A1').removeHyperlink();
+sheet.clearHyperlinks();
 ```
 
 ---
 
 ### Complete Styling Engine (`cell.setStyle`)
 
-`cell.setStyle()` provides full control over cell presentation:
+`cell.setStyle()` provides full control over cell presentation. It changes only the options you pass, so you can call it several times; `cell.resetStyle()` removes all formatting:
 
 ```javascript
 sheet.cell('A1').setStyle({
@@ -682,6 +998,7 @@ sheet.cell('A1').setStyle({
   horizontalAlign: 'center',   // 'left' | 'center' | 'right'
   verticalAlign: 'center',     // 'top' | 'center' | 'bottom'
   wrapText: true,              // Wrap text onto multiple lines
+  // shrinkToFit: true,        // Or shrink the text to fit the cell
   rotation: 0,                 // Text angle from -90 to 90 degrees
 
   // Borders
@@ -692,13 +1009,26 @@ sheet.cell('A1').setStyle({
   // topBorder:    { style: 'thick',  color: '#002060' },
   // bottomBorder: { style: 'double', color: '#002060' },
 
+  // Diagonal border
+  // diagonalBorder: { style: 'thin', color: '#FF0000' }, diagonalUp: true, diagonalDown: false,
+
   // Number Format
   numberFormat: '$#,##0.00;($#,##0.00);"-"',
+
+  // Protection (used when the sheet is protected)
+  locked: true,   // read-only under protection (Excel's default)
+  hidden: false,  // hide the formula from the formula bar
 });
+
+// Later calls keep the other options
+sheet.cell('A1').setStyle({ italic: true });
 
 // Inspect active styles
 const style = sheet.cell('A1').style;
-console.log(style.bold, style.fontColor, style.backgroundColor);
+console.log(style.bold, style.italic, style.fontColor, style.backgroundColor, style.numberFormat);
+
+// Remove all formatting
+sheet.cell('A1').resetStyle();
 ```
 
 ---
@@ -748,27 +1078,34 @@ You can pass either standard integer IDs or custom formatting pattern strings to
 | `'dashed'` | Dashed border line |
 | `'dotted'` | Dotted border line |
 | `'hair'` | Ultra-fine subtle boundary line |
-| `'dashdot'` | Alternating dash-and-dot border line |
-| `'dashdotdot'` | Alternating dash-dot-dot border line |
+| `'dashDot'` | Alternating dash-and-dot border line |
+| `'dashDotDot'` | Alternating dash-dot-dot border line |
+| `'mediumDashed'`, `'mediumDashDot'`, `'mediumDashDotDot'`, `'slantDashDot'` | Medium-weight dashed variants |
 | `'none'` | Explicitly clears border |
 
 ---
 
 ### Sheet Protection Permissions
 
-Pass any of the following booleans inside `sheet.protect('password', options)`:
+Pass any of the following booleans inside `sheet.protect('password', options)`. `true` **allows** the action while the sheet is protected; options you leave out are blocked:
 
-| Option | Default | Description |
-| :--- | :---: | :--- |
-| `formatCells` | `true` | Allows user to modify fonts, fills, and alignments |
-| `formatColumns` | `true` | Allows user to resize or auto-fit column widths |
-| `formatRows` | `true` | Allows user to resize row heights |
-| `insertColumns` | `true` | Allows inserting new columns |
-| `insertRows` | `true` | Allows inserting new rows |
-| `deleteColumns` | `true` | Allows deleting columns |
-| `deleteRows` | `true` | Allows deleting rows |
-| `autoFilter` | `true` | Allows applying filters |
-| `sort` | `true` | Allows sorting ranges |
+| Option | Allows the user to |
+| :--- | :--- |
+| `selectLockedCells` | Select locked cells |
+| `selectUnlockedCells` | Select unlocked cells |
+| `formatCells` | Modify fonts, fills, and alignments |
+| `formatColumns` | Resize or auto-fit column widths |
+| `formatRows` | Resize row heights |
+| `insertColumns` | Insert new columns |
+| `insertRows` | Insert new rows |
+| `insertHyperlinks` | Insert hyperlinks |
+| `deleteColumns` | Delete columns |
+| `deleteRows` | Delete rows |
+| `sort` | Sort ranges |
+| `autoFilter` | Use AutoFilter |
+| `pivotTables` | Use pivot tables |
+| `objects` | Edit charts, images and other objects |
+| `scenarios` | Edit scenarios |
 
 ---
 
@@ -776,13 +1113,19 @@ Pass any of the following booleans inside `sheet.protect('password', options)`:
 
 | Chart Type | String Key | Best Used For |
 | :--- | :---: | :--- |
-| **Column Chart** | `'column'` | Vertical bars for category comparisons |
-| **Bar Chart** | `'bar'` | Horizontal bars for rankings or long label lists |
-| **Line Chart** | `'line'` | Continuous time-series and trend tracking |
+| **Column Chart** | `'column'` | Vertical bars for category comparisons (`grouping`) |
+| **Bar Chart** | `'bar'` | Horizontal bars for rankings or long label lists (`grouping`) |
+| **Line Chart** | `'line'` | Time series and trends (`grouping`, `showMarkers`, `smooth`) |
+| **Area Chart** | `'area'` | Cumulative volume trends over time (`grouping`) |
 | **Pie Chart** | `'pie'` | Proportional composition of a whole |
-| **Area Chart** | `'area'` | Cumulative volume trends over time |
-| **Scatter Chart** | `'scatter'` | Correlation between two numeric variables |
-| **Radar Chart** | `'radar'` | Multi-variable comparative analysis |
+| **Doughnut Chart** | `'doughnut'` | Pie with a center hole |
+| **Of-Pie Chart** | `'ofPie'`, `'pieOfPie'`, `'barOfPie'` | Pie with a secondary breakdown (`ofPieType`, `splitType`, `splitPosition`, `secondPieSize`) |
+| **Scatter Chart** | `'scatter'` | Correlation between two numeric variables (`showLines`, `showMarkers`, `smooth`) |
+| **Bubble Chart** | `'bubble'` | X, Y and bubble size (`bubbleSizeRange` per series, `bubbleScale`, `showNegativeBubbles`) |
+| **Stock Chart** | `'stock'` | High-low-close or open-high-low-close (`showHighLowLines`, `showUpDownBars`) |
+| **Radar Chart** | `'radar'` | Multi-variable comparative analysis (`filled`) |
+
+Every chart also accepts `title`, `showLegend`, `anchor`, `dataLabels` (`value`, `categoryName`, `seriesName`, `percentage`, `separator`, `labelPosition`) and a `style` per series (`fillColor`, `fillType: 'solid' | 'transparent' | 'none'`, `fillAlpha`, `borderColor`, `borderAlpha`, `borderWidth`).
 
 ---
 

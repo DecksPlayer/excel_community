@@ -4,6 +4,9 @@ scratch/
 excel_flutter_example/
 xl/
 
+# npm package (JavaScript build, uses dart:js_interop)
+npm/
+
 # Exclude test files/output templates from root
 *.xlsx
 *.txt

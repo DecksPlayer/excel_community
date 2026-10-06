@@ -13,6 +13,10 @@ enum ChartGrouping {
 
   final String ooxmlValue;
   const ChartGrouping(this.ooxmlValue);
+
+  /// The value for line and area charts, whose schema has no `clustered`
+  /// grouping (Excel cannot open the file): the unstacked mode is `standard`.
+  String get lineAreaOoxmlValue => this == clustered ? 'standard' : ooxmlValue;
 }
 
 /// Subtype for [OfPieChart] (Pie-of-Pie or Bar-of-Pie).
