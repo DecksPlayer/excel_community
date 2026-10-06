@@ -373,5 +373,22 @@ void main() {
       expect(xml, isNot(contains('<pageSetup')));
       expect(xml, contains('<outlinePr'));
     });
+
+    test('header and footer text is escaped once and read back unchanged', () {
+      final excel = Excel.createExcel();
+      excel['Sheet1'].headerFooter = HeaderFooter(
+        oddHeader: '&CExample "Q3" report',
+        oddFooter: '&RPage &P of &N',
+      );
+      final bytes = excel.encode()!;
+
+      final xml = _sheetXml(bytes);
+      expect(xml, contains('<oddHeader>&amp;CExample "Q3" report</oddHeader>'));
+      expect(xml, contains('<oddFooter>&amp;RPage &amp;P of &amp;N</oddFooter>'));
+
+      final headerFooter = Excel.decodeBytes(bytes)['Sheet1'].headerFooter!;
+      expect(headerFooter.oddHeader, '&CExample "Q3" report');
+      expect(headerFooter.oddFooter, '&RPage &P of &N');
+    });
   });
 }

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>excel-community · Browser Test Page</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --text: #1b1f24;
+      --muted: #5c6670;
+      --border: #dde1e6;
+      --accent: #1f6f43;
+      --accent-text: #ffffff;
+      --pass: #1f7a3a;
+      --pass-bg: #e7f5ec;
+      --fail: #b42318;
+      --fail-bg: #fdecea;
+      --code-bg: #f1f3f5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111418;
+        --surface: #1a1e23;
+        --text: #e6e9ed;
+        --muted: #98a2ad;
+        --border: #2d333b;
+        --accent: #3fa36b;
+        --accent-text: #0b1410;
+        --pass: #5bc785;
+        --pass-bg: #15281d;
+        --fail: #f47c70;
+        --fail-bg: #2e1715;
+        --code-bg: #0d1013;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+    header h1 { margin: 0 0 4px; font-size: 26px; }
+    header p { margin: 0; color: var(--muted); }
+    code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 13px; }
+    section {
+      margin-top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    h2 { margin: 0 0 4px; font-size: 18px; }
+    .hint { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button, .file {
+      font: inherit;
+      font-size: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 7px 14px;
+      cursor: pointer;
+    }
+    button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+    button:hover, .file:hover { filter: brightness(0.95); }
+    .file input { display: none; }
+    .summary { font-weight: 600; padding: 4px 10px; border-radius: 999px; font-size: 14px; }
+    .summary.pass { color: var(--pass); background: var(--pass-bg); }
+    .summary.fail { color: var(--fail); background: var(--fail-bg); }
+    #results { list-style: none; margin: 16px 0 0; padding: 0; columns: 2 420px; column-gap: 24px; }
+    #results .group { break-inside: avoid; margin-bottom: 16px; }
+    #results h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    #results ul { list-style: none; margin: 0; padding: 0; }
+    #results ul li { display: grid; grid-template-columns: 18px 1fr auto; gap: 6px; padding: 3px 0; font-size: 14px; }
+    .mark { font-weight: 700; }
+    .pass .mark { color: var(--pass); }
+    .fail .mark, .fail .name { color: var(--fail); }
+    .ms { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    #results pre {
+      grid-column: 2 / -1;
+      margin: 2px 0 4px;
+      padding: 6px 8px;
+      background: var(--fail-bg);
+      color: var(--fail);
+      border-radius: 4px;
+      white-space: pre-wrap;
+      font-size: 12px;
+    }
+    textarea, #play-output {
+      width: 100%;
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+    textarea { min-height: 280px; resize: vertical; margin-bottom: 8px; }
+    #play-output { min-height: 40px; margin: 8px 0 0; white-space: pre-wrap; }
+    #play-output.error { color: var(--fail); }
+    #tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 12px 0 8px; }
+    #tabs button { padding: 4px 12px; }
+    #tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+    #sheet-info { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    #grid { overflow: auto; max-height: 480px; border: 1px solid var(--border); border-radius: 6px; }
+    table { border-collapse: collapse; font-size: 13px; }
+    th, td { border: 1px solid var(--border); padding: 3px 8px; white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+    th { background: var(--code-bg); color: var(--muted); font-weight: 500; position: sticky; top: 0; }
+    tbody th { position: sticky; left: 0; text-align: right; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.formula { color: var(--muted); font-style: italic; }
+    .status { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+    .status:empty { display: none; }
+    .status.error { color: var(--fail); }
+    .status a { color: var(--accent); font-weight: 600; }
+    #page-error { margin-top: 16px; padding: 12px 16px; border-radius: 8px; background: var(--fail-bg); color: var(--fail); white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>excel-community · Browser Test Page</h1>
+    <p>Exercises the whole npm module in the browser through <code>dist/excel_community.browser.js</code>.</p>
+  </header>
+  <div id="page-error" role="alert" hidden></div>
+
+  <section>
+    <div class="row" style="justify-content: space-between">
+      <div>
+        <h2>Automated tests</h2>
+        <p class="hint">Every feature is written, saved to <code>.xlsx</code> bytes and read back.</p>
+      </div>
+      <div class="row">
+        <span id="summary" class="summary">Running…</span>
+        <button id="run-tests" type="button">Run again</button>
+      </div>
+    </div>
+    <ul id="results"></ul>
+  </section>
+
+  <section>
+    <h2>Demo workbook</h2>
+    <p class="hint">A dashboard with styles, formulas, dates, merged cells, conditional formatting, data validation, three charts, an image, a hyperlink, print setup, a table, a pivot table and a protected sheet. Open the download in Excel to check it.</p>
+    <div class="row">
+      <button id="download-demo" class="primary" type="button">Download demo .xlsx</button>
+      <button id="view-demo" type="button">Show in viewer</button>
+    </div>
+    <p id="demo-status" class="status" role="status"></p>
+  </section>
+
+  <section>
+    <h2>Open an .xlsx file</h2>
+    <p class="hint">Reads any workbook with <code>Excel.read()</code> and shows each sheet using <code>displayText</code>. Hover a cell to see its type and formula.</p>
+    <div class="row">
+      <label class="file">Choose file…<input id="file" type="file" accept=".xlsx"></label>
+    </div>
+    <div id="viewer" hidden>
+      <div class="row" style="margin-top: 12px; justify-content: space-between">
+        <strong id="viewer-name"></strong>
+        <button id="resave" type="button">Save a copy (round trip)</button>
+      </div>
+      <p id="viewer-status" class="status" role="status"></p>
+      <div id="tabs" role="tablist"></div>
+      <div id="sheet-info"></div>
+      <div id="grid"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Playground</h2>
+    <p class="hint">Run any code against the API. Return a workbook to show it in the viewer above.</p>
+    <textarea id="code" spellcheck="false" aria-label="Code"></textarea>
+    <button id="run-code" class="primary" type="button">Run</button>
+    <pre id="play-output"></pre>
+  </section>
+</main>
+
+<script>
+  // Show any failure on the page instead of only in the console.
+  function pageError(message) {
+    const el = document.getElementById('page-error');
+    el.hidden = false;
+    el.textContent += (el.textContent ? '\n' : '') + message;
+  }
+  window.addEventListener('error', (e) => pageError(`Error: ${e.message}`));
+  window.addEventListener('unhandledrejection', (e) => pageError(`Error: ${(e.reason && e.reason.message) || e.reason}`));
+</script>
+<script src="../dist/excel_community.browser.js"
+        onerror="pageError('Could not load ../dist/excel_community.browser.js. Run npm run build in the npm folder.')"></script>
+<script>
+  if (typeof ExcelCommunity === 'undefined') {
+    pageError('The excel-community browser build did not load. Run npm run build in the npm folder and reload.');
+  }
+</script>
+<script src="app.js"></script>
+</body>
+</html>

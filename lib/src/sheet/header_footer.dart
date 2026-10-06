@@ -48,27 +48,27 @@ class HeaderFooter {
     final children = <XmlNode>[];
     if (evenHeader != null) {
       children.add(XmlElement(XmlName.parts("evenHeader"), [],
-          [XmlText(evenHeader!.simplifyText())]));
+          [XmlText(evenHeader!)]));
     }
     if (evenFooter != null) {
       children.add(XmlElement(XmlName.parts("evenFooter"), [],
-          [XmlText(evenFooter!.simplifyText())]));
+          [XmlText(evenFooter!)]));
     }
     if (firstHeader != null) {
       children.add(XmlElement(XmlName.parts("firstHeader"), [],
-          [XmlText(firstHeader!.simplifyText())]));
+          [XmlText(firstHeader!)]));
     }
     if (firstFooter != null) {
       children.add(XmlElement(XmlName.parts("firstFooter"), [],
-          [XmlText(firstFooter!.simplifyText())]));
+          [XmlText(firstFooter!)]));
     }
     if (oddHeader != null) {
       children.add(XmlElement(XmlName.parts("oddHeader"), [],
-          [XmlText(oddHeader!.simplifyText())]));
+          [XmlText(oddHeader!)]));
     }
     if (oddFooter != null) {
       children.add(XmlElement(XmlName.parts("oddFooter"), [],
-          [XmlText(oddFooter!.simplifyText())]));
+          [XmlText(oddFooter!)]));
     }
 
     return XmlElement(XmlName.parts("headerFooter"), attributes, children);

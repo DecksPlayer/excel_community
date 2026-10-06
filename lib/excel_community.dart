@@ -81,6 +81,7 @@ part 'src/save/comments/comment_manager.dart';
 part 'src/save/hyperlinks/hyperlink_manager.dart';
 part 'src/save/tables/table_manager.dart';
 part 'src/save/images/image_manager.dart';
+part 'src/save/pivot_table/pivot_layout.dart';
 part 'src/save/pivot_table/pivot_table_manager.dart';
 part 'src/save/styles/style_manager.dart';
 part 'src/save/styles/style_resource_collector.dart';
