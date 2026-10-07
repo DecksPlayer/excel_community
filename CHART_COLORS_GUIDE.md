@@ -165,21 +165,20 @@ ScatterChart(
 ```
 
 ### Assignment Algorithm
-1. Shuffle (randomize) the palette
-2. Take the first N colors (N = number of segments)
-3. Assign one by one to each segment
+1. Segment `i` gets palette color `i` (`ChartColorConfig.getPieColor(i)`)
+2. After 20 segments the palette starts over
 
-**Result:** Each execution generates random combinations WITHOUT repetition
+**Result:** No repeated colors up to 20 segments, and the same chart always gets the same colors, so saving a workbook twice gives the same file
 
 ---
 
 ## 6️⃣ Pie Chart
 
 **Features:**
-- ✅ Random colors without repetition
+- ✅ Palette colors in order, without repetition up to 20 segments
 - ✅ Solid colors (100% opacity)
 - ✅ 20 colors available
-- ✅ Shuffle before assigning
+- ✅ Same colors on every save
 
 **Usage:**
 ```dart
@@ -193,8 +192,8 @@ PieChart(
 
 **Visual:**
 - Each segment has a different vibrant color
-- Randomized colors every time
-- Maximum 20 segments with unique colors
+- Same colors every time
+- Up to 20 segments with unique colors
 
 ---
 
@@ -203,7 +202,7 @@ PieChart(
 **Features:**
 - ✅ Identical to Pie Chart in colors
 - ✅ Central hole (holeSize: 50%)
-- ✅ Random colors without repetition
+- ✅ Palette colors in order, without repetition up to 20 segments
 
 **Usage:**
 ```dart
@@ -217,7 +216,7 @@ DoughnutChart(
 
 **Visual:**
 - Like Pie Chart but with a central hole
-- Same randomized color system
+- Same palette-order color system
 
 ---
 
@@ -373,7 +372,7 @@ Open the generated files in Microsoft Excel and verify:
 - ✅ Borders and markers look good
 - ✅ Legends show correct colors
 - ✅ No repeated colors in the same chart
-- ✅ Circular charts have random variety
+- ✅ Circular charts get a distinct color per slice, the same on every save
 
 ---
 
@@ -418,7 +417,7 @@ Each chart type has a color strategy optimized for its specific use case:
 - **Bar/Column charts:** Solid and distinguishable
 - **Line charts:** Visible markers
 - **Area/Radar charts:** Transparent to see overlaps
-- **Circular charts:** Random for variety
+- **Circular charts:** one palette color per slice, in order
 - **Scatter charts:** White borders for separation
 
 This system ensures professional and easy-to-interpret visualizations across all cases.

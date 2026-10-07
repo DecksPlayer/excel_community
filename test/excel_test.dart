@@ -372,6 +372,24 @@ void main() {
         equals('Moscow'));
   });
 
+  test('appendRow scales linearly with the number of rows', () {
+    final sheet = Excel.createExcel()['Sheet1'];
+    final stopwatch = Stopwatch()..start();
+    for (var r = 0; r < 50000; r++) {
+      sheet.appendRow([
+        for (var c = 0; c < 10; c++) IntCellValue(r * c),
+      ]);
+    }
+    stopwatch.stop();
+
+    expect(sheet.maxRows, 50000);
+    expect(sheet.maxColumns, 10);
+    expect(sheet.cell(CellIndex.indexByString('J50000')).value,
+        IntCellValue(49999 * 9));
+    // Recounting the sheet on every call made this take minutes.
+    expect(stopwatch.elapsed, lessThan(const Duration(seconds: 10)));
+  });
+
   test('Saving XLSX File with appendRow', () {
     var excel = Excel.createExcel();
     var sheet = excel['Sheet1'];

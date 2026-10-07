@@ -80,19 +80,19 @@ CellStyle applyStyleOptions(CellStyle? base, Map<String, Object?> o) {
 
 Map<String, Object?>? _borderInfo(Border b) => b.borderStyle == null
     ? null
-    : {'style': b.borderStyle!.style, 'color': b.borderColorHex};
+    : {'style': b.borderStyle!.style, 'color': colorInfo(b.borderColorHex)};
 
 Map<String, Object?> styleInfo(CellStyle s) => {
       'bold': s.isBold,
       'italic': s.isItalic,
       'strikethrough': s.isStrikethrough,
-      'underline': s.underline.name,
+      'underline': optionName(s.underline),
       'fontSize': s.fontSize,
       'fontFamily': s.fontFamily,
-      'fontColor': s.fontColor.colorHex,
-      'backgroundColor': s.backgroundColor.colorHex,
-      'horizontalAlign': s.horizontalAlignment.name,
-      'verticalAlign': s.verticalAlignment.name,
+      'fontColor': colorInfo(s.fontColor.colorHex),
+      'backgroundColor': colorInfo(s.backgroundColor.colorHex),
+      'horizontalAlign': optionName(s.horizontalAlignment),
+      'verticalAlign': optionName(s.verticalAlignment),
       'wrapText': s.wrap == TextWrapping.WrapText,
       'shrinkToFit': s.wrap == TextWrapping.Clip,
       'rotation': s.rotation,
@@ -317,12 +317,12 @@ Map<String, Object?> conditionalRuleInfo(ConditionalFormattingRule r) => {
       'text': r.text,
       'priority': r.priority,
       'style': {
-        'backgroundColor': r.style.backgroundColor?.colorHex,
-        'fontColor': r.style.fontColor?.colorHex,
+        'backgroundColor': colorInfo(r.style.backgroundColor?.colorHex),
+        'fontColor': colorInfo(r.style.fontColor?.colorHex),
         'bold': r.style.bold,
         'italic': r.style.italic,
         'strikethrough': r.style.strikethrough,
-        'underline': r.style.underline?.name,
+        'underline': r.style.underline == null ? null : optionName(r.style.underline!),
       },
     };
 

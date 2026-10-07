@@ -150,6 +150,18 @@ extension OptionReaders on Map<String, Object?> {
 
 ExcelColor parseColor(String hex) => ExcelColor.fromHexString(hex.startsWith('#') ? hex : '#$hex');
 
+/// A stored color the way `setStyle` takes it: `'#RRGGBB'`, or
+/// `'#AARRGGBB'` when not opaque; `null` for no color.
+String? colorInfo(String? hex) {
+  if (hex == null || hex == 'none') return null;
+  final h = hex.replaceFirst('#', '').toUpperCase();
+  return h.length == 8 && h.startsWith('FF') ? '#${h.substring(2)}' : '#$h';
+}
+
+/// A Dart enum value as the lowercase option name the JS API takes
+/// (`Center` → `'center'`).
+String optionName(Enum value) => value.name[0].toLowerCase() + value.name.substring(1);
+
 /// Finds an enum value by name, ignoring case, `-`, `_` and spaces.
 T enumByName<T extends Enum>(List<T> values, String? name, T fallback) {
   if (name == null) return fallback;

@@ -2,14 +2,14 @@
 
 # Excel Community (NPM Module)
 
-> **The ultimate high-performance, full-featured Excel XLSX library for JavaScript, TypeScript, Node.js, and modern Web Browsers.**  
-> Compiled directly from the industry-proven [excel_community](https://github.com/decksplayer/excel_community) Dart engine. Zero heavy native binaries. Zero bloated dependencies. 100% pure, optimized OpenXML spreadsheet manipulation.
+> **Read and write Excel `.xlsx` files with styles, charts, tables and pivot tables, in Node.js and browsers.**  
+> This package is the [excel_community](https://github.com/decksplayer/excel_community) Dart engine compiled to JavaScript, with a JS API and TypeScript types on top. No native binaries and no dependencies.
 
 [![npm version](https://img.shields.io/npm/v/excel-community.svg)](https://www.npmjs.com/package/excel-community)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
-[![Bundle Size](https://img.shields.io/badge/Bundle%20Size-~192%20KB%20(gz)-brightgreen.svg)](https://www.npmjs.com/package/excel-community)
+[![Bundle Size](https://img.shields.io/badge/Bundle%20Size-~216%20KB%20(gz)-brightgreen.svg)](https://www.npmjs.com/package/excel-community)
 
 ---
 
@@ -30,7 +30,7 @@
 7. [Worksheets (`Sheet`)](#-worksheets-sheet)
    - [Cell Coordinates & Addressing](#cell-coordinates--addressing)
    - [Reading All Rows & Cells (`sheet.rows`)](#reading-all-rows--cells-sheetrows)
-   - [Batch Row Appending (`sheet.appendRow`)](#batch-row-appending-sheetappendrow)
+   - [Batch Row Appending (`appendRow`, `appendRows`)](#batch-row-appending-appendrow-appendrows)
    - [Inserting, Removing & Clearing Rows and Columns](#inserting-removing--clearing-rows-and-columns)
    - [Ranges and Find & Replace](#ranges-and-find--replace)
    - [Dimensions (Width, Height, Auto-Fit)](#dimensions-width-height-auto-fit)
@@ -65,15 +65,16 @@
 10. [Real-World Examples](#-real-world-examples)
     - [Example 1: Executive Sales Dashboard with Chart](#example-1-executive-sales-dashboard-with-chart)
     - [Example 2: In-Memory Transform & Cloud Export (AWS Lambda)](#example-2-in-memory-transform--cloud-export-aws-lambda)
-11. [License](#-license)
+11. [Errors](#️-errors)
+12. [Benchmark](#-benchmark)
+13. [Limitations](#-limitations)
+14. [License](#-license)
 
 ---
 
 ## ⚡ Why Excel Community?
 
-Traditional JavaScript Excel packages present severe trade-offs: either they are abandoned, locked behind commercial paywalls with stripped features, or weigh several megabytes with dozens of transitives.
-
-`excel-community` solves this completely:
+Free JavaScript Excel packages usually leave out charts, pivot tables or styling. `excel-community` includes them:
 
 | Feature | `excel-community` | `exceljs` | `xlsx` (SheetJS Community) |
 | :--- | :---: | :---: | :---: |
@@ -85,8 +86,8 @@ Traditional JavaScript Excel packages present severe trade-offs: either they are
 | **Sheet Protection + 16-Bit Password Hash** | ✅ **Included** | ⚠️ Basic | ❌ Pro Only |
 | **Images (PNG, JPEG, WebP, GIF)** | ✅ **Included** | ✅ Included | ❌ Pro Only |
 | **Legacy XLS (BIFF8) + Modern XLSX** | ✅ **Included** | ❌ XLSX only | ✅ Included |
-| **Bundle Size (Minified + Gzipped)** | ⚡ **~192 KB** | ❌ ~2.5 MB | ⚠️ ~400 KB |
-| **Zero Heavy Dependencies** | ✅ **0 deps** | ❌ 10+ dependencies | ⚠️ Multiple |
+| **Bundle Size (Minified + Gzipped)** | **~216 KB** | ~252 KB | ⚠️ ~400 KB |
+| **Dependencies** | ✅ **0** | 9 | ⚠️ Multiple |
 
 ---
 
@@ -146,7 +147,7 @@ npm run example   # then open http://localhost:8080/example/
 ## 🧠 Architecture & How It Works
 
 1. **Native OpenXML Engine**: `excel-community` is built on top of Dart's high-performance OpenXML serializer. It reads, parses, and writes OpenXML `.xlsx` files adhering strictly to the ISO/IEC 29500 spreadsheet specification.
-2. **Direct Memory Mapping via `@JSExport`**: The compiled JavaScript runtime uses direct JavaScript Interop objects. When you access `sheet.cell('A1').value`, JavaScript reads the memory directly with $O(1)$ lookups without slow JSON serialization or message queues.
+2. **Compiled with dart2js**: the workbook lives in the compiled Dart code, and `Workbook`, `Sheet` and `Cell` are JavaScript objects that call into it (no JSON serialization or workers). A `Cell` is a light handle on a position of its sheet; for bulk data, `appendRows` is still the fastest way in.
 3. **Environment Polyfills Built-In**: It automatically adapts to its execution environment:
    - In **Node.js**: `wb.save('file.xlsx')` calls `fs.writeFileSync`.
    - In **Browsers**: `wb.save('file.xlsx')` creates a `Blob` and triggers a download link automatically.
@@ -338,7 +339,7 @@ for (let r = 0; r < rows.length; r++) {
 
 ---
 
-### Batch Row Appending (`sheet.appendRow`)
+### Batch Row Appending (`appendRow`, `appendRows`)
 
 Insert complete rows of data in a single call. Values can be strings, numbers, booleans, dates, or formula strings:
 
@@ -350,6 +351,9 @@ sheet.appendRow(['ID', 'Product', 'Quantity', 'Unit Price', 'Total']);
 sheet.appendRow([101, 'Mechanical Keyboard', 2, 85.50, '=C2*D2']);
 sheet.appendRow([102, 'Gaming Mouse', 5, 45.00, '=C3*D3']);
 sheet.appendRow([103, 'USB-C Cable', 10, 8.99, '=C4*D4']);
+
+// Many rows in one call: the fastest way to load data (20,000 rows × 10 columns take about 0.4 s in Node)
+sheet.appendRows(records.map((r) => [r.id, r.product, r.quantity, r.price]));
 
 // Query current sheet boundary dimensions
 console.log(`Max Rows: ${sheet.maxRows}, Max Columns: ${sheet.maxColumns}`);
@@ -660,7 +664,7 @@ sheet.addChart({
 ```
 
 > [!NOTE]
-> Pie, doughnut and of-pie charts without custom colors pick their slice colors from a shuffled palette, so two saves of the same workbook can differ in those colors.
+> Pie, doughnut and of-pie charts without custom colors take their slice colors from a fixed palette, in order, so saving the same workbook twice gives the same file.
 
 ---
 
@@ -691,6 +695,8 @@ sheet.removeTable('Q2_Sales');                       // cells keep their values
 ```
 
 Table names must be unique in the workbook and cannot contain spaces or look like cell references (`'T2'` is rejected).
+
+With `showTotalsRow: true`, the last row of the range is the totals row, so leave it empty: if it holds data, `addTable` throws an `ExcelArgumentError` instead of overwriting it. Turning the totals row on later with `updateTable(name, { showTotalsRow: true })` adds a row below the table, like Excel.
 
 ---
 
@@ -812,6 +818,12 @@ wb.sheet('Report').addPivotTable({
     { field: 'Amount', function: 'average' }, // sum | count | average | max | min | product | countNums | stdDev | stdDevp | var | varp
   ],
 });
+
+// The results are in the cells right away
+wb.sheet('Report').rangeValues('A3:D10');
+
+// After changing the source data (saving does this too)
+wb.sheet('Report').refreshPivotTables();
 ```
 
 ---
@@ -1023,9 +1035,10 @@ sheet.cell('A1').setStyle({
 // Later calls keep the other options
 sheet.cell('A1').setStyle({ italic: true });
 
-// Inspect active styles
+// Inspect active styles: same form setStyle takes ('#1F4E78', 'center'), so it can be passed back
 const style = sheet.cell('A1').style;
-console.log(style.bold, style.italic, style.fontColor, style.backgroundColor, style.numberFormat);
+console.log(style.bold, style.fontColor, style.backgroundColor, style.horizontalAlign, style.numberFormat);
+sheet.cell('B1').setStyle(style);
 
 // Remove all formatting
 sheet.cell('A1').resetStyle();
@@ -1241,6 +1254,58 @@ exports.handler = async (event) => {
   };
 };
 ```
+
+---
+
+## ⚠️ Errors
+
+Errors are thrown as these classes (exported next to `Excel`), with the original error in `cause`:
+
+| Class | When |
+| :--- | :--- |
+| `ExcelArgumentError` | An invalid argument or option: cell reference, range, table name, style value... |
+| `ExcelStateError` | The operation is not possible in the current state. |
+| `ExcelFormatError` | `Excel.read` / `Excel.fromFile` got data that is not a readable workbook. |
+| `ExcelError` | Base class of the three above. |
+
+```javascript
+import { Excel, ExcelArgumentError, ExcelFormatError } from 'excel-community';
+
+try {
+  wb = Excel.read(upload);
+} catch (e) {
+  if (e instanceof ExcelFormatError) return res.status(400).send('Not an Excel file');
+  throw e;
+}
+```
+
+---
+
+## 📈 Benchmark
+
+`npm run bench` builds a sheet with 10 mixed columns (numbers, text, booleans) and encodes it, then reads the same file back and walks every value. Each measurement runs in a fresh Node process with the libraries alternating, and the time excludes loading the module. Node 22 on Windows (Ryzen 7 5700U laptop), median of 5 runs, against exceljs 4.4.0:
+
+| Rows | Library | Write | Read | File size |
+| ---: | :--- | ---: | ---: | ---: |
+| 10,000 | excel-community | 0.96 s | 1.09 s | 679 KB |
+| 10,000 | exceljs | 0.85 s | 0.65 s | 537 KB |
+| 50,000 | excel-community | 3.67 s | 4.21 s | 3457 KB |
+| 50,000 | exceljs | 3.55 s | 2.21 s | 2662 KB |
+| 100,000 | excel-community | 6.64 s | 9.56 s | 6926 KB |
+| 100,000 | exceljs | 6.69 s | 4.35 s | 5320 KB |
+
+Writing is on par with exceljs; reading takes about twice as long, and files are about 30% larger. Results depend on the machine, so run it on yours.
+
+---
+
+## 🚧 Limitations
+
+- Files are tested with the library's own reader and with openpyxl; complex workbooks from third parties (macros, external links, unusual formats) can lose parts the library does not model. Keep the original when you rewrite a user's file.
+- `.xls` files can be read, but saving always writes `.xlsx`.
+- Formulas are stored, not calculated: Excel computes them when the file is opened (`cachedValue` holds the result Excel saved).
+- The API is synchronous and works on the whole workbook in memory; there is no streaming for very large files.
+- Reading takes about twice as long as with exceljs (writing is on par); see the [benchmark](#-benchmark).
+- A `Cell` is a position: after `insertRow` or `removeRow`, get the cell again with `sheet.cell(...)`.
 
 ---
 

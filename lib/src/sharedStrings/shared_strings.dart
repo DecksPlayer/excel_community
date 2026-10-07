@@ -3,12 +3,21 @@ part of '../../excel_community.dart';
 class _SharedStringsMaintainer {
   final Map<String, SharedString> _mapString = <String, SharedString>{};
   final List<SharedString> _list = <SharedString>[];
+  // Strings without rich text, by their text: saving looks these up for
+  // every text cell without building their XML first.
+  final Map<String, SharedString> _plainText = <String, SharedString>{};
   int _index = 0;
 
   _SharedStringsMaintainer._();
 
   SharedString? tryFind(String xmlKey) {
     return _mapString[xmlKey];
+  }
+
+  SharedString? tryFindPlain(String text) => _plainText[text];
+
+  void rememberPlain(String text, SharedString value) {
+    _plainText[text] = value;
   }
 
   SharedString addFromString(String val) {
@@ -44,6 +53,7 @@ class _SharedStringsMaintainer {
     _index = 0;
     _list.clear();
     _mapString.clear();
+    _plainText.clear();
   }
 }
 
@@ -62,6 +72,15 @@ class SharedString {
           xmlString: node.toXmlString(),
           stringValue: stringValue ?? _getRawStringValue(node),
         );
+
+  /// A plain `<si><t>text</t></si>` item read from a file, with the same
+  /// values as building it from its node, without parsing it into a DOM.
+  SharedString._plainItem(String xmlString, String text)
+      : _node = null,
+        _xmlString = xmlString,
+        _stringValue = _normalizeNewLine(text),
+        _textSpan = TextSpan(text: text),
+        _hashCode = xmlString.hashCode;
 
   SharedString.fromPlainString(String val)
       : _node = null,

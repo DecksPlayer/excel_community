@@ -10,6 +10,7 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart' as xml_events;
+import 'src/parser/fast_xml_events.dart';
 import 'src/web_helper/client_save_excel.dart'
     if (dart.library.js_interop) 'src/web_helper/web_save_excel_browser.dart'
     as helper;

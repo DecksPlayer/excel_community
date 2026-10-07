@@ -40,7 +40,13 @@ assert.ok(style);
 assert.strictEqual(style.bold, true);
 assert.strictEqual(style.italic, true);
 assert.strictEqual(style.fontSize, 14);
-assert.strictEqual(style.horizontalAlign, 'Center');
+// Read back in the same form setStyle takes.
+assert.strictEqual(style.horizontalAlign, 'center');
+assert.strictEqual(style.verticalAlign, 'center');
+assert.strictEqual(style.fontColor, '#FFFFFF');
+assert.strictEqual(style.backgroundColor, '#1F4E78');
+assert.strictEqual(style.topBorder.color, '#002060');
+assert.strictEqual(style.underline, 'none');
 
 // 3. Hyperlinks
 sheet.cell('A1').setHyperlink('https://google.com', 'Google Search', 'Visit Google');

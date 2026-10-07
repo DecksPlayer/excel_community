@@ -1,4 +1,4 @@
-import { Excel } from './index.js';
+import { Excel, ExcelError, ExcelArgumentError, ExcelStateError, ExcelFormatError } from './index.js';
 
-export { Excel };
+export { Excel, ExcelError, ExcelArgumentError, ExcelStateError, ExcelFormatError };
 export default Excel;

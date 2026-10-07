@@ -88,3 +88,6 @@ PRUEBA_*.xlsx
 **/TEST_RESOURCES
 excel_flutter_example/windows/flutter/generated_plugins.cmake
 test*.txt
+
+# npm package
+node_modules/

@@ -1,6 +1,6 @@
 {
   "name": "excel-community",
-  "version": "2.5.3",
+  "version": "2.6.0",
   "description": "High-performance Excel XLSX library for Node.js and Browser compiled directly from Dart excel_community.",
   "main": "./index.js",
   "module": "./dist/excel_community.mjs",
@@ -35,13 +35,15 @@
     "index.d.ts",
     "index.d.mts",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "node build.js",
     "prepublishOnly": "node build.js",
-    "test": "node test.js && node test-features.js",
-    "example": "node example/serve.js"
+    "test": "node test.js && node test-features.js && node test-types.js",
+    "example": "node example/serve.js",
+    "bench": "node bench.js"
   },
   "keywords": [
     "excel",
@@ -62,5 +64,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "exceljs": "^4.4.0"
   }
 }

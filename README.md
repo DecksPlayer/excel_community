@@ -104,42 +104,26 @@ For more details on how to use `excel_community`, see the following detailed gui
 ## Performance & Benchmarks
 <details open>
 
-`excel_community` is highly optimized for large-scale spreadsheet creation, high-throughput encoding, and massive cell manipulation. Below are benchmark measurements comparing `excel_community`, `excel_plus` (v2.14.3), and the original `excel` package (v4.0.6) on the Dart VM.
+Measured with `benchmark/compare.dart` against [`excel_plus`](https://pub.dev/packages/excel_plus) 2.27.1 and the original [`excel`](https://pub.dev/packages/excel) 4.0.6: 10 columns of mixed data (text, integers, decimals, booleans), each measurement in a fresh process compiled AOT (like a Flutter release build), the libraries alternating run by run, median of 3 runs. Dart 3.12, Windows, Ryzen 7 5700U laptop.
 
-### 1. Isolated Full Lifecycle Benchmark (1,000,000 Cells)
-*20,000 rows × 50 columns continuous workload measuring Create, Encode, Decode (forcing full worksheet read), and Peak RSS memory:*
+| Rows (× 10 columns) | Library | `cell().value` + encode | `appendRow` + encode | Read | File size |
+| ---: | :--- | ---: | ---: | ---: | ---: |
+| 10,000 | **excel_community** | **0.18 s** | **0.17 s** | **0.30 s** | 677 KB |
+| 10,000 | excel_plus | 0.19 s | 0.18 s | 0.53 s | 677 KB |
+| 10,000 | excel (original) | 1.46 s | 1.43 s | 1.53 s | 683 KB |
+| 100,000 | **excel_community** | **1.74 s** | **1.68 s** | **3.17 s** | 6.8 MB |
+| 100,000 | excel_plus | 1.96 s | 1.86 s | 5.51 s | 6.8 MB |
+| 100,000 | excel (original) | 15.94 s | 15.06 s | 15.62 s | 6.9 MB |
 
-| Library | Create | Encode | Decode (Full Read) | Total Time | Peak RSS | File Size | Create Speedup | Encode Speedup |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **excel_community** (Ours) | **1,288 ms** | **2,102 ms** | 25,175 ms | 28,565 ms | 1,752 MB | 7.08 MB | **1.77x vs Plus** <br> **1.48x vs Original** | **2.68x vs Plus** <br> **11.13x vs Original** |
-| excel_plus (v2.14.3) | 2,279 ms | 5,642 ms | **9,818 ms** | **17,739 ms** | **770 MB** | 7.08 MB | 1.00x | 1.00x |
-| excel_original (v4.0.6) | 1,907 ms | 23,404 ms | 28,340 ms | 53,650 ms | 2,552 MB | 7.04 MB | 1.19x | 0.24x |
+With 100,000 rows, `excel_community` writes about 10% faster than `excel_plus` and reads in about 40% less time; compared with the original `excel`, it writes about 9 times faster and reads 5 times faster. `excel_plus` can also read rows one at a time (`streamRows`) without loading the whole workbook, which `excel_community` does not support yet. Timings vary between runs on the same machine, so compare libraries within one run.
 
-### 2. Scaling Comparison (10k, 100k, and 5M Cells)
+Run it on your machine:
 
-| Workload | Library | Create (ms) | Encode (ms) | Total Time | File Size | Encode Speedup vs Original | Encode Speedup vs Plus |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **5,000,000 cells** <br>*(500k rows × 10 cols)* | **excel_community** | **3,119** | **14,173** | **17,292** | 33.1 MB | **5.95x** | **1.55x** |
-| | excel_plus | 9,618 | 22,030 | 31,648 | 33.1 MB | 3.83x | 1.00x |
-| | excel_original | 10,510 | 84,300 | 94,810 | 33.9 MB | 1.00x | 0.26x |
-| | | | | | | | |
-| **100,000 cells** <br>*(10k rows × 10 cols)* | **excel_community** | **416** | **714** | 1,130 | 588.8 KB | **3.70x** | **1.06x** |
-| | excel_plus | 368 | 754 | 1,122 | 588.8 KB | 3.51x | 1.00x |
-| | excel_original | 548 | 2,643 | 3,191 | 695.2 KB | 1.00x | 0.29x |
-| | | | | | | | |
-| **10,000 cells** <br>*(1k rows × 10 cols)* | **excel_community** | 350 | 206 | 556 | 60.5 KB | **3.88x** | 0.96x |
-| | excel_plus | **309** | **198** | **507** | 60.5 KB | 4.04x | **1.00x** |
-| | excel_original | 452 | 800 | 1,252 | 70.5 KB | 1.00x | 0.25x |
-
-### 💡 Key Architectural Insights
-
-1. **Ultra-Fast XML Encoding**:
-   - `excel_community` features an optimized streaming XML serializer that encodes 1,000,000 cells in **2.1 seconds** (**2.68x faster than `excel_plus`** and **11.13x faster than `excel` original**).
-2. **Eager vs. Lazy Parsing Trade-offs**:
-   - `excel_community` uses **eager parsing** upon file load, instantiating all cell coordinate models upfront. This guarantees direct $O(1)$ cell lookups and mutations with stable identities.
-   - `excel_plus` uses **lazy parsing**, delaying cell object creation until individual cells are accessed, which gives a faster initial cold decode but adds runtime overhead during intensive cell updates.
-3. **Memory Optimization**:
-   - `excel_community` reduces peak RSS memory by **1.46x** compared to `excel` original (1,752 MB vs 2,552 MB for 1M cells) by eliminating redundant style maps and optimizing cell coordinate indexing.
+```bash
+cd benchmark
+dart pub get
+dart run compare.dart 10000 100000
+```
 </details>
 
 <details open><summary><h2>📖 Usage</h2></summary>
@@ -970,6 +954,8 @@ sheetObject.removeTable('Sales');
 ```
 
 Table names must be unique in the workbook and cannot contain spaces or look like cell references. Tables move and resize with inserted or removed rows and columns; tables read from a file are kept (including calculated column formulas).
+
+With `showTotalsRow: true` the last row of the range is the totals row, so leave it empty: `addTable` throws an `ArgumentError` rather than overwrite data there. Turning the totals row on later with `updateTable` adds a row below the table, like Excel.
 
 ### Row & Column Grouping (`<outlinePr>`)
 
@@ -2007,8 +1993,11 @@ final pivotTable = PivotTable(
   ],
 );
 
-// Add pivot table to sheet
+// Add pivot table to sheet; its computed values are in the cells right away
 reportSheet.addPivotTable(pivotTable);
+
+// After changing the source data (saving does this too)
+reportSheet.refreshPivotTables();
 
 // Save the file
 var bytes = excel.save();

@@ -154,7 +154,7 @@ class Parser {
 
     sharedStrings!.decompress();
     final contentString = utf8.decode(sharedStrings.content);
-    final events = xml_events.parseEvents(contentString);
+    final events = fastXmlEvents(contentString);
     List<xml_events.XmlEvent>? currentSiEvents;
     for (final event in events) {
       if (event is xml_events.XmlStartElementEvent &&
@@ -171,12 +171,47 @@ class Parser {
         if (event is xml_events.XmlEndElementEvent &&
             (event.name == 'si' || event.name.endsWith(':si'))) {
           final siXml = currentSiEvents.map((e) => e.toString()).join();
-          final node = XmlDocument.parse(siXml).rootElement;
-          _parseSharedString(node);
+          final text = _plainSharedStringText(currentSiEvents);
+          if (text != null) {
+            final sharedString = SharedString._plainItem(siXml, text);
+            _excel._sharedStrings.add(sharedString, siXml);
+          } else {
+            _parseSharedString(XmlDocument.parse(siXml).rootElement);
+          }
           currentSiEvents = null;
         }
       }
     }
+  }
+
+  /// The text of a plain `<si><t>text</t></si>` item (the usual case), or
+  /// `null` for anything else (rich text runs, phonetic runs, whitespace
+  /// between elements...), which is parsed as a node. Parsing every item
+  /// into a DOM made reading files with many strings slow.
+  static String? _plainSharedStringText(List<xml_events.XmlEvent> events) {
+    final count = events.length;
+    if (count < 3 || count > 5) return null;
+    final si = events.first;
+    final t = events[1];
+    if (si is! xml_events.XmlStartElementEvent ||
+        si.name != 'si' ||
+        si.attributes.isNotEmpty ||
+        t is! xml_events.XmlStartElementEvent ||
+        t.name != 't') {
+      return null;
+    }
+    if (t.isSelfClosing) return count == 3 ? '' : null;
+    if (count == 4) {
+      return events[2] is xml_events.XmlEndElementEvent ? '' : null;
+    }
+    final text = events[2];
+    final tEnd = events[3];
+    if (text is! xml_events.XmlTextEvent ||
+        tEnd is! xml_events.XmlEndElementEvent ||
+        tEnd.name != 't') {
+      return null;
+    }
+    return text.value;
   }
 
   void _parseSharedString(XmlElement node) {

@@ -46,6 +46,15 @@ class HeaderFooter {
     }
 
     final children = <XmlNode>[];
+    // CT_HeaderFooter sequence: Excel refuses another order.
+    if (oddHeader != null) {
+      children.add(XmlElement(XmlName.parts("oddHeader"), [],
+          [XmlText(oddHeader!)]));
+    }
+    if (oddFooter != null) {
+      children.add(XmlElement(XmlName.parts("oddFooter"), [],
+          [XmlText(oddFooter!)]));
+    }
     if (evenHeader != null) {
       children.add(XmlElement(XmlName.parts("evenHeader"), [],
           [XmlText(evenHeader!)]));
@@ -61,14 +70,6 @@ class HeaderFooter {
     if (firstFooter != null) {
       children.add(XmlElement(XmlName.parts("firstFooter"), [],
           [XmlText(firstFooter!)]));
-    }
-    if (oddHeader != null) {
-      children.add(XmlElement(XmlName.parts("oddHeader"), [],
-          [XmlText(oddHeader!)]));
-    }
-    if (oddFooter != null) {
-      children.add(XmlElement(XmlName.parts("oddFooter"), [],
-          [XmlText(oddFooter!)]));
     }
 
     return XmlElement(XmlName.parts("headerFooter"), attributes, children);

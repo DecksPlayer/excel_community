@@ -3,7 +3,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const { Excel } = require('./index.js');
+const { Excel, ExcelError, ExcelArgumentError, ExcelFormatError } = require('./index.js');
 
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -390,6 +390,105 @@ test('linked sheets share their content', () => {
   assert.strictEqual(wb.sheet('Sheet1').cell('A3').value, null);
 });
 
+console.log('Fixes from the 2.5.3 review');
+test('appendRow and appendRows scale linearly', () => {
+  const s = Excel.create().sheet('Sheet1');
+  const row = (r) => Array.from({ length: 10 }, (_, c) => r * c);
+  const start = Date.now();
+  for (let r = 0; r < 10000; r++) s.appendRow(row(r));
+  s.appendRows(Array.from({ length: 10000 }, (_, r) => row(r + 10000)));
+  const elapsed = Date.now() - start;
+  assert.strictEqual(s.maxRows, 20000);
+  assert.strictEqual(s.cell('J20000').value, 19999 * 9);
+  // Used to take minutes (the sheet was recounted on every call).
+  assert.ok(elapsed < 20000, `took ${elapsed} ms`);
+});
+
+test('cell() is cheap and cells are positions on their sheet', () => {
+  const wb = Excel.create();
+  const start = Date.now();
+  for (let r = 1; r <= 10000; r++) {
+    for (const c of 'ABCDEFGHIJ') wb.sheet('Sheet1').cell(c + r).value = r;
+  }
+  const elapsed = Date.now() - start;
+  // Building a core object per cell made this take about 2 s.
+  assert.ok(elapsed < 5000, `took ${elapsed} ms`);
+  const s = wb.sheet('Sheet1');
+  assert.strictEqual(s, wb.sheet('Sheet1'));
+  const cell = s.cell('AA10');
+  assert.deepStrictEqual([cell.row, cell.col, cell.cellId], [9, 26, 'AA10']);
+  assert.strictEqual(s.rows[9][26].cellId, 'AA10');
+});
+
+test('errors have a name and an error class', () => {
+  const s = Excel.create().sheet('Sheet1');
+  assert.throws(() => s.cell('A0'), (e) =>
+    e instanceof ExcelArgumentError && e instanceof ExcelError && e instanceof Error &&
+    e.name === 'ExcelArgumentError' && /Negative rowIndex/.test(e.message));
+  assert.throws(() => s.cell('A1').setStyle({ horizontalAlign: 'diagonal' }), ExcelArgumentError);
+  assert.throws(() => Excel.read(new Uint8Array([1, 2, 3, 4])), (e) =>
+    e instanceof ExcelFormatError && e.name === 'ExcelFormatError');
+  // Plain JS errors pass through unchanged.
+  assert.throws(() => Excel.read(Symbol('x')), (e) => e instanceof TypeError && !(e instanceof ExcelError));
+});
+
+test('style reads back in the form setStyle takes', () => {
+  const wb = Excel.create();
+  const s = wb.sheet('Sheet1');
+  s.cell('A1').setStyle({
+    fontColor: '1f4e78',
+    backgroundColor: '#FFF2CC',
+    horizontalAlign: 'center',
+    verticalAlign: 'top',
+    underline: 'double',
+    leftBorder: { style: 'thin', color: '#002060' },
+  });
+  s.tabColor = '#1F4E78';
+  for (const sheet of [s, reload(wb).sheet('Sheet1')]) {
+    const st = sheet.cell('A1').style;
+    assert.deepStrictEqual(
+      [st.fontColor, st.backgroundColor, st.horizontalAlign, st.verticalAlign, st.underline, st.leftBorder.color],
+      ['#1F4E78', '#FFF2CC', 'center', 'top', 'double', '#002060']
+    );
+    assert.strictEqual(sheet.tabColor, '#1F4E78');
+  }
+  s.cell('A1').setStyle(s.cell('A1').style); // accepted as is
+  s.cell('A1').setStyle({ backgroundColor: 'none' });
+  assert.strictEqual(s.cell('A1').style.backgroundColor, undefined);
+});
+
+test('a totals row never overwrites data', () => {
+  const wb = Excel.create();
+  const s = salesSheet(wb);
+  const columns = [{ name: 'Region', totalsLabel: 'Total' }, { name: 'Units', totalsFunction: 'sum' }, 'Price', 'Date'];
+  assert.throws(() => s.addTable('A1:D4', 'Full', columns, { showTotalsRow: true }), ExcelArgumentError);
+  assert.deepStrictEqual(s.rangeValues('A4:C4')[0], ['East', 4, 1.5]);
+
+  s.addTable('A1:D4', 'Sales_T', columns);
+  s.updateTable('Sales_T', { showTotalsRow: true });
+  assert.strictEqual(s.getTable('Sales_T').ref, 'A1:D5');
+  assert.deepStrictEqual(s.rangeValues('A4:B5'), [['East', 4], ['Total', 'SUBTOTAL(109,Sales_T[Units])']]);
+});
+
+test('saving twice gives the same bytes with pie charts', () => {
+  const wb = Excel.create();
+  salesSheet(wb);
+  wb.sheet('Sales').addChart({ type: 'pie', series: [{ categoriesRange: 'Sales!$A$2:$A$4', valuesRange: 'Sales!$B$2:$B$4' }] });
+  wb.sheet('Sales').addChart({ type: 'doughnut', series: [{ categoriesRange: 'Sales!$A$2:$A$4', valuesRange: 'Sales!$B$2:$B$4' }] });
+  assert.deepStrictEqual(Buffer.from(wb.encode()), Buffer.from(wb.encode()));
+});
+
+test('pivot table cells can be read before saving', () => {
+  const wb = Excel.create();
+  const data = salesSheet(wb, 'Data');
+  const report = wb.sheet('Pivot');
+  report.addPivotTable({ sourceSheet: 'Data', sourceRange: 'A1:B4', targetCell: 'A1', rows: ['Region'], values: [{ field: 'Units' }] });
+  assert.deepStrictEqual(report.rangeValues('A5:B5')[0], ['Grand Total', 21]);
+  data.cell('B2').value = 20;
+  report.refreshPivotTables();
+  assert.strictEqual(report.cell('B5').value, 31);
+});
+
 console.log('Full workbook');
 test('a workbook with every feature encodes twice identically and reads back', () => {
   const wb = Excel.create();
@@ -398,8 +497,7 @@ test('a workbook with every feature encodes twice identically and reads back', (
   s.addDataValidation('A2:A10', { type: 'list', items: ['North', 'South', 'East'] });
   s.setPageSetup({ orientation: 'landscape' });
   s.addTable('A1:D4', 'Full', null, { style: 'medium2' });
-  // Pie/doughnut slice colors are shuffled on purpose, so use a column chart here.
-  s.addChart({ type: 'column', series: [{ categoriesRange: 'Sales!$A$2:$A$4', valuesRange: 'Sales!$B$2:$B$4' }] });
+  s.addChart({ type: 'pie', series: [{ categoriesRange: 'Sales!$A$2:$A$4', valuesRange: 'Sales!$B$2:$B$4' }] });
   s.cell('F1').setHyperlink({ url: 'https://dart.dev' });
   s.groupRows(1, 2);
   wb.sheet('Pivot').addPivotTable({

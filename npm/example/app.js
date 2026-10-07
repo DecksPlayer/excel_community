@@ -249,11 +249,11 @@ test('Styles', 'font, colors and alignment survive save', () => {
   const st = roundTrip(wb).sheet('Sheet1').cell('A1').style;
   same(
     [st.bold, st.italic, st.strikethrough, st.underline, st.fontSize, st.fontFamily],
-    [true, true, true, 'Double', 16, 'Arial'],
+    [true, true, true, 'double', 16, 'Arial'],
     'font'
   );
-  same([st.fontColor, st.backgroundColor], ['FFFFFFFF', 'FF1F4E78'], 'colors');
-  same([st.horizontalAlign, st.verticalAlign, st.rotation], ['Center', 'Top', 45], 'alignment');
+  same([st.fontColor, st.backgroundColor], ['#FFFFFF', '#1F4E78'], 'colors');
+  same([st.horizontalAlign, st.verticalAlign, st.rotation], ['center', 'top', 45], 'alignment');
 });
 
 test('Styles', 'borders (all sides and per side)', () => {
@@ -336,7 +336,7 @@ test('Sheets', 'tab color and right-to-left', () => {
   s.tabColor = '#FF0000';
   s.rightToLeft = true;
   const back = roundTrip(wb).sheet('Sheet1');
-  same([back.tabColor, back.rightToLeft], ['FFFF0000', true], 'after reload');
+  same([back.tabColor, back.rightToLeft], ['#FF0000', true], 'after reload');
   s.tabColor = null;
   same(s.tabColor, null, 'cleared');
 });

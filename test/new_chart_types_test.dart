@@ -299,4 +299,30 @@ void main() {
         'stacked');
     expect(groupingOf(ColumnChart(title: 'C', series: series, anchor: anchor)), 'clustered');
   });
+
+  test('pie charts get the same slice colors on every save, beyond the palette size', () {
+    final excel = Excel.createExcel();
+    final sheet = excel['Sheet1'];
+    for (var i = 0; i < 25; i++) {
+      sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: i), TextCellValue('P$i'));
+      sheet.updateCell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: i), IntCellValue(i + 1));
+    }
+    sheet.addChart(PieChart(
+      title: 'Share',
+      series: [
+        ChartSeries(name: 'Share', categoriesRange: r"Sheet1!$A$1:$A$25", valuesRange: r"Sheet1!$B$1:$B$25"),
+      ],
+      anchor: ChartAnchor.at(column: 3, row: 1),
+    ));
+
+    final first = extractChartXml(excel.encode()!);
+    expect(extractChartXml(excel.encode()!), first);
+    final fills = RegExp(r'<c:dPt><c:idx val="\d+"/><c:spPr><a:solidFill><a:srgbClr val="(\w+)"/>')
+        .allMatches(first)
+        .map((m) => m.group(1))
+        .toList();
+    expect(fills, hasLength(25));
+    expect(fills.first, ChartColorConfig.getPieColor(0).colorHex6);
+    expect(fills[ChartColorConfig.piePalette.length], fills.first, reason: 'palette wraps around');
+  });
 }

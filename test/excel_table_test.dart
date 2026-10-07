@@ -91,6 +91,55 @@ void main() {
     });
   });
 
+  group('Totals row', () {
+    const columns = [
+      TableColumn('Region', totalsLabel: 'Total'),
+      TableColumn('Units', totalsFunction: TableTotalsFunction.sum),
+      TableColumn('Price'),
+    ];
+
+    test('addTable refuses a totals row that holds data', () {
+      final sheet = _salesSheet(Excel.createExcel());
+      expect(
+          () => sheet.addTable('A1:C3', name: 'Sales', showTotalsRow: true, columns: columns),
+          throwsArgumentError);
+      expect(sheet.hasTables, isFalse);
+      expect(sheet.cell(_at('A3')).value, TextCellValue('South'), reason: 'data kept');
+      expect(sheet.cell(_at('C3')).value, DoubleCellValue(3.0));
+    });
+
+    test('a removed table can be added again over its own totals row', () {
+      final sheet = _salesSheet(Excel.createExcel());
+      sheet.addTable('A1:C4', name: 'Sales', showTotalsRow: true, columns: columns);
+      sheet.removeTable('Sales');
+      expect(sheet.addTable('A1:C4', name: 'Sales', showTotalsRow: true, columns: columns).ref,
+          'A1:C4');
+    });
+
+    test('updateTable turning totals on adds a row below the table', () {
+      final sheet = _salesSheet(Excel.createExcel());
+      sheet.appendRow([TextCellValue('Below')]);
+      final table = sheet.addTable('A1:C3', name: 'Sales', columns: columns);
+      sheet.updateTable(table.copyWith(showTotalsRow: true));
+
+      expect(sheet.getTable('Sales')!.ref, 'A1:C4');
+      expect(sheet.cell(_at('A3')).value, TextCellValue('South'), reason: 'last data row kept');
+      expect(sheet.cell(_at('A4')).value, TextCellValue('Total'));
+      expect(sheet.cell(_at('A5')).value, TextCellValue('Below'), reason: 'shifted down');
+    });
+
+    test('updateTable turning totals off removes the totals row', () {
+      final sheet = _salesSheet(Excel.createExcel());
+      final table =
+          sheet.addTable('A1:C4', name: 'Sales', showTotalsRow: true, columns: columns);
+      sheet.updateTable(table.copyWith(showTotalsRow: false));
+
+      expect(sheet.getTable('Sales')!.ref, 'A1:C3');
+      expect(sheet.cell(_at('A4')).value, isNull);
+      expect(sheet.tableRowsAsMaps('Sales').map((r) => r['Region']), ['North', 'South']);
+    });
+  });
+
   group('Data access and editing', () {
     test('tableRowsAsMaps and appendTableRow with a totals row', () {
       final excel = Excel.createExcel();
