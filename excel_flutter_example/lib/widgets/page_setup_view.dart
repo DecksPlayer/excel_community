@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:excel_community/excel_community.dart' show PaperSize, PageMargins;
 import 'package:flutter/material.dart';
 
+import '../data/snippets/page_setup.dart';
 import 'wiki/wiki_components.dart';
 
 
@@ -442,6 +443,7 @@ sheet.headerFooter = HeaderFooter(oddFooter: '&CPage &P');""",
         const WikiTab('scaling', 'Orientation & Scaling'),
         const WikiTab('margins', 'Margins'),
         const WikiTab('print', 'Print Options'),
+        const WikiTab('code', 'Full Example (Code)'),
       ],
       selectedTab: _selectedTab,
       onTabSelected: (tab) => setState(() => _selectedTab = tab),
@@ -449,6 +451,13 @@ sheet.headerFooter = HeaderFooter(oddFooter: '&CPage &P');""",
         'scaling' => _buildExampleTab(_scalingExamples),
         'margins' => _buildExampleTab(_marginExamples),
         'print' => _buildExampleTab(_printExamples),
+        'code' => const WikiCodeCard(
+            title: 'Page Setup & Print Demo Workbook Code',
+            subtitle:
+                'Complete code configuring paper sizes, orientation, scaling, fit-to-pages, margins, and headers/footers',
+            code: pageSetupSnippet,
+            accent: _accent,
+          ),
         _ => _buildPaperTab(),
       },
     );

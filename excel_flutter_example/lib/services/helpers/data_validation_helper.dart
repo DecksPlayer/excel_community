@@ -32,13 +32,17 @@ Excel buildDataValidationWorkbook() {
   );
   var col = 0;
   for (final header in columns.keys) {
-    tasks.updateCell(CellIndex.indexByColumnRow(columnIndex: col, rowIndex: 0), TextCellValue(header),
-        cellStyle: headerStyle);
+    tasks.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: 0),
+      TextCellValue(header),
+      cellStyle: headerStyle,
+    );
     tasks.setColumnWidth(col, 16);
     col++;
   }
 
-  DataValidation rule(String title) => validationSamples.firstWhere((s) => s.title == title).rule;
+  DataValidation rule(String title) =>
+      validationSamples.firstWhere((s) => s.title == title).rule;
   tasks.addDataValidation('A2:A100', rule('Input Message Only'));
   tasks.addDataValidation('B2:B100', rule('Fixed List with Messages'));
   tasks.addDataValidation('C2:C100', rule('List from Another Sheet'));

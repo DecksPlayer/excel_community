@@ -443,3 +443,106 @@ class WikiPreviewBox extends StatelessWidget {
     );
   }
 }
+
+/// Full example code card shown in the "Full Example" tab of wiki pages.
+/// Displays the complete source code used to produce the downloadable .xlsx file,
+/// with a copy button and a formatted dark code box.
+class WikiCodeCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String code;
+  final Color accent;
+
+  const WikiCodeCard({
+    super.key,
+    this.title = 'Complete Workbook Code',
+    this.subtitle = 'Self-contained Dart code that generates the downloadable .xlsx demo file',
+    required this.code,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => copyWikiSnippet(context, code, title),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(Icons.copy, size: 14),
+                  label: const Text(
+                    'Copy Code',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SelectableText(
+                  code,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    height: 1.45,
+                    color: Color(0xFFF1F5F9),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

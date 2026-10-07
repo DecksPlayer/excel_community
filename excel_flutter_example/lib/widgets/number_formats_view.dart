@@ -2,6 +2,7 @@ import 'package:excel_community/excel_community.dart' show CellValue, DoubleCell
 import 'package:flutter/material.dart';
 
 import '../data/number_format_catalog.dart';
+import '../data/snippets/number_formats.dart';
 import 'wiki/wiki_components.dart';
 
 const _accent = Colors.teal;
@@ -28,7 +29,15 @@ class NumberFormatsView extends StatefulWidget {
 class _NumberFormatsViewState extends State<NumberFormatsView> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  NumFormatCategory _category = NumFormatCategory.numbers;
+  String _tab = 'numbers';
+
+  NumFormatCategory get _category {
+    try {
+      return NumFormatCategory.values.byName(_tab);
+    } catch (_) {
+      return NumFormatCategory.numbers;
+    }
+  }
 
   @override
   void dispose() {
@@ -72,14 +81,23 @@ class _NumberFormatsViewState extends State<NumberFormatsView> {
             category.name,
             '${category.label} (${numFormatCatalog.where((e) => e.category == category).length})',
           ),
+        const WikiTab('code', 'Full Example (Code)'),
       ],
-      selectedTab: _category.name,
+      selectedTab: _tab,
       onTabSelected: (key) => setState(() {
-        _category = NumFormatCategory.values.byName(key);
+        _tab = key;
         _searchController.clear();
         _searchQuery = '';
       }),
-      child: Column(
+      child: _tab == 'code'
+          ? const WikiCodeCard(
+              title: 'Number Formats Demo Workbook Code',
+              subtitle:
+                  'Complete code configuring standard formats, currency, dates, times, and exporting the file',
+              code: numberFormatsFullSnippet,
+              accent: _accent,
+            )
+          : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WikiSearchField(

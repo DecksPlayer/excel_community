@@ -8,6 +8,7 @@ library;
 
 export 'snippets/basic.dart';
 export 'snippets/styling.dart';
+export 'snippets/number_formats.dart';
 export 'snippets/fonts_styles.dart';
 export 'snippets/charts.dart';
 export 'snippets/images.dart';
