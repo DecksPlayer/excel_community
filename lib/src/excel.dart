@@ -79,6 +79,7 @@ class Excel {
   }
 
   Excel._(this._archive) {
+    _unprefixXmlParts(_archive);
     parser = Parser._(this);
     parser._startParsing();
   }
