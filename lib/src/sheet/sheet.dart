@@ -20,7 +20,6 @@ class Sheet {
   final List<Chart> _charts = [];
   final List<ExcelImage> _images = [];
   final List<PivotTable> _pivotTables = [];
-  final List<String> _pivotTableRIds = [];
   String? _drawingRId;
   String? _legacyDrawingRId;
   SheetProtection sheetProtection = SheetProtection();
@@ -63,7 +62,6 @@ class Sheet {
             charts: oldSheetObject._charts,
             images: oldSheetObject._images,
             pivotTables: oldSheetObject._pivotTables,
-            pivotTableRIds: oldSheetObject._pivotTableRIds,
             sheetProtection: oldSheetObject.sheetProtection,
             hiddenColumnsVal: oldSheetObject._hiddenColumns,
             hiddenRowsVal: oldSheetObject._hiddenRows,
@@ -100,7 +98,6 @@ class Sheet {
       List<Chart>? charts,
       List<ExcelImage>? images,
       List<PivotTable>? pivotTables,
-      List<String>? pivotTableRIds,
       SheetProtection? sheetProtection,
       Set<int>? hiddenColumnsVal,
       Set<int>? hiddenRowsVal,
@@ -162,9 +159,6 @@ class Sheet {
     }
     if (pivotTables != null) {
       _pivotTables.addAll(pivotTables);
-    }
-    if (pivotTableRIds != null) {
-      _pivotTableRIds.addAll(pivotTableRIds);
     }
 
     if (spanL_ != null) {

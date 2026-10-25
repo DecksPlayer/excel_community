@@ -17,8 +17,6 @@ class _PivotTableManager {
       final sheetFileName = sheetId.split('/').last; // e.g. sheet1.xml
       final sheetRelsPath = 'xl/worksheets/_rels/$sheetFileName.rels';
 
-      sheet._pivotTableRIds.clear();
-
       // Ensure worksheet rels XML exists
       final sheetRels = _save._relationshipsPart(sheetRelsPath);
       final sheetRelsRoot = sheetRels.findAllElements('Relationships').first;
@@ -87,8 +85,6 @@ class _PivotTableManager {
           XmlAttribute(XmlName.parts('Target'),
               '../pivotTables/pivotTable$pivotTableCount.xml'),
         ]));
-
-        sheet._pivotTableRIds.add(ptRId);
 
         // Wire to workbook relationships
         var workbookRels = _excel._xmlFiles['xl/_rels/workbook.xml.rels'];

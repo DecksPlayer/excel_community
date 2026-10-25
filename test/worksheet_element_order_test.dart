@@ -104,4 +104,32 @@ void main() {
         .toList();
     expect(parts, ['oddHeader', 'oddFooter', 'evenHeader', 'evenFooter', 'firstHeader', 'firstFooter']);
   });
+
+  group('dimension', () {
+    String dimension(List<int> xlsx) =>
+        RegExp(r'<dimension ref="([^"]+)"/>').firstMatch(_sheetXml(xlsx))!.group(1)!;
+
+    test('covers the cells written, not the A1 of the template', () {
+      final excel = Excel.createExcel();
+      final sheet = excel['Sheet1'];
+      sheet.updateCell(CellIndex.indexByString('B2'), TextCellValue('x'));
+      sheet.updateCell(CellIndex.indexByString('E9'), IntCellValue(1));
+      expect(dimension(excel.encode()!), 'B2:E9');
+    });
+
+    test('is A1 for an empty sheet and a single cell for one cell', () {
+      final excel = Excel.createExcel();
+      expect(dimension(excel.encode()!), 'A1');
+      excel['Sheet1'].updateCell(CellIndex.indexByString('C3'), IntCellValue(1));
+      expect(dimension(excel.encode()!), 'C3');
+    });
+
+    test('follows edits of a reopened file', () {
+      final excel = Excel.createExcel();
+      excel['Sheet1'].updateCell(CellIndex.indexByString('A1'), IntCellValue(1));
+      final reopened = Excel.decodeBytes(excel.encode()!);
+      reopened['Sheet1'].appendRow([IntCellValue(2), IntCellValue(3), IntCellValue(4)]);
+      expect(dimension(reopened.encode()!), 'A1:C2');
+    });
+  });
 }

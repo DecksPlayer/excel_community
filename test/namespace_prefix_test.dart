@@ -40,6 +40,7 @@ List<int> _workbook({String? prefix}) {
     'xl/workbook.xml': '<?xml version="1.0" encoding="UTF-8"?>'
         '<${x}workbook $namespace xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
         'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x15ac" '
+        'xmlns:x15="http://schemas.microsoft.com/office/spreadsheetml/2010/11/main" '
         'xmlns:x15ac="http://schemas.microsoft.com/office/spreadsheetml/2010/11/ac">'
         '<mc:AlternateContent><mc:Choice Requires="x15">'
         '<x15ac:absPath url="C:\\exports\\"/></mc:Choice></mc:AlternateContent>'

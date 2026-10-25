@@ -9,6 +9,10 @@ void main() {
   const testSheetToKeep = 'Sheet To Keep';
   const testSheetToKeepRename = 'Rename Of Sheet To Keep';
 
+  // Ask for Sheet1 first: otherwise the first new sheet takes its place
+  // (it is renamed), and there is no default sheet left to delete below.
+  excel[defaultSheetName];
+
   var listDynamic = (List<List<dynamic>>.generate(
       5, (_) => List<int>.generate(5, (i) => i + 1))
     ..insert(0, [

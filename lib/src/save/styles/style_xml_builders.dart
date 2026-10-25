@@ -74,9 +74,17 @@ class _StyleXmlBuilders {
           '${_excel._patternFill.length + innerPatternFill.length}'));
     }
 
+    // One <fill> per entry, always: fillId is the entry's position, so a
+    // skipped entry would shift every fill after it.
     for (var color in innerPatternFill) {
       if (color.length >= 2) {
-        if (color.substring(0, 2).toUpperCase() == 'FF') {
+        if (color == "none" || color == "gray125" || color == "lightGray") {
+          fills.children.add(XmlElement(XmlName.parts('fill'), [], [
+            XmlElement(XmlName.parts('patternFill'),
+                [XmlAttribute(XmlName.parts('patternType'), color)], [])
+          ]));
+        } else {
+          // An ARGB color, opaque (FF...) or not (e.g. ExcelColor.black12).
           fills.children.add(XmlElement(XmlName.parts('fill'), [], [
             XmlElement(XmlName.parts('patternFill'), [
               XmlAttribute(XmlName.parts('patternType'), 'solid')
@@ -86,13 +94,6 @@ class _StyleXmlBuilders {
               XmlElement(XmlName.parts('bgColor'),
                   [XmlAttribute(XmlName.parts('rgb'), color)], [])
             ])
-          ]));
-        } else if (color == "none" ||
-            color == "gray125" ||
-            color == "lightGray") {
-          fills.children.add(XmlElement(XmlName.parts('fill'), [], [
-            XmlElement(XmlName.parts('patternFill'),
-                [XmlAttribute(XmlName.parts('patternType'), color)], [])
           ]));
         }
       } else {

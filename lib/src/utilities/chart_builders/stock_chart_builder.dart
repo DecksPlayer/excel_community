@@ -1,9 +1,12 @@
 part of '../../../excel_community.dart';
 
 /// Builder for Stock chart styles (HLC, OHLC, etc.).
-class StockChartBuilder implements ChartStyleBuilder {
+class StockChartBuilder extends ChartStyleBuilder {
   @override
-  void buildProperties(XmlBuilder builder, Chart chart) {
+  void buildProperties(XmlBuilder builder, Chart chart) {}
+
+  @override
+  void buildPropertiesAfterSeries(XmlBuilder builder, Chart chart) {
     final stockChart = chart as StockChart;
     if (stockChart.showHighLowLines) {
       builder.element('c:hiLowLines');

@@ -1,12 +1,17 @@
 part of '../../../excel_community.dart';
 
 /// Builder for OfPie (Pie-of-Pie and Bar-of-Pie) chart styles.
-class OfPieChartBuilder implements ChartStyleBuilder {
+class OfPieChartBuilder extends ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
     final ofPie = chart as OfPieChart;
     builder.element('c:ofPieType',
         attributes: {'val': ofPie.ofPieType.ooxmlValue});
+  }
+
+  @override
+  void buildPropertiesAfterSeries(XmlBuilder builder, Chart chart) {
+    final ofPie = chart as OfPieChart;
     builder.element('c:splitType',
         attributes: {'val': ofPie.splitType.ooxmlValue});
     if (ofPie.splitPosition != null) {

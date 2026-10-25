@@ -1,7 +1,7 @@
 part of '../../../excel_community.dart';
 
 /// Builder for Column and Bar chart styles
-class ColumnBarChartBuilder implements ChartStyleBuilder {
+class ColumnBarChartBuilder extends ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
     ChartGrouping grouping = ChartGrouping.clustered;
@@ -15,6 +15,15 @@ class ColumnBarChartBuilder implements ChartStyleBuilder {
     }
 
     builder.element('c:grouping', attributes: {'val': grouping.ooxmlValue});
+  }
+
+  @override
+  void buildPropertiesAfterSeries(XmlBuilder builder, Chart chart) {
+    final grouping = switch (chart) {
+      ColumnChart() => chart.grouping,
+      BarChart() => chart.grouping,
+      _ => ChartGrouping.clustered,
+    };
     if (grouping != ChartGrouping.clustered) {
       builder.element('c:overlap', attributes: {'val': '100'});
     }

@@ -5,7 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const { Excel } = require('./index.js');
 
-const dts = fs.readFileSync(path.join(__dirname, 'index.d.ts'), 'utf8');
+// CRLF on Windows checkouts (git core.autocrlf) would break the regexes below.
+const dts = fs.readFileSync(path.join(__dirname, 'index.d.ts'), 'utf8').replace(/\r\n/g, '\n');
 
 /** Member names of `export interface <name> { ... }` (two-space indented). */
 function declaredMembers(name) {
