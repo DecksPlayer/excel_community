@@ -238,35 +238,42 @@ Future<void> generateLockedCellsReport() async {
 ''';
 
 // ---------------------------------------------------------------------------
-// Pivot-template round-trip
+// Pivot tables
 // ---------------------------------------------------------------------------
 const String pivotTemplateSnippet = '''
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:excel_community/excel_community.dart';
 
-Future<void> generatePivotFromTemplate() async {
-  // 1. Load an existing Excel template containing pre-configured Pivot Tables
-  final ByteData data = await rootBundle.load('assets/financial_template.xlsx');
-  final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-  
-  // 2. Decode the workbook bytes using excel_community
-  var excel = Excel.decodeBytes(bytes);
-  
-  // 3. Select the sheet containing the source data range
+void generatePivotTable() {
+  var excel = Excel.createExcel();
+
+  // 1. Source data
   var sheet = excel['Sales Data'];
-  
-  // 4. Overwrite or append records in the source data rows
+  sheet.updateCell(CellIndex.indexByString("A1"), TextCellValue("Region"));
+  sheet.updateCell(CellIndex.indexByString("B1"), TextCellValue("Amount"));
   sheet.updateCell(CellIndex.indexByString("A2"), TextCellValue("North Region"));
   sheet.updateCell(CellIndex.indexByString("B2"), IntCellValue(45000));
-  
   sheet.updateCell(CellIndex.indexByString("A3"), TextCellValue("South Region"));
   sheet.updateCell(CellIndex.indexByString("B3"), IntCellValue(32000));
-  
   sheet.updateCell(CellIndex.indexByString("A4"), TextCellValue("East Region"));
   sheet.updateCell(CellIndex.indexByString("B4"), IntCellValue(51000));
 
-  // 5. Save the workbook bytes. 
-  // All Pivot Cache Relationships, Definitions, and Filters are fully preserved!
+  // 2. Pivot table on its own sheet; its values are in the cells right away
+  var pivotSheet = excel['Pivot Report'];
+  pivotSheet.addPivotTable(PivotTable(
+    name: 'PivotTable1',
+    sourceSheet: 'Sales Data',
+    sourceRange: 'A1:B4',
+    targetCell: CellIndex.indexByString('A3'),
+    rows: ['Region'],
+    values: [
+      PivotTableValue(field: 'Amount', function: PivotValueFunction.sum),
+    ],
+  ));
+
+  // 3. After changing the source data, recompute it (saving does this too)
+  sheet.updateCell(CellIndex.indexByString("B4"), IntCellValue(53000));
+  pivotSheet.refreshPivotTables();
+
   excel.save(fileName: 'sales_report_pivot.xlsx');
 }
 ''';

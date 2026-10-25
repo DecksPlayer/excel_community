@@ -7,12 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.6.1] - 2026-10-26
 ### Fixed
-- check vulnerabilities of the project
-- Fixed issues with xml packages for openoffice/libreoffice
-- thanks @marcobazzani for your contribution
-
-## [2.6.1] - 2026-10-25
-### Fixed
+- Fixed reading files whose XML uses namespace prefixes, as some writers produce (thanks @marcobazzani).
 - Fixed files that Excel could not open after styling a cell in a reopened workbook with conditional formatting.
 - Fixed new cell colors using the wrong fill in workbooks with gradient fills.
 - Fixed semi-transparent background colors shifting the colors of other cells.
@@ -20,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed charts that apps other than Excel could refuse to open.
 - Fixed sheets with pivot tables that apps other than Excel could refuse to open.
 - Fixed formulas set as `'=SUM(A1:A3)'` being saved with the `=`.
+
+### Changed
+- A formula set as `'=SUM(A1:A3)'` is read back from the file as `'SUM(A1:A3)'`, like formulas saved by Excel.
 
 ## [2.6.0] - 2026-10-07
 ### Fixed

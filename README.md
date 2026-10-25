@@ -2079,21 +2079,11 @@ If you find this package helpful and want to support its development, consider m
 
 [![PayPal](https://img.shields.io/badge/Donate-PayPal-ff3f59.svg?style=for-the-badge&logo=paypal)](https://www.paypal.com/paypalme/gonojuarez)
 <details>
-<summary><h2>📜 History & Legacy Breaking Changes</h2></summary>
+<summary><h2>⚠️ Breaking changes</h2></summary>
 
-### Breaking changes from 4.x.x to 5.x.x (Original excel library)
+### 2.6.1
 
-- Updated minimum Dart SDK to 3.6.0
-
-### Breaking changes from 3.x.x to 4.x.x (Original excel library)
-
-- Renamed `Formula` to `FormulaCellValue`
-- Cells value now represented by the sealed class `CellValue` instead of `dynamic`. Subtypes are `TextCellValue` `FormulaCellValue`, `IntCellValue`, `DoubleCellValue`, `DateCellValue`, `TextCellValue`, `BoolCellValue`, `TimeCellValue`, `DateTimeCellValue` and they allow for exhaustive switch.
-
-### Breaking changes from 2.x.x to 3.x.x (Original excel library)
-
-- Renamed `getColAutoFits()` to `getColumnAutoFits()`, and changed return type to `Map<int, bool>` in `Sheet`
-- Renamed `getColWidths()` to `getColumnWidths()`, and changed return type to `Map<int, double>` in `Sheet`
-- Renamed `setColWidth()` to `setColumnWidth()` in `Sheet`
+- A formula saved as `FormulaCellValue('=SUM(A1:A3)')` is read back as `'SUM(A1:A3)'` (without the `=`), like formulas saved by Excel.
+- `ChartStyleBuilder` has two new methods, `buildPropertiesAfterSeries` and `buildSeriesEnd`. A custom builder must `extend` it instead of `implements` it.
 
 </details>

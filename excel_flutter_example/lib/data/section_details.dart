@@ -217,13 +217,13 @@ SectionDetail getSectionDetail(SelectedSection section) {
       return SectionDetail(
         title: 'Templates & Pivot Tables',
         description:
-            'Modify pre-configured Excel templates containing Pivot Tables while preserving all formulas and connections.',
+            'Create Pivot Tables from a data range, or edit templates that already contain them.',
         icon: Icons.content_paste_go_outlined,
         themeColor: Colors.indigo,
         highlights: [
-          'Load templates using Excel.decodeBytes(...)',
-          'All Pivot Cache Definitions and Filters are fully preserved',
-          'Modify source data sheets, and let Excel calculate Pivot updates on open',
+          'sheet.addPivotTable(...) writes the computed values into the cells',
+          'sheet.refreshPivotTables() recomputes them after the source data changes',
+          'Pivot Tables of templates loaded with Excel.decodeBytes(...) are preserved',
         ],
         codeSnippet: pivotTemplateSnippet,
       );
