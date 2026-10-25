@@ -482,8 +482,19 @@ class Sheet {
 
   List<PivotTable> get pivotTables => _pivotTables;
 
+  /// Adds [pivotTable] and writes its computed values into its target
+  /// cells, so they can be read before saving.
   void addPivotTable(PivotTable pivotTable) {
     _pivotTables.add(pivotTable);
+    _PivotTableManager.render(this, pivotTable);
+  }
+
+  /// Recomputes the cells of this sheet's pivot tables after their source
+  /// data changed. Saving does this too.
+  void refreshPivotTables() {
+    for (final pt in _pivotTables) {
+      _PivotTableManager.render(this, pt);
+    }
   }
 
   /// Returns an unmodifiable list of conditional formatting groups defined for this sheet.

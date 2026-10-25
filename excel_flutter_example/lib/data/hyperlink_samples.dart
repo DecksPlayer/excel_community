@@ -202,32 +202,37 @@ final List<HyperlinkSample> hyperlinkSamples = [
   ),
 ];
 
+final Map<HyperlinkSample, HyperlinkSampleResult> _hyperlinkSampleCache = {};
+
 /// Runs [sample] on a fresh workbook, then saves and reopens it to read
-/// the links back from the file.
+/// the links back from the file. Results are cached so zip encode/decode
+/// only runs once across the app session.
 HyperlinkSampleResult runHyperlinkSample(HyperlinkSample sample) {
-  final excel = Excel.createExcel();
-  excel.rename('Sheet1', 'Links');
-  sample.apply(excel);
-  final sheet = excel['Links'];
+  return _hyperlinkSampleCache.putIfAbsent(sample, () {
+    final excel = Excel.createExcel();
+    excel.rename('Sheet1', 'Links');
+    sample.apply(excel);
+    final sheet = excel['Links'];
 
-  // First cell holding a value (A1, or A2 after insertRow).
-  final cellIndex = sheet.hyperlinks.keys.isNotEmpty
-      ? CellIndex.indexByString(sheet.hyperlinks.keys.first.split(':').first)
-      : _a1;
-  final cell = sheet.cell(cellIndex);
+    // First cell holding a value (A1, or A2 after insertRow).
+    final cellIndex = sheet.hyperlinks.keys.isNotEmpty
+        ? CellIndex.indexByString(sheet.hyperlinks.keys.first.split(':').first)
+        : _a1;
+    final cell = sheet.cell(cellIndex);
 
-  final reopened = Excel.decodeBytes(excel.encode()!)['Links'].hyperlinks;
+    final reopened = Excel.decodeBytes(excel.encode()!)['Links'].hyperlinks;
 
-  return HyperlinkSampleResult(
-    cell.value?.toString() ?? '',
-    cell.cellStyle?.underline == Underline.Single,
-    cell.hyperlink,
-    reopened,
-    switch (sample.title) {
-      'Links Move with Rows' => 'sheet.hyperlinks.keys → ${sheet.hyperlinks.keys.toList()}',
-      'Remove Links' => 'hasHyperlinks → ${sheet.hasHyperlinks}',
-      'From the Cell' => 'cell.hyperlink?.url → ${cell.hyperlink?.url}',
-      _ => null,
-    },
-  );
+    return HyperlinkSampleResult(
+      cell.value?.toString() ?? '',
+      cell.cellStyle?.underline == Underline.Single,
+      cell.hyperlink,
+      reopened,
+      switch (sample.title) {
+        'Links Move with Rows' => 'sheet.hyperlinks.keys → ${sheet.hyperlinks.keys.toList()}',
+        'Remove Links' => 'hasHyperlinks → ${sheet.hasHyperlinks}',
+        'From the Cell' => 'cell.hyperlink?.url → ${cell.hyperlink?.url}',
+        _ => null,
+      },
+    );
+  });
 }

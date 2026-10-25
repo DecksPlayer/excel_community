@@ -19,7 +19,7 @@ class JsSheet {
 
   // ==================== TAB COLOR ====================
 
-  String? get tabColor => _sheet.tabColor?.rgb ?? _sheet.tabColor?.color?.colorHex;
+  String? get tabColor => colorInfo(_sheet.tabColor?.rgb ?? _sheet.tabColor?.color?.colorHex);
   set tabColor(String? hex) {
     if (hex == null || hex.isEmpty) {
       _sheet.clearTabColor();
@@ -35,15 +35,31 @@ class JsSheet {
 
   // ==================== CELLS & ROWS ====================
 
-  JSObject cell(String cellIndex) {
-    return createJSInteropWrapper(JsCell(_sheet.cell(CellIndex.indexByString(cellIndex)), _sheet));
+  /// Creates the cell if needed and returns its position as
+  /// `row * 16384 + column`; wrapper.js turns it into a `Cell`.
+  int cell(String cellIndex) {
+    final data = _sheet.cell(CellIndex.indexByString(cellIndex));
+    return _position(data.rowIndex, data.columnIndex);
   }
+
+  static int _position(int row, int col) => row * 16384 + col;
+
+  /// The cell operations used by wrapper.js `Cell` objects (see [JsCellOps]).
+  JSObject get cellOps => _cellOps ??= createJSInteropWrapper(JsCellOps(_sheet));
+  JSObject? _cellOps;
 
   List<CellValue?> _values(JSArray values) => [
         for (var i = 0; i < values.length; i++) jsToCellValue(values[i]),
       ];
 
   void appendRow(JSArray values) => _sheet.appendRow(_values(values));
+
+  /// Appends several rows in one call, avoiding a JS↔Dart round trip per row.
+  void appendRows(JSArray rows) {
+    for (var i = 0; i < rows.length; i++) {
+      _sheet.appendRow(_values(rows[i] as JSArray));
+    }
+  }
 
   /// Writes [values] into row [rowIndex] (0-based), from `startingColumn`.
   void insertRowIterables(JSArray values, int rowIndex, [JSAny? options]) {
@@ -62,10 +78,11 @@ class JsSheet {
   void removeColumn(int columnIndex) => _sheet.removeColumn(columnIndex);
   bool clearRow(int rowIndex) => _sheet.clearRow(rowIndex);
 
+  /// Cell positions as in [cell], `null` where there is no cell.
   JSArray get rows {
     return plainJsArray(_sheet.rows.map((row) {
       return plainJsArray(row.map((cell) {
-        return cell != null ? createJSInteropWrapper(JsCell(cell, _sheet)) : null;
+        return cell != null ? _position(cell.rowIndex, cell.columnIndex).toJS : null;
       }));
     }));
   }
@@ -465,6 +482,9 @@ class JsSheet {
   void addPivotTable(JSObject options) => _sheet.addPivotTable(parsePivotTable(optionsMap(options)));
 
   int get pivotTableCount => _sheet.pivotTables.length;
+
+  /// Recomputes the pivot table cells after their source data changed.
+  void refreshPivotTables() => _sheet.refreshPivotTables();
 
   // ==================== EXPORT & IMPORT ====================
 

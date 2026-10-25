@@ -361,8 +361,9 @@ extension SheetTables on Sheet {
   /// column's label or `SUBTOTAL` formula.
   ///
   /// Throws an [ArgumentError] for an invalid or duplicate [name], a column
-  /// count that does not match the range, too few rows, or a range that
-  /// overlaps another table, merged cells or the sheet's AutoFilter.
+  /// count that does not match the range, too few rows, a range that
+  /// overlaps another table, merged cells or the sheet's AutoFilter, or a
+  /// totals row ([showTotalsRow]) whose cells already hold data.
   ExcelTable addTable(
     String range, {
     required String name,
@@ -428,6 +429,7 @@ extension SheetTables on Sheet {
       showLastColumn: showLastColumn,
       showFilterButtons: showFilterButtons,
     );
+    _checkTotalsRowIsFree(table);
     _tables.add(table);
     _syncTableCells(table);
     return table;
@@ -441,9 +443,35 @@ extension SheetTables on Sheet {
 
   /// Replaces the table that has the same name as [table] (e.g. a
   /// `copyWith` of it) and refreshes its header and totals cells.
+  ///
+  /// Like Excel, turning the totals row on without changing the range adds
+  /// a row below the table (shifting the rows under it when they have
+  /// data), and turning it off removes that row from the table.
   void updateTable(ExcelTable table) {
     final i = _tables.indexWhere((t) => t.name.toLowerCase() == table.name.toLowerCase());
     if (i < 0) throw ArgumentError.value(table.name, 'table', 'not found');
+    final old = _tables[i];
+    if (table.ref == old.ref && table.showTotalsRow != old.showTotalsRow) {
+      final rect = old._rect;
+      if (table.showTotalsRow) {
+        final below = rect.bottom + 1;
+        final occupied = [
+          for (var c = rect.left; c <= rect.right; c++) _sheetData[below]?[c]?.value,
+        ].any((v) => v != null);
+        if (occupied) insertRow(below);
+        table = table.copyWith(ref: _CellRect(rect.top, rect.left, below, rect.right).ref);
+      } else {
+        for (var c = rect.left; c <= rect.right; c++) {
+          if (_sheetData[rect.bottom]?[c] != null) {
+            updateCell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: rect.bottom), null);
+          }
+        }
+        table = table.copyWith(ref: _CellRect(rect.top, rect.left, rect.bottom - 1, rect.right).ref);
+      }
+    } else if (table.showTotalsRow &&
+        (!old.showTotalsRow || table.totalsRowIndex != old.totalsRowIndex)) {
+      _checkTotalsRowIsFree(table);
+    }
     _tables[i] = table;
     _syncTableCells(table);
   }
@@ -543,18 +571,41 @@ extension SheetTables on Sheet {
         }
       }
       if (table.showTotalsRow) {
-        final index =
-            CellIndex.indexByColumnRow(columnIndex: col, rowIndex: rect.bottom);
-        final code = column.totalsFunction.subtotalCode;
-        if (column.totalsLabel != null) {
-          updateCell(index, TextCellValue(column.totalsLabel!));
-        } else if (code != null) {
-          updateCell(index,
-              FormulaCellValue('SUBTOTAL($code,${table.columnReference(column.name)})'));
-        } else if (column.totalsFunction == TableTotalsFunction.custom &&
-            column.totalsRowFormula != null) {
-          updateCell(index, FormulaCellValue(column.totalsRowFormula!));
+        final value = _totalsCellValue(table, column);
+        if (value != null) {
+          updateCell(
+              CellIndex.indexByColumnRow(columnIndex: col, rowIndex: rect.bottom), value);
         }
+      }
+    }
+  }
+
+  /// The label or formula the totals row shows for [column], if any.
+  CellValue? _totalsCellValue(ExcelTable table, TableColumn column) {
+    final code = column.totalsFunction.subtotalCode;
+    if (column.totalsLabel != null) return TextCellValue(column.totalsLabel!);
+    if (code != null) {
+      return FormulaCellValue('SUBTOTAL($code,${table.columnReference(column.name)})');
+    }
+    if (column.totalsFunction == TableTotalsFunction.custom && column.totalsRowFormula != null) {
+      return FormulaCellValue(column.totalsRowFormula!);
+    }
+    return null;
+  }
+
+  /// Throws when [table]'s totals row holds data it would overwrite or
+  /// leave mixed with the totals; values the totals row writes anyway are
+  /// allowed, so a removed table can be added again.
+  void _checkTotalsRowIsFree(ExcelTable table) {
+    final row = table.totalsRowIndex;
+    if (row == null) return;
+    final left = table._rect.left;
+    for (var i = 0; i < table.columns.length; i++) {
+      final value = _sheetData[row]?[left + i]?.value;
+      if (value != null && value != _totalsCellValue(table, table.columns[i])) {
+        throw ArgumentError.value(table.ref, 'range',
+            'its last row (${row + 1}) has data the totals row would overwrite; '
+            'leave an empty row at the end of the range for the totals');
       }
     }
   }

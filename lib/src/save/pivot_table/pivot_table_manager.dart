@@ -142,38 +142,44 @@ class _PivotTableManager {
         .length;
   }
 
-  /// Writes the computed pivot table into its target cells, like Excel does,
-  /// so the values show even where the table is not refreshed (Protected
-  /// View, other spreadsheet apps). Runs before styles are written.
+  /// Writes the computed pivot tables into their target cells, like Excel
+  /// does, so the values show even where the table is not refreshed
+  /// (Protected View, other spreadsheet apps). Runs before styles are
+  /// written.
   void renderPivotTables() {
     _excel._sheetMap.forEach((sheetName, sheet) {
       for (final pt in sheet.pivotTables) {
-        final source = _excel._sheetMap[pt.sourceSheet];
-        final layout = source == null ? null : _PivotLayout.build(pt, source);
-        final top = pt.targetCell.rowIndex;
-        final left = pt.targetCell.columnIndex;
-
-        // Clear what an earlier save rendered for this table.
-        for (final (r, c) in _rendered[pt] ?? const <(int, int)>[]) {
-          sheet._sheetData[r]?.remove(c);
-        }
-        if (layout == null) continue;
-
-        final written = <(int, int)>[];
-        layout.cells().forEach((pos, entry) {
-          final (value, general) = entry;
-          final index = CellIndex.indexByColumnRow(
-              columnIndex: left + pos.$2, rowIndex: top + pos.$1);
-          sheet.updateCell(index, value);
-          if (general) {
-            sheet.cell(index).cellStyle = (sheet.cell(index).cellStyle ?? CellStyle())
-                .copyWith(numberFormat: NumFormat.standard_0);
-          }
-          written.add((index.rowIndex, index.columnIndex));
-        });
-        _rendered[pt] = written;
+        render(sheet, pt);
       }
     });
+  }
+
+  /// Writes [pt] into [sheet], replacing what an earlier render wrote.
+  static void render(Sheet sheet, PivotTable pt) {
+    final source = sheet._excel._sheetMap[pt.sourceSheet];
+    final layout = source == null ? null : _PivotLayout.build(pt, source);
+    final top = pt.targetCell.rowIndex;
+    final left = pt.targetCell.columnIndex;
+
+    // Clear what an earlier render wrote for this table.
+    for (final (r, c) in _rendered[pt] ?? const <(int, int)>[]) {
+      sheet._sheetData[r]?.remove(c);
+    }
+    if (layout == null) return;
+
+    final written = <(int, int)>[];
+    layout.cells().forEach((pos, entry) {
+      final (value, general) = entry;
+      final index = CellIndex.indexByColumnRow(
+          columnIndex: left + pos.$2, rowIndex: top + pos.$1);
+      sheet.updateCell(index, value);
+      if (general) {
+        sheet.cell(index).cellStyle = (sheet.cell(index).cellStyle ?? CellStyle())
+            .copyWith(numberFormat: NumFormat.standard_0);
+      }
+      written.add((index.rowIndex, index.columnIndex));
+    });
+    _rendered[pt] = written;
   }
 
   static final _rendered = Expando<List<(int, int)>>('pivotCells');

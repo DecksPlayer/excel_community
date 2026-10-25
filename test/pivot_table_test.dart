@@ -102,6 +102,31 @@ void main() {
     expect([text('A8'), text('B8'), text('C8'), text('D8')], ['Grand Total', '19', '11', '30']);
   });
 
+  test('pivot table cells are computed when added and refreshed on demand', () {
+    final excel = Excel.createExcel();
+    final data = excel['Data'];
+    data.appendRow([TextCellValue('Region'), TextCellValue('Units')]);
+    data.appendRow([TextCellValue('North'), IntCellValue(10)]);
+    data.appendRow([TextCellValue('South'), IntCellValue(7)]);
+    final pivot = excel['Pivot'];
+    pivot.addPivotTable(PivotTable(
+      name: 'PT',
+      sourceSheet: 'Data',
+      sourceRange: 'A1:B3',
+      targetCell: CellIndex.indexByString('A1'),
+      rows: ['Region'],
+      values: [PivotTableValue(field: 'Units')],
+    ));
+    String? text(String cell) => pivot.cell(CellIndex.indexByString(cell)).value?.toString();
+
+    expect([text('A2'), text('B2'), text('A4'), text('B4')], ['North', '10', 'Grand Total', '17'],
+        reason: 'readable before saving');
+
+    data.updateCell(CellIndex.indexByString('B3'), IntCellValue(20));
+    pivot.refreshPivotTables();
+    expect(text('B4'), '30');
+  });
+
   test('several data fields add the virtual Values field to colFields', () {
     final excel = Excel.createExcel();
     final data = excel['Data'];

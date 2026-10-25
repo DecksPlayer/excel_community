@@ -147,19 +147,16 @@ extension SheetDataExt on Sheet {
   ///
   void _countRowsAndColumns() {
     int maximumColumnIndex = -1, maximumRowIndex = -1;
-    List<int> sortedKeys = _sheetData.keys.toList()..sort();
-    sortedKeys.forEach((rowKey) {
-      if (_sheetData[rowKey] != null && _sheetData[rowKey]!.isNotEmpty) {
-        List<int> keys = _sheetData[rowKey]!.keys.toList()..sort();
-        if (keys.isNotEmpty && keys.last > maximumColumnIndex) {
-          maximumColumnIndex = keys.last;
+    _sheetData.forEach((rowKey, row) {
+      if (rowKey > maximumRowIndex) {
+        maximumRowIndex = rowKey;
+      }
+      for (final columnKey in row.keys) {
+        if (columnKey > maximumColumnIndex) {
+          maximumColumnIndex = columnKey;
         }
       }
     });
-
-    if (sortedKeys.isNotEmpty) {
-      maximumRowIndex = sortedKeys.last;
-    }
 
     _maxColumns = maximumColumnIndex + 1;
     _maxRows = maximumRowIndex + 1;
@@ -499,7 +496,8 @@ extension SheetDataExt on Sheet {
 
       i++;
     });
-    _countRowsAndColumns();
+    // `_putData` already grows `maxRows`/`maxColumns`; recounting the whole
+    // sheet here made `appendRow` quadratic.
   }
 
   ///

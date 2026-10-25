@@ -3,42 +3,43 @@ import 'package:excel_community/excel_community.dart';
 import 'js_convert.dart';
 import 'js_options.dart';
 
+/// The cell operations of one sheet, addressed by 0-based row and column.
+///
+/// Building a JS object with `createJSInteropWrapper` costs about a
+/// microsecond per member, so instead of one wrapper per cell, the `Cell`
+/// class in wrapper.js holds a position and calls this object, which is
+/// created once per sheet.
 @JSExport()
-class JsCell {
-  final Data _data;
+class JsCellOps {
   final Sheet _sheet;
-  JsCell(this._data, this._sheet);
+  JsCellOps(this._sheet);
 
-  String get cellId => _data.cellIndex.cellId;
-  int get row => _data.rowIndex;
-  int get col => _data.columnIndex;
-  String get displayText => _data.displayText;
+  Data _data(int row, int col) =>
+      _sheet.cell(CellIndex.indexByColumnRow(rowIndex: row, columnIndex: col));
 
-  String? get comment => _data.comment;
-  set comment(String? val) => _data.comment = val;
+  String displayText(int row, int col) => _data(row, col).displayText;
 
-  String? get formula {
-    final v = _data.value;
+  String? getComment(int row, int col) => _data(row, col).comment;
+  void setComment(int row, int col, String? val) => _data(row, col).comment = val;
+
+  String? getFormula(int row, int col) {
+    final v = _data(row, col).value;
     return v is FormulaCellValue ? v.formula : null;
   }
 
-  set formula(String? val) {
-    if (val != null) {
-      _data.setFormula(val);
+  void setFormula(int row, int col, String? formula) {
+    if (formula != null) {
+      _data(row, col).setFormula(formula);
     }
   }
 
-  void setFormula(String formula) {
-    _data.setFormula(formula);
-  }
-
   /// The result Excel cached for a formula cell when the file was saved.
-  JSAny? get cachedValue {
-    final v = _data.value;
+  JSAny? cachedValue(int row, int col) {
+    final v = _data(row, col).value;
     return v is FormulaCellValue ? cellValueToJs(v.cachedValue) : null;
   }
 
-  String get type => switch (_data.value) {
+  String type(int row, int col) => switch (_data(row, col).value) {
         TextCellValue() => 'string',
         IntCellValue() => 'int',
         DoubleCellValue() => 'double',
@@ -50,20 +51,20 @@ class JsCell {
         null => 'null',
       };
 
-  JSAny? get value => cellValueToJs(_data.value);
+  JSAny? getValue(int row, int col) => cellValueToJs(_data(row, col).value);
 
-  set value(JSAny? val) => _data.value = jsToCellValue(val);
+  void setValue(int row, int col, JSAny? val) => _data(row, col).value = jsToCellValue(val);
 
   /// A JS `Date` for date and date-time cells, otherwise `null`.
-  JSAny? get dateValue => switch (_data.value) {
+  JSAny? dateValue(int row, int col) => switch (_data(row, col).value) {
         DateCellValue v => jsDate(v.year, v.month, v.day),
         DateTimeCellValue v => jsDate(v.year, v.month, v.day, v.hour, v.minute, v.second, v.millisecond),
         _ => null,
       };
 
   /// Stores a time of day, from `'HH:MM[:SS]'` or hour/minute/second numbers.
-  void setTime(JSAny time, [int? minute, int? second]) {
-    _data.value = time.isA<JSString>()
+  void setTime(int row, int col, JSAny time, [int? minute, int? second]) {
+    _data(row, col).value = time.isA<JSString>()
         ? TimeCellValue.fromDuration(parseTime((time as JSString).toDart))
         : TimeCellValue(
             hour: (time as JSNumber).toDartInt,
@@ -75,17 +76,18 @@ class JsCell {
   // ==================== STYLING ====================
 
   /// Changes only the given style options; the rest of the style is kept.
-  void setStyle(JSObject options) {
-    _data.cellStyle = applyStyleOptions(_data.cellStyle, optionsMap(options));
+  void setStyle(int row, int col, JSObject options) {
+    final data = _data(row, col);
+    data.cellStyle = applyStyleOptions(data.cellStyle, optionsMap(options));
   }
 
   /// Removes all formatting from the cell.
-  void resetStyle() {
-    _data.cellStyle = CellStyle();
+  void resetStyle(int row, int col) {
+    _data(row, col).cellStyle = CellStyle();
   }
 
-  JSObject? get style {
-    final s = _data.cellStyle;
+  JSObject? style(int row, int col) {
+    final s = _data(row, col).cellStyle;
     return s == null ? null : jsObject(styleInfo(s));
   }
 
@@ -93,11 +95,12 @@ class JsCell {
 
   /// `setHyperlink(url, tooltip?, text?)` or `setHyperlink({url | email |
   /// sheet+cell | location, tooltip, display}, {text, styled})`.
-  void setHyperlink(JSAny target, [JSAny? tooltipOrOptions, String? display]) {
+  void setHyperlink(int row, int col, JSAny target, [JSAny? tooltipOrOptions, String? display]) {
+    final index = CellIndex.indexByColumnRow(rowIndex: row, columnIndex: col);
     if (target.isA<JSString>()) {
       final tooltip = tooltipOrOptions.isA<JSString>() ? (tooltipOrOptions as JSString).toDart : null;
       _sheet.setHyperlink(
-        _data.cellIndex,
+        index,
         Hyperlink.url((target as JSString).toDart, tooltip: tooltip, display: display),
         text: display,
       );
@@ -105,31 +108,33 @@ class JsCell {
     }
     final options = optionsMap(tooltipOrOptions);
     _sheet.setHyperlink(
-      _data.cellIndex,
+      index,
       parseHyperlink(optionsMap(target)),
       text: options.str('text'),
       styled: options.flag('styled') ?? true,
     );
   }
 
-  JSObject? getHyperlink() {
-    final link = _sheet.getHyperlink(_data.cellIndex);
+  JSObject? getHyperlink(int row, int col) {
+    final link = _sheet.getHyperlink(CellIndex.indexByColumnRow(rowIndex: row, columnIndex: col));
     return link == null ? null : jsObject(hyperlinkInfo(link));
   }
 
-  void removeHyperlink() {
-    _sheet.removeHyperlink(_data.cellIndex);
+  void removeHyperlink(int row, int col) {
+    _sheet.removeHyperlink(CellIndex.indexByColumnRow(rowIndex: row, columnIndex: col));
   }
 
   // ==================== DATA VALIDATION ====================
 
-  JSObject? get dataValidation {
-    final rule = _sheet.getDataValidation(_data.cellIndex);
+  JSObject? dataValidation(int row, int col) {
+    final rule = _sheet.getDataValidation(CellIndex.indexByColumnRow(rowIndex: row, columnIndex: col));
     return rule == null ? null : jsObject(dataValidationInfo(rule));
   }
 
   /// Whether [value] passes this cell's validation (`null` when it depends
   /// on formulas or other cells).
-  bool? validates(JSAny? value) =>
-      _sheet.getDataValidation(_data.cellIndex)?.accepts(jsToCellValue(value)) ?? true;
+  bool? validates(int row, int col, JSAny? value) => _sheet
+          .getDataValidation(CellIndex.indexByColumnRow(rowIndex: row, columnIndex: col))
+          ?.accepts(jsToCellValue(value)) ??
+      true;
 }

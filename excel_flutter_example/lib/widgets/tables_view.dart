@@ -1,7 +1,8 @@
 import 'package:excel_community/excel_community.dart'
-    show CellIndex, DoubleCellValue, ExcelTable, FormulaCellValue, IntCellValue, Sheet, SheetTables, TableStyle;
+    show CellIndex, DoubleCellValue, ExcelTable, FormulaCellValue, IntCellValue, Sheet, TableColumn, TableStyle;
 import 'package:flutter/material.dart';
 
+import '../data/snippets/tables.dart';
 import '../data/table_samples.dart';
 import 'wiki/wiki_components.dart';
 
@@ -29,6 +30,7 @@ class _TablesViewState extends State<TablesView> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
   String _tab = 'styles';
+  late final Sheet _cachedStyleSheet = tableSampleSheet();
 
   @override
   void dispose() {
@@ -53,10 +55,20 @@ class _TablesViewState extends State<TablesView> {
         WikiTab('styles', 'Styles (${builtInTableStyles.length})'),
         WikiTab('options', 'Options (${tableSamples.where((s) => s.category == 'options').length})'),
         WikiTab('data', 'Data & Formulas (${tableSamples.where((s) => s.category == 'data').length})'),
+        const WikiTab('code', 'Full Example (Code)'),
       ],
       selectedTab: _tab,
       onTabSelected: (tab) => setState(() => _tab = tab),
-      child: _tab == 'styles' ? _buildStyles() : _buildSamples(_tab),
+      child: switch (_tab) {
+        'styles' => _buildStyles(),
+        'code' => const WikiCodeCard(
+            title: 'Excel Tables Demo Workbook Code',
+            subtitle: 'Complete code creating styled tables, totals rows, formulas, and multi-sheet demo',
+            code: tablesSnippet,
+            accent: _accent,
+          ),
+        _ => _buildSamples(_tab),
+      },
     );
   }
 
@@ -82,8 +94,16 @@ class _TablesViewState extends State<TablesView> {
             final (label, style) = styles[index];
             final kind = label.split(' ').first.toLowerCase();
             final number = label.split(' ').last;
-            final sheet = tableSampleSheet();
-            final table = sheet.addTable('A1:C4', name: 'Sales', style: style);
+            final table = ExcelTable(
+              name: 'Sales',
+              ref: 'A1:C4',
+              style: style,
+              columns: const [
+                TableColumn('Region'),
+                TableColumn('Units'),
+                TableColumn('Price'),
+              ],
+            );
             return WikiCard(
               title: label,
               subtitle: style.name,
@@ -92,7 +112,7 @@ class _TablesViewState extends State<TablesView> {
                   '    style: TableStyle.$kind($number));',
               codeSummary: 'style: TableStyle.$kind($number)',
               previewLabel: 'Style Preview:',
-              preview: WikiPreviewBox(child: TablePreview(sheet: sheet, table: table)),
+              preview: WikiPreviewBox(child: TablePreview(sheet: _cachedStyleSheet, table: table)),
             );
           },
         ),
@@ -169,57 +189,61 @@ class _StyleColors {
 
   static Color _tint(Color c, double amount) => Color.lerp(c, Colors.white, amount)!;
 
+  static final Map<String, _StyleColors> _styleColorsCache = {};
+
   factory _StyleColors.of(TableStyle? style) {
     if (style == null) return const _StyleColors(line: Color(0xFFE2E8F0));
-    final match = RegExp(r'TableStyle(Light|Medium|Dark)(\d+)').firstMatch(style.name);
-    if (match == null) return const _StyleColors(line: Color(0xFFCBD5E1));
-    final kind = match.group(1)!;
-    final n = int.parse(match.group(2)!);
-    final accent = _accents[(n - 1) % 7];
-    final gray = accent == _accents[0];
-    final group = (n - 1) ~/ 7;
-    switch (kind) {
-      case 'Light':
-        return switch (group) {
-          0 => _StyleColors(band: _tint(accent, gray ? 0.85 : 0.8), line: accent),
-          1 => _StyleColors(headerFill: accent, headerText: Colors.white, line: accent),
-          _ => _StyleColors(band: _tint(accent, gray ? 0.85 : 0.8), line: accent),
-        };
-      case 'Medium':
-        return switch (group) {
-          0 => _StyleColors(
-              headerFill: accent, headerText: Colors.white, band: _tint(accent, 0.8), line: _tint(accent, 0.4)),
-          1 => _StyleColors(
-              headerFill: accent,
-              headerText: Colors.white,
-              band: _tint(accent, 0.6),
-              bodyFill: _tint(accent, 0.8),
-              line: Colors.white),
-          2 => _StyleColors(
-              headerFill: Colors.black,
-              headerText: Colors.white,
-              band: _tint(accent, gray ? 0.75 : 0.6),
-              bodyFill: _tint(accent, gray ? 0.85 : 0.8),
-              line: Colors.white),
-          _ => _StyleColors(
-              headerFill: _tint(accent, 0.6), band: _tint(accent, 0.6), bodyFill: _tint(accent, 0.8), line: Colors.white),
-        };
-      default: // Dark
-        return group == 0
-            ? _StyleColors(
+    return _styleColorsCache.putIfAbsent(style.name, () {
+      final match = RegExp(r'TableStyle(Light|Medium|Dark)(\d+)').firstMatch(style.name);
+      if (match == null) return const _StyleColors(line: Color(0xFFCBD5E1));
+      final kind = match.group(1)!;
+      final n = int.parse(match.group(2)!);
+      final accent = _accents[(n - 1) % 7];
+      final gray = accent == _accents[0];
+      final group = (n - 1) ~/ 7;
+      switch (kind) {
+        case 'Light':
+          return switch (group) {
+            0 => _StyleColors(band: _tint(accent, gray ? 0.85 : 0.8), line: accent),
+            1 => _StyleColors(headerFill: accent, headerText: Colors.white, line: accent),
+            _ => _StyleColors(band: _tint(accent, gray ? 0.85 : 0.8), line: accent),
+          };
+        case 'Medium':
+          return switch (group) {
+            0 => _StyleColors(
+                headerFill: accent, headerText: Colors.white, band: _tint(accent, 0.8), line: _tint(accent, 0.4)),
+            1 => _StyleColors(
+                headerFill: accent,
+                headerText: Colors.white,
+                band: _tint(accent, 0.6),
+                bodyFill: _tint(accent, 0.8),
+                line: Colors.white),
+            2 => _StyleColors(
                 headerFill: Colors.black,
                 headerText: Colors.white,
-                band: Color.lerp(accent, Colors.black, gray ? 0.3 : 0.25),
-                bodyFill: gray ? const Color(0xFF737373) : accent,
-                bodyText: Colors.white,
-                line: Colors.black)
-            : _StyleColors(
-                headerFill: Colors.black,
-                headerText: Colors.white,
-                band: _tint(_accents[(n - 1) % 4 * 2 % 7], 0.6),
-                bodyFill: _tint(_accents[(n - 1) % 4 * 2 % 7], 0.8),
-                line: Colors.white);
-    }
+                band: _tint(accent, gray ? 0.75 : 0.6),
+                bodyFill: _tint(accent, gray ? 0.85 : 0.8),
+                line: Colors.white),
+            _ => _StyleColors(
+                headerFill: _tint(accent, 0.6), band: _tint(accent, 0.6), bodyFill: _tint(accent, 0.8), line: Colors.white),
+          };
+        default: // Dark
+          return group == 0
+              ? _StyleColors(
+                  headerFill: Colors.black,
+                  headerText: Colors.white,
+                  band: Color.lerp(accent, Colors.black, gray ? 0.3 : 0.25),
+                  bodyFill: gray ? const Color(0xFF737373) : accent,
+                  bodyText: Colors.white,
+                  line: Colors.black)
+              : _StyleColors(
+                  headerFill: Colors.black,
+                  headerText: Colors.white,
+                  band: _tint(_accents[(n - 1) % 4 * 2 % 7], 0.6),
+                  bodyFill: _tint(_accents[(n - 1) % 4 * 2 % 7], 0.8),
+                  line: Colors.white);
+      }
+    });
   }
 }
 

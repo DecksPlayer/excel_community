@@ -4,12 +4,17 @@ class _WorksheetManager {
   final Excel _excel;
   final Save _save;
   final Map<CellStyle, int> _styleIndexCache = {};
+  // Most cells share a few style instances; keeping their ` s="..."`
+  // attribute by identity avoids hashing every field of the style, and
+  // building the attribute, for each cell.
+  final Map<CellStyle, String> _styleAttrByInstance = Map.identity();
 
   _WorksheetManager(this._excel, this._save);
 
   void setSheetElements() {
     _excel._sharedStrings.clear();
     _styleIndexCache.clear();
+    _styleAttrByInstance.clear();
 
     // Only one sheet per workbook may carry tabSelected="1". Mark the first
     // sheet in the iteration order as the active one; all others omit the
@@ -41,7 +46,7 @@ class _WorksheetManager {
     String originalXml, {
     required bool isActiveSheet,
   }) {
-    final events = xml_events.parseEvents(originalXml);
+    final events = fastXmlEvents(originalXml);
 
     final worksheetAttributes = <xml_events.XmlEventAttribute>[];
     final originalElements = <String, List<String>>{};
@@ -186,10 +191,14 @@ class _WorksheetManager {
     out.write(_buildSheetDataXml(sheetName, sheetObject));
     printedTags.add('sheetData');
 
-    // Write common other elements in order
+    // The rest follows the CT_Worksheet sequence of ECMA-376; Excel refuses
+    // a file whose known elements are out of order.
+    writeOriginal('sheetCalcPr');
     if (sheetObject.sheetProtection.sheet) {
       out.write(sheetObject.sheetProtection.toXmlString());
     }
+    writeOriginal('protectedRanges');
+    writeOriginal('scenarios');
     if (sheetObject.autoFilter != null) {
       out.write(sheetObject.autoFilter!.toXmlString());
     }
@@ -201,6 +210,7 @@ class _WorksheetManager {
     // 7. mergeCells
     out.write(_buildMergeCellsXml(sheetObject));
     printedTags.add('mergeCells');
+    writeOriginal('phoneticPr');
 
     // Write subsequent common elements
     out.write(_buildConditionalFormattingXml(sheetObject));
@@ -219,8 +229,12 @@ class _WorksheetManager {
     out.write(_buildHeaderFooterXml(sheetObject));
     printedTags.add('headerFooter');
 
+    writeOriginal('rowBreaks');
+    writeOriginal('colBreaks');
     writeOriginal('customProperties');
     writeOriginal('cellWatches');
+    writeOriginal('ignoredErrors');
+    writeOriginal('smartTags');
 
     // 8. drawing / legacyDrawing / picture / oleObjects
     if (sheetObject._drawingRId != null) {
@@ -236,9 +250,10 @@ class _WorksheetManager {
     printedTags.add('legacyDrawing');
 
     writeOriginal('legacyDrawingHF');
+    writeOriginal('drawingHF');
     writeOriginal('picture');
     writeOriginal('oleObjects');
-    writeOriginal('drawingHF');
+    writeOriginal('controls');
     writeOriginal('webPublishItems');
 
     // 9b. pivotTableParts
@@ -569,7 +584,8 @@ class _WorksheetManager {
       final isRowHidden = hiddenRows.contains(rowIndex);
 
       double? height = customHeights[rowIndex];
-      buffer.write('<row r="${rowIndex + 1}"');
+      final rowNumber = '${rowIndex + 1}';
+      buffer.write('<row r="$rowNumber"');
       if (height != null) {
         buffer.write(' ht="${height.toStringAsFixed(2)}" customHeight="1"');
       }
@@ -585,6 +601,23 @@ class _WorksheetManager {
       }
       buffer.write('>');
 
+      final nonOriginRow = mergedNonOriginStyles[rowIndex];
+      if (nonOriginRow == null) {
+        // Usual case: only regular cells, written in column order without
+        // building a merged entry per cell.
+        if (rowData != null && rowData.isNotEmpty) {
+          final columns = rowData.keys.toList();
+          if (!_isSorted(columns)) columns.sort();
+          for (final columnIndex in columns) {
+            final data = rowData[columnIndex]!;
+            _buildCellXml(buffer, sheetName, columnIndex, rowIndex, rowNumber,
+                data.value, data._cellStyle, sheetStyleReferenced);
+          }
+        }
+        buffer.write('</row>');
+        continue;
+      }
+
       // Merge regular cells and non-origin style-only cells into a sorted map.
       final Map<int, _MergedCellEntry> colEntries = {};
 
@@ -594,14 +627,11 @@ class _WorksheetManager {
         });
       }
 
-      final nonOriginRow = mergedNonOriginStyles[rowIndex];
-      if (nonOriginRow != null) {
-        nonOriginRow.forEach((col, styleIdx) {
-          if (!colEntries.containsKey(col)) {
-            colEntries[col] = _MergedCellEntry(styleOnlyIndex: styleIdx);
-          }
-        });
-      }
+      nonOriginRow.forEach((col, styleIdx) {
+        if (!colEntries.containsKey(col)) {
+          colEntries[col] = _MergedCellEntry(styleOnlyIndex: styleIdx);
+        }
+      });
 
       final sortedCols = colEntries.keys.toList()..sort();
       for (final columnIndex in sortedCols) {
@@ -612,6 +642,7 @@ class _WorksheetManager {
             sheetName,
             columnIndex,
             rowIndex,
+            rowNumber,
             entry.data!.value,
             entry.data!._cellStyle,
             sheetStyleReferenced,
@@ -624,7 +655,7 @@ class _WorksheetManager {
           } else {
             buffer.write(_numericToLetters(columnIndex + 1));
           }
-          buffer.write(rowIndex + 1);
+          buffer.write(rowNumber);
           buffer.write('" s="${entry.styleOnlyIndex}"/>');
         }
       }
@@ -640,24 +671,41 @@ class _WorksheetManager {
       String sheet,
       int columnIndex,
       int rowIndex,
+      String rowNumber,
       CellValue? value,
       CellStyle? cellStyle,
       Map<String, int>? sheetStyleReferenced) {
     SharedString? sharedString;
     if (value is TextCellValue) {
-      final tempSharedString = SharedString.fromTextSpan(value.value);
-      final xmlKey = tempSharedString._xmlString;
-      sharedString = _excel._sharedStrings.tryFind(xmlKey);
+      final strings = _excel._sharedStrings;
+      final span = value.value;
+      // Text without rich formatting is found by the text itself, without
+      // building its XML.
+      final plainText =
+          span.style == null && span.children == null ? span.text : null;
+      sharedString = plainText == null ? null : strings.tryFindPlain(plainText);
       if (sharedString != null) {
-        _excel._sharedStrings.add(sharedString, xmlKey);
+        strings.add(sharedString, sharedString._xmlString);
       } else {
-        _excel._sharedStrings.add(tempSharedString, xmlKey);
-        sharedString = tempSharedString;
+        final tempSharedString = SharedString.fromTextSpan(span);
+        final xmlKey = tempSharedString._xmlString;
+        sharedString = strings.tryFind(xmlKey);
+        if (sharedString != null) {
+          strings.add(sharedString, xmlKey);
+        } else {
+          strings.add(tempSharedString, xmlKey);
+          sharedString = tempSharedString;
+        }
+        if (plainText != null) strings.rememberPlain(plainText, sharedString);
       }
     }
 
     String sAttr = '';
-    if (_excel._styleChanges && cellStyle != null) {
+    final knownStyleAttr =
+        cellStyle == null ? null : _styleAttrByInstance[cellStyle];
+    if (knownStyleAttr != null && _excel._styleChanges) {
+      sAttr = knownStyleAttr;
+    } else if (_excel._styleChanges && cellStyle != null) {
       var upperLevelPos = _styleIndexCache[cellStyle];
       if (upperLevelPos == null) {
         upperLevelPos = _checkPosition(_excel._cellStyleList, cellStyle);
@@ -672,6 +720,7 @@ class _WorksheetManager {
         _styleIndexCache[cellStyle] = upperLevelPos;
       }
       sAttr = ' s="$upperLevelPos"';
+      _styleAttrByInstance[cellStyle] = sAttr;
     } else if (sheetStyleReferenced != null) {
       final rC = getCellId(columnIndex, rowIndex);
       if (sheetStyleReferenced.containsKey(rC)) {
@@ -692,7 +741,7 @@ class _WorksheetManager {
     } else {
       buffer.write(_numericToLetters(columnIndex + 1));
     }
-    buffer.write(rowIndex + 1);
+    buffer.write(rowNumber);
     buffer.write('"');
 
     if (sAttr.isNotEmpty) {
@@ -731,6 +780,13 @@ class _WorksheetManager {
       }
     }
     buffer.write('</c>');
+  }
+
+  static bool _isSorted(List<int> values) {
+    for (var i = 1; i < values.length; i++) {
+      if (values[i - 1] > values[i]) return false;
+    }
+    return true;
   }
 
   String _buildMergeCellsXml(Sheet sheetObject) {

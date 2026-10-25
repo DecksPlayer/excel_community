@@ -13,14 +13,18 @@ class JsWorkbook {
   JSArray<JSString> get sheets =>
       plainJsArray(_excel.sheets.keys.map((s) => s.toJS));
 
-  JSObject sheet(String name) {
-    return createJSInteropWrapper(JsSheet(_excel[name]));
-  }
+  // Building a sheet wrapper costs tens of microseconds, so each Sheet keeps
+  // its own and `wb.sheet(name)` can be called in loops.
+  static final _wrappers = Expando<JSObject>('jsSheet');
+
+  JSObject _wrap(Sheet sheet) => _wrappers[sheet] ??= createJSInteropWrapper(JsSheet(sheet));
+
+  JSObject sheet(String name) => _wrap(_excel[name]);
 
   /// Adds a sheet; unlike [sheet], it never renames the empty `Sheet1`.
   JSObject createSheet(String name) {
     if (_excel.sheets.containsKey('Sheet1')) _excel['Sheet1'];
-    return createJSInteropWrapper(JsSheet(_excel[name]));
+    return _wrap(_excel[name]);
   }
 
   bool deleteSheet(String name) {

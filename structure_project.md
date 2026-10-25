@@ -429,7 +429,7 @@ excel_community/
 - **`ColumnBarChartBuilder`**: Builds XML styling for column and bar charts with solid fills and borders.
 - **`LineChartBuilder`**: Builds XML styling for line charts with stroke widths and circular markers.
 - **`AreaChartBuilder`**: Builds XML styling for area charts with alpha transparency fills (50% fill opacity, 90% line opacity).
-- **`PieChartBuilder`**: Builds XML styling for pie and doughnut charts, handling random color assignment per slice and hole sizes.
+- **`PieChartBuilder`**: Builds XML styling for pie and doughnut charts, handling per-slice colors (fixed palette order) and hole sizes.
 - **`ScatterChartBuilder`**: Builds XML styling for scatter charts with distinct marker shapes and point colors.
 - **`RadarChartBuilder`**: Builds XML styling for radar charts with filled polygons or wireframe lines.
 

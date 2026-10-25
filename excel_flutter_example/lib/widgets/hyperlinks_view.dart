@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/hyperlink_samples.dart';
+import '../data/snippets/hyperlinks.dart';
 import 'wiki/wiki_components.dart';
 
 const _accent = Color(0xFF2563EB);
@@ -52,10 +53,19 @@ class _HyperlinksViewState extends State<HyperlinksView> {
         for (final entry in _tabs.entries)
           WikiTab(entry.key,
               '${entry.value} (${hyperlinkSamples.where((s) => s.category == entry.key).length})'),
+        const WikiTab('code', 'Full Example (Code)'),
       ],
       selectedTab: _tab,
       onTabSelected: (tab) => setState(() => _tab = tab),
-      child: WikiGrid(
+      child: _tab == 'code'
+          ? const WikiCodeCard(
+              title: 'Cell Hyperlinks Demo Workbook Code',
+              subtitle:
+                  'Complete code configuring external URLs, mailto, internal cell/sheet targets, and jump-back links',
+              code: hyperlinksSnippet,
+              accent: _accent,
+            )
+          : WikiGrid(
         itemCount: samples.length,
         extent: 340,
         itemBuilder: (context, index) {

@@ -48,7 +48,7 @@ class _WorksheetParser {
     _excel._sheetXmls[path] = contentString;
     _excel._xmlSheetId[name] = path;
 
-    final events = xml_events.parseEvents(contentString);
+    final events = fastXmlEvents(contentString);
 
     List<xml_events.XmlEvent>? currentHeaderFooterEvents;
     List<xml_events.XmlEvent>? currentAutoFilterEvents;

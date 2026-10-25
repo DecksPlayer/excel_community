@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/snippets/fonts_styles.dart';
 import 'wiki/wiki_components.dart';
 
 class FontsStylesView extends StatefulWidget {
@@ -197,31 +198,40 @@ cell.cellStyle = cellStyle;
       tabs: const [
         WikiTab('fonts', 'Font Families (48)'),
         WikiTab('styles', 'Styles & Decorations'),
+        WikiTab('code', 'Full Example (Code)'),
       ],
       selectedTab: _selectedTab,
       onTabSelected: (tab) => setState(() => _selectedTab = tab),
-      child: _selectedTab == 'fonts'
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                WikiSearchField(
-                  controller: _searchController,
-                  hint: 'Search fonts by name or enum...',
-                  accent: Colors.indigo,
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                ),
-                const SizedBox(height: 16),
-                WikiGrid(
-                  itemCount: filteredFonts.length,
-                  extent: 220,
-                  itemBuilder: (context, index) {
-                    final fontName = filteredFonts[index]['name']!;
-                    final fontEnum = filteredFonts[index]['enum']!;
-                    return WikiCard(
-                      title: fontName,
-                      subtitle: fontEnum,
+      child: _selectedTab == 'code'
+          ? const WikiCodeCard(
+              title: 'Fonts & Styles Demo Workbook Code',
+              subtitle:
+                  'Complete code that creates custom fonts, styles, fills, borders, and exports the file',
+              code: fontsStylesSnippet,
+              accent: Colors.indigo,
+            )
+          : _selectedTab == 'fonts'
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    WikiSearchField(
+                      controller: _searchController,
+                      hint: 'Search fonts by name or enum...',
                       accent: Colors.indigo,
-                      code: '''
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                    ),
+                    const SizedBox(height: 16),
+                    WikiGrid(
+                      itemCount: filteredFonts.length,
+                      extent: 220,
+                      itemBuilder: (context, index) {
+                        final fontName = filteredFonts[index]['name']!;
+                        final fontEnum = filteredFonts[index]['enum']!;
+                        return WikiCard(
+                          title: fontName,
+                          subtitle: fontEnum,
+                          accent: Colors.indigo,
+                          code: '''
 var cellStyle = CellStyle(
   fontFamily: getFontFamily($fontEnum), // Mapped to '$fontName'
   fontSize: 12,
@@ -229,57 +239,57 @@ var cellStyle = CellStyle(
 );
 cell.cellStyle = cellStyle;
 ''',
-                      codeSummary: 'CellStyle(fontFamily: getFontFamily($fontEnum))',
-                      previewLabel: 'Live Font Preview:',
+                          codeSummary: 'CellStyle(fontFamily: getFontFamily($fontEnum))',
+                          previewLabel: 'Live Font Preview:',
+                          preview: WikiPreviewBox(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'The quick brown fox jumps over the lazy dog.',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: fontName,
+                                fontSize: 13,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                )
+              : WikiGrid(
+                  itemCount: _styles.length,
+                  extent: 220,
+                  itemBuilder: (context, index) {
+                    final item = _styles[index];
+                    final styleName = item['name'] as String;
+                    final styleCode = item['code'] as String;
+                    final textStyle = item['style'] as TextStyle;
+                    final background = item['background'] as Color?;
+                    return WikiCard(
+                      title: styleName,
+                      subtitle: item['detail'] as String,
+                      accent: Colors.indigo,
+                      code: styleCode,
+                      codeSummary: '${styleCode.split(';')[0].trim()};',
+                      previewLabel: 'Live Style Preview:',
                       preview: WikiPreviewBox(
-                        alignment: Alignment.centerLeft,
+                        color: background ?? const Color(0xFFF8FAFC),
+                        border: background == null ? null : Border.all(color: const Color(0xFFE2E8F0)),
                         child: Text(
-                          'The quick brown fox jumps over the lazy dog.',
+                          'Styled Sample Text',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: fontName,
-                            fontSize: 12,
-                            color: const Color(0xFF1E293B),
+                          style: textStyle.copyWith(
+                            color: background != null ? Colors.white : (textStyle.color ?? const Color(0xFF1E293B)),
                           ),
                         ),
                       ),
                     );
                   },
                 ),
-              ],
-            )
-          : WikiGrid(
-              itemCount: _styles.length,
-              extent: 220,
-              itemBuilder: (context, index) {
-                final item = _styles[index];
-                final styleName = item['name'] as String;
-                final styleCode = item['code'] as String;
-                final textStyle = item['style'] as TextStyle;
-                final background = item['background'] as Color?;
-                return WikiCard(
-                  title: styleName,
-                  subtitle: item['detail'] as String,
-                  accent: Colors.indigo,
-                  code: styleCode,
-                  codeSummary: '${styleCode.split(';')[0].trim()};',
-                  previewLabel: 'Live Style Preview:',
-                  preview: WikiPreviewBox(
-                    color: background ?? const Color(0xFFF8FAFC),
-                    border: background == null ? null : Border.all(color: const Color(0xFFE2E8F0)),
-                    child: Text(
-                      'Styled Sample Text',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textStyle.copyWith(
-                        color: background != null ? Colors.white : (textStyle.color ?? const Color(0xFF1E293B)),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
     );
   }
 }

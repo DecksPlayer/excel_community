@@ -64,8 +64,8 @@ SectionDetail getSectionDetail(SelectedSection section) {
         themeColor: Colors.red,
         highlights: [
           'Supports single series segment visualization',
-          'Shuffles standard 20-color palette for unique slices',
-          'Ensures no repeated colors within the same pie chart',
+          'Takes slice colors from a 20-color palette, in order',
+          'No repeated colors up to 20 slices; the same chart always saves the same',
         ],
         codeSnippet: pieChartSnippet,
       );
@@ -92,7 +92,7 @@ SectionDetail getSectionDetail(SelectedSection section) {
         themeColor: Colors.teal,
         highlights: [
           'Built-in hole size set to 50% for optimal readability',
-          'Shuffled colors from a professional 20-color palette',
+          'Slice colors from a professional 20-color palette, in order',
           'Compatible with Microsoft Excel, Excel 365, and Google Sheets',
         ],
         codeSnippet: doughnutChartSnippet,

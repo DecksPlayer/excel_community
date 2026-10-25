@@ -5,6 +5,7 @@ import 'package:excel_community/excel_community.dart'
 import 'package:flutter/material.dart';
 
 import '../data/grouping_samples.dart';
+import '../data/snippets/grouping.dart';
 import 'wiki/wiki_components.dart';
 
 const _accent = Color(0xFFEA580C);
@@ -53,10 +54,19 @@ class _GroupingViewState extends State<GroupingView> {
         for (final entry in _tabs.entries)
           WikiTab(entry.key,
               '${entry.value} (${groupingSamples.where((s) => s.category == entry.key).length})'),
+        const WikiTab('code', 'Full Example (Code)'),
       ],
       selectedTab: _tab,
       onTabSelected: (tab) => setState(() => _tab = tab),
-      child: WikiGrid(
+      child: _tab == 'code'
+          ? const WikiCodeCard(
+              title: 'Row & Column Grouping Demo Workbook Code',
+              subtitle:
+                  'Complete code configuring multi-level nested row groups, column outlines, summaries, and formulas',
+              code: groupingSnippet,
+              accent: _accent,
+            )
+          : WikiGrid(
         itemCount: samples.length,
         extent: 470,
         itemBuilder: (context, index) {

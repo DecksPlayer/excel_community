@@ -80,7 +80,14 @@ class ChartColorConfig {
     return radarPalette[index % radarPalette.length];
   }
 
+  /// Gets a color from the pie palette by index (with rotation), so the
+  /// same chart always gets the same slice colors.
+  static ExcelColor getPieColor(int index) {
+    return piePalette[index % piePalette.length];
+  }
+
   /// Gets a randomized list of pie colors for the specified number of points
+  @Deprecated('Charts use getPieColor so saving is deterministic')
   static List<ExcelColor> getRandomizedPieColors(int numPoints) {
     final shuffled = List<ExcelColor>.from(piePalette)..shuffle();
     return shuffled.take(numPoints).toList();
@@ -136,8 +143,7 @@ class ChartColorConfig {
   ///
   /// When [alpha] is `null` or 100, no `<a:alpha>` child is added (= fully
   /// opaque).  Any other value emits the OOXML-scale alpha (0–100 000).
-  static void emitSolidFill(
-      XmlBuilder b, ExcelColor color, [int alpha = 100]) {
+  static void emitSolidFill(XmlBuilder b, ExcelColor color, [int alpha = 100]) {
     b.element('a:solidFill', nest: () {
       if (alpha >= 100) {
         b.element('a:srgbClr', attributes: {'val': color.colorHex6});
@@ -188,10 +194,8 @@ class ChartColorConfig {
       effectiveFillAlpha = defaultFillAlpha;
     }
 
-    final effectiveBorderAlpha =
-        userStyle?.borderAlpha ?? defaultBorderAlpha;
-    final effectiveBorderWidth =
-        userStyle?.borderWidth ?? defaultBorderWidth;
+    final effectiveBorderAlpha = userStyle?.borderAlpha ?? defaultBorderAlpha;
+    final effectiveBorderWidth = userStyle?.borderWidth ?? defaultBorderWidth;
 
     b.element('c:spPr', nest: () {
       if (includeFill) {

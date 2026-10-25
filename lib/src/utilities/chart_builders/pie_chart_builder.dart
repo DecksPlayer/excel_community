@@ -46,8 +46,7 @@ class PieChartBuilder implements ChartStyleBuilder {
                   builder, userStyle.fillColor!, alpha);
             }
 
-            final borderColor =
-                userStyle.borderColor ?? userStyle.fillColor!;
+            final borderColor = userStyle.borderColor ?? userStyle.fillColor!;
             final borderWidth =
                 userStyle.borderWidth ?? ChartColorConfig.thinLineWidth;
             builder.element('a:ln', attributes: {'w': borderWidth}, nest: () {
@@ -58,15 +57,15 @@ class PieChartBuilder implements ChartStyleBuilder {
         });
       }
     } else {
-      // Automatic: randomized palette, white separator border.
-      final colors = ChartColorConfig.getRandomizedPieColors(valuesCount);
+      // Automatic: palette in order, white separator border.
       for (int i = 0; i < valuesCount; i++) {
         builder.element('c:dPt', nest: () {
           builder.element('c:idx', attributes: {'val': '$i'});
           builder.element('c:spPr', nest: () {
             builder.element('a:solidFill', nest: () {
-              builder.element(
-                  'a:srgbClr', attributes: {'val': colors[i].colorHex6});
+              builder.element('a:srgbClr', attributes: {
+                'val': ChartColorConfig.getPieColor(i).colorHex6
+              });
             });
             builder.element('a:ln',
                 attributes: {'w': ChartColorConfig.thinLineWidth}, nest: () {

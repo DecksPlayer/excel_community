@@ -56,21 +56,25 @@ export interface CellStyleOptions {
 }
 
 export interface BorderInfo {
-  style: string;
-  color: string | null;
+  style: BorderLineStyle;
+  /** `'#RRGGBB'` (`'#AARRGGBB'` when not opaque). */
+  color?: string;
 }
 
+/** A cell style in the same form `setStyle` takes, so it can be passed back to it. */
 export interface CellStyleInfo {
   bold: boolean;
   italic: boolean;
   strikethrough: boolean;
-  underline: 'None' | 'Single' | 'Double';
+  underline: 'none' | 'single' | 'double';
   fontSize?: number;
   fontFamily?: string;
+  /** `'#RRGGBB'` (`'#AARRGGBB'` when not opaque). */
   fontColor: string;
-  backgroundColor: string;
-  horizontalAlign: 'Left' | 'Center' | 'Right';
-  verticalAlign: 'Top' | 'Center' | 'Bottom';
+  /** Absent when the cell has no fill. */
+  backgroundColor?: string;
+  horizontalAlign: 'left' | 'center' | 'right';
+  verticalAlign: 'top' | 'center' | 'bottom';
   wrapText: boolean;
   shrinkToFit: boolean;
   rotation: number;
@@ -192,7 +196,7 @@ export interface ConditionalStyle {
   bold?: boolean;
   italic?: boolean;
   strikethrough?: boolean;
-  underline?: 'single' | 'double' | boolean;
+  underline?: 'single' | 'double' | 'none' | boolean;
 }
 
 export type ConditionalOperator =
@@ -514,6 +518,7 @@ export interface Sheet {
   readonly maxRows: number;
   readonly maxColumns: number;
   rightToLeft: boolean;
+  /** `'#RRGGBB'`; `null` when there is none or it is a theme color. */
   tabColor: string | null;
   frozenRows: number | null;
   frozenColumns: number | null;
@@ -523,6 +528,8 @@ export interface Sheet {
   // Cells, rows and columns
   cell(cellIndex: string): Cell;
   appendRow(values: CellInput[]): void;
+  /** Appends several rows in one call; faster than calling `appendRow` for each. */
+  appendRows(rows: CellInput[][]): void;
   insertRowIterables(values: CellInput[], rowIndex: number, options?: { startingColumn?: number; overwriteMergedCells?: boolean }): void;
   insertRow(rowIndex: number): void;
   removeRow(rowIndex: number): void;
@@ -640,6 +647,8 @@ export interface Sheet {
   // Pivot tables
   addPivotTable(config: PivotTableConfig): void;
   readonly pivotTableCount: number;
+  /** Recomputes the pivot table cells after their source data changed (saving does it too). */
+  refreshPivotTables(): void;
 
   // Export & import
   rowsAsMaps(options?: ExportOptions): Record<string, ExportValue>[];
@@ -669,6 +678,25 @@ export interface Workbook {
   toBuffer(): Uint8Array | null;
   /** Writes the file in Node.js or downloads it in a browser. */
   save(fileName?: string): string | Uint8Array;
+}
+
+// ==================== ERRORS ====================
+
+/** Base class of the errors thrown by the library; the original error is in `cause`. */
+export class ExcelError extends Error {
+  readonly name: 'ExcelError' | 'ExcelArgumentError' | 'ExcelStateError' | 'ExcelFormatError';
+}
+/** An invalid argument or option: bad cell reference, range, value... */
+export class ExcelArgumentError extends ExcelError {
+  readonly name: 'ExcelArgumentError';
+}
+/** The operation is not possible in the current state. */
+export class ExcelStateError extends ExcelError {
+  readonly name: 'ExcelStateError';
+}
+/** The data given to `Excel.read` is not a readable workbook. */
+export class ExcelFormatError extends ExcelError {
+  readonly name: 'ExcelFormatError';
 }
 
 export class Excel {

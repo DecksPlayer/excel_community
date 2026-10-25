@@ -17,6 +17,9 @@ if (!fs.existsSync(outDir)) {
 }
 
 console.log('Compiling excel_community to JavaScript...');
+// -O2 on purpose: -O3/-O4 save only 2.5%/6% gzipped but drop the type checks
+// on JS arguments, so e.g. `setColumnWidth('x', 5)` would be accepted and
+// write a broken file instead of throwing.
 execSync(`dart compile js -O2 -o "${rawOutput}" "${dartEntry}"`, {
   cwd: rootDir,
   stdio: 'inherit',
@@ -52,10 +55,13 @@ ${wrapper}
 return module.exports(globalThis.__excelCommunityCore, null);
 })()`;
 
-// Plain <script> tag: exposes `ExcelCommunity.Excel`.
+const errorNames = 'ExcelError, ExcelArgumentError, ExcelStateError, ExcelFormatError';
+
+// Plain <script> tag: exposes `ExcelCommunity.Excel` and the error classes.
 fs.writeFileSync(
   browserOutput,
-  `${wrapped}globalThis.ExcelCommunity = { Excel: ${createBrowserExcel} };\n`,
+  `${wrapped}(function (Excel) {\nconst { ${errorNames} } = Excel;\n` +
+    `globalThis.ExcelCommunity = { Excel, ${errorNames} };\n})(${createBrowserExcel});\n`,
   'utf8'
 );
 
@@ -63,7 +69,8 @@ fs.writeFileSync(
 // so it also works where CommonJS is not converted, e.g. linked packages in Vite.
 fs.writeFileSync(
   esmOutput,
-  `${wrapped}const Excel = ${createBrowserExcel};\nexport { Excel };\nexport default Excel;\n`,
+  `${wrapped}const Excel = ${createBrowserExcel};\nconst { ${errorNames} } = Excel;\n` +
+    `export { Excel, ${errorNames} };\nexport default Excel;\n`,
   'utf8'
 );
 

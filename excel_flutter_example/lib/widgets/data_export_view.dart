@@ -5,6 +5,7 @@ import 'package:excel_community/excel_community.dart'
 import 'package:flutter/material.dart';
 
 import '../data/data_export_samples.dart';
+import '../data/snippets/data_export.dart';
 import 'wiki/wiki_components.dart';
 
 const _accent = Color(0xFF7C3AED);
@@ -169,14 +170,23 @@ class _DataExportViewState extends State<DataExportView> {
       tabs: [
         WikiTab('export', 'Export (${_exportExamples.length})'),
         WikiTab('import', 'Import (${_importExamples.length})'),
+        const WikiTab('code', 'Full Example (Code)'),
       ],
       selectedTab: _tab,
       onTabSelected: (tab) => setState(() => _tab = tab),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SampleTable(grid: _sampleGrid),
-          const SizedBox(height: 16),
+      child: _tab == 'code'
+          ? const WikiCodeCard(
+              title: 'Data Export & Transformation Demo Workbook Code',
+              subtitle:
+                  'Complete code configuring JSON and CSV exports, sheet writing, and importing maps back into Excel',
+              code: dataExportSnippet,
+              accent: _accent,
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SampleTable(grid: _sampleGrid),
+                const SizedBox(height: 16),
           WikiGrid(
             itemCount: examples.length,
             extent: 400,
