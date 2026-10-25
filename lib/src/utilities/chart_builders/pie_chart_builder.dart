@@ -5,9 +5,12 @@ part of '../../../excel_community.dart';
 /// When the user provides a [ChartSeriesStyle] on the single pie series, that
 /// color (and fill type) is applied to **all** slices uniformly. Without a
 /// custom style the builder uses the automatic shuffled 20-color palette.
-class PieChartBuilder implements ChartStyleBuilder {
+class PieChartBuilder extends ChartStyleBuilder {
   @override
-  void buildProperties(XmlBuilder builder, Chart chart) {
+  void buildProperties(XmlBuilder builder, Chart chart) {}
+
+  @override
+  void buildPropertiesAfterSeries(XmlBuilder builder, Chart chart) {
     if (chart is PieChart) {
       builder.element('c:firstSliceAng', attributes: {'val': '0'});
     } else if (chart is DoughnutChart) {

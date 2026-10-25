@@ -1,7 +1,7 @@
 part of '../../../excel_community.dart';
 
 /// Builder for Line chart styles.
-class LineChartBuilder implements ChartStyleBuilder {
+class LineChartBuilder extends ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
     final lineChart = chart as LineChart;
@@ -49,8 +49,12 @@ class LineChartBuilder implements ChartStyleBuilder {
         builder.element('c:symbol', attributes: {'val': 'none'});
       });
     }
+  }
 
-    if (lineChart.smooth) {
+  @override
+  void buildSeriesEnd(
+      XmlBuilder builder, Chart chart, ChartSeries series, int seriesIndex) {
+    if ((chart as LineChart).smooth) {
       builder.element('c:smooth', attributes: {'val': '1'});
     }
   }

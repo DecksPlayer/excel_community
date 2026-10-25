@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2026-10-26
+- update readme.md and docs to reflect new features and API
+
+## [2.6.1] - 2026-10-26
+### Fixed
+- Fixed reading files whose XML uses namespace prefixes, as some writers produce (thanks @marcobazzani).
+- Fixed files that Excel could not open after styling a cell in a reopened workbook with conditional formatting.
+- Fixed new cell colors using the wrong fill in workbooks with gradient fills.
+- Fixed semi-transparent background colors shifting the colors of other cells.
+- Fixed the used range of each sheet being saved as A1, so some readers skipped the data.
+- Fixed charts that apps other than Excel could refuse to open.
+- Fixed sheets with pivot tables that apps other than Excel could refuse to open.
+- Fixed formulas written as `FormulaCellValue('=SUM(A1:A3)')` being saved with the `=`.
+- Fixed the `excel_save` example failing to run.
+
+### Changed
+- A formula saved as `FormulaCellValue('=SUM(A1:A3)')` is read back as `'SUM(A1:A3)'`, like formulas saved by Excel.
+- `ChartStyleBuilder` has two new methods, `buildPropertiesAfterSeries` and `buildSeriesEnd`; extend it instead of implementing it.
+
 ## [2.6.0] - 2026-10-07
 ### Fixed
 - Fixed `appendRow` getting slower as the sheet grows.

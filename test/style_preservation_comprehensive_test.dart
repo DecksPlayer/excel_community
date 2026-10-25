@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:archive/archive.dart';
 import 'package:excel_community/excel_community.dart';
 import 'package:test/test.dart';
+import 'package:xml/xml.dart';
 
 void main() {
   group('Style Preservation Tests', () {
@@ -275,5 +279,33 @@ void main() {
 
       print('\n✅ TODOS LOS ESTILOS DE MÚLTIPLES CELDAS SE PRESERVAN\n');
     });
+  });
+
+  test('semi-transparent background colors keep every fill in place', () {
+    final excel = Excel.createExcel();
+    final sheet = excel['Sheet1'];
+    sheet.updateCell(CellIndex.indexByString('A1'), TextCellValue('shade'),
+        cellStyle: CellStyle(backgroundColorHex: ExcelColor.black12));
+    sheet.updateCell(CellIndex.indexByString('A2'), TextCellValue('red'),
+        cellStyle: CellStyle(backgroundColorHex: ExcelColor.red));
+    final bytes = excel.encode()!;
+
+    final styles = XmlDocument.parse(utf8.decode(
+        ZipDecoder().decodeBytes(bytes).findFile('xl/styles.xml')!.content));
+    final fillsElement = styles.rootElement.getElement('fills')!;
+    final fills = fillsElement.findElements('fill').toList();
+    expect(fillsElement.getAttribute('count'), '${fills.length}');
+
+    final xfs = styles.rootElement.getElement('cellXfs')!.findElements('xf').toList();
+    final sheetXml = utf8.decode(
+        ZipDecoder().decodeBytes(bytes).findFile('xl/worksheets/sheet1.xml')!.content);
+    String fillOf(String cell) {
+      final s = int.parse(RegExp('<c r="$cell" s="(\\d+)"').firstMatch(sheetXml)!.group(1)!);
+      final fillId = int.parse(xfs[s].getAttribute('fillId')!);
+      return fills[fillId].findAllElements('fgColor').single.getAttribute('rgb')!;
+    }
+
+    expect(fillOf('A1'), ExcelColor.black12.colorHex);
+    expect(fillOf('A2'), ExcelColor.red.colorHex);
   });
 }

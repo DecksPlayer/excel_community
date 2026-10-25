@@ -1,7 +1,7 @@
 part of '../../../excel_community.dart';
 
 /// Builder for Radar chart styles with optional fill.
-class RadarChartBuilder implements ChartStyleBuilder {
+class RadarChartBuilder extends ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
     final radarChart = chart as RadarChart;

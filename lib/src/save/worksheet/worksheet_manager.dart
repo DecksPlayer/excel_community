@@ -59,6 +59,7 @@ class _WorksheetManager {
 
     const replacedTags = {
       'sheetPr',
+      'dimension',
       'sheetViews',
       'sheetFormatPr',
       'cols',
@@ -74,6 +75,8 @@ class _WorksheetManager {
       'pageSetup',
       'headerFooter',
       'drawing',
+      // Not part of CT_Worksheet (pivot tables are linked only through the
+      // sheet's relationships); dropped from files saved by older versions.
       'pivotTableParts',
       'tableParts',
     };
@@ -176,8 +179,11 @@ class _WorksheetManager {
     // 1. sheetPr
     out.write(_buildSheetPrXml(sheetObject, originalSheetPrXml));
     printedTags.add('sheetPr');
-    // 2. dimension
-    writeOriginal('dimension');
+    // 2. dimension: the range of the cells written below. A copied one is
+    // stale after edits, and some readers only read the cells inside it.
+    final (sheetDataXml, usedRange) = _buildSheetDataXml(sheetName, sheetObject);
+    out.write('<dimension ref="${usedRange ?? 'A1'}"/>');
+    printedTags.add('dimension');
     // 3. sheetViews
     out.write(_buildSheetViewsXml(sheetObject, isActiveSheet: isActiveSheet));
     printedTags.add('sheetViews');
@@ -188,7 +194,7 @@ class _WorksheetManager {
     out.write(_buildColsXml(sheetObject));
     printedTags.add('cols');
     // 6. sheetData
-    out.write(_buildSheetDataXml(sheetName, sheetObject));
+    out.write(sheetDataXml);
     printedTags.add('sheetData');
 
     // The rest follows the CT_Worksheet sequence of ECMA-376; Excel refuses
@@ -255,18 +261,6 @@ class _WorksheetManager {
     writeOriginal('oleObjects');
     writeOriginal('controls');
     writeOriginal('webPublishItems');
-
-    // 9b. pivotTableParts
-    if (sheetObject.pivotTables.isNotEmpty && sheetObject._pivotTableRIds.isNotEmpty) {
-      out.write('<pivotTableParts count="${sheetObject._pivotTableRIds.length}">');
-      for (final rId in sheetObject._pivotTableRIds) {
-        out.write('<pivotTablePart r:id="$rId"/>');
-      }
-      out.write('</pivotTableParts>');
-    } else {
-      writeOriginal('pivotTableParts');
-    }
-    printedTags.add('pivotTableParts');
 
     // tableParts (rebuilt from the sheet's tables)
     if (sheetObject._tableRIds.isNotEmpty) {
@@ -528,7 +522,9 @@ class _WorksheetManager {
     return buffer.toString();
   }
 
-  String _buildSheetDataXml(String sheetName, Sheet sheetObject) {
+  /// The `<sheetData>` element, and the range of the cells it holds (`A1:D4`,
+  /// or `null` when it holds none).
+  (String, String?) _buildSheetDataXml(String sheetName, Sheet sheetObject) {
     final customHeights = sheetObject.getRowHeights;
     final hiddenRows = sheetObject.getHiddenRows;
     final buffer = StringBuffer();
@@ -579,6 +575,16 @@ class _WorksheetManager {
       ...sheetObject._collapsedRows,
     };
 
+    int? firstRow, lastRow, firstColumn, lastColumn;
+    void cellsWritten(int rowIndex, int fromColumn, int toColumn) {
+      firstRow ??= rowIndex;
+      lastRow = rowIndex;
+      if (firstColumn == null || fromColumn < firstColumn!) {
+        firstColumn = fromColumn;
+      }
+      if (lastColumn == null || toColumn > lastColumn!) lastColumn = toColumn;
+    }
+
     for (final rowIndex in rowsToWrite.toList()..sort()) {
       final rowData = sheetObject._sheetData[rowIndex];
       final isRowHidden = hiddenRows.contains(rowIndex);
@@ -608,6 +614,7 @@ class _WorksheetManager {
         if (rowData != null && rowData.isNotEmpty) {
           final columns = rowData.keys.toList();
           if (!_isSorted(columns)) columns.sort();
+          cellsWritten(rowIndex, columns.first, columns.last);
           for (final columnIndex in columns) {
             final data = rowData[columnIndex]!;
             _buildCellXml(buffer, sheetName, columnIndex, rowIndex, rowNumber,
@@ -634,6 +641,7 @@ class _WorksheetManager {
       });
 
       final sortedCols = colEntries.keys.toList()..sort();
+      cellsWritten(rowIndex, sortedCols.first, sortedCols.last);
       for (final columnIndex in sortedCols) {
         final entry = colEntries[columnIndex]!;
         if (entry.data != null) {
@@ -663,7 +671,11 @@ class _WorksheetManager {
       buffer.write('</row>');
     }
     buffer.write('</sheetData>');
-    return buffer.toString();
+
+    if (firstRow == null) return (buffer.toString(), null);
+    final first = getCellId(firstColumn!, firstRow!);
+    final last = getCellId(lastColumn!, lastRow!);
+    return (buffer.toString(), first == last ? first : '$first:$last');
   }
 
   void _buildCellXml(
@@ -761,8 +773,11 @@ class _WorksheetManager {
           buffer.write('</v>');
           break;
         case FormulaCellValue():
+          // OOXML stores formulas without the leading "=" typed in Excel.
+          final formula = value.formula;
           buffer.write('<f>');
-          buffer.write(_escapeXml(value.formula));
+          buffer.write(_escapeXml(
+              formula.startsWith('=') ? formula.substring(1) : formula));
           buffer.write('</f><v>');
           buffer.write(_escapeXml(value.write(numFormat)));
           buffer.write('</v>');

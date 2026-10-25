@@ -79,4 +79,19 @@ void main() {
       expect(a.hashCode == c.hashCode, isTrue);
     });
   });
+
+  test('a leading "=" is not written into <f>', () {
+    final excel = Excel.createExcel();
+    final sheet = excel['Sheet1'];
+    sheet.updateCell(CellIndex.indexByString('A1'), FormulaCellValue('=SUM(B1:C1)'));
+    sheet.updateCell(CellIndex.indexByString('A2'), FormulaCellValue('SUM(B1:C1)'));
+    final bytes = excel.encode()!;
+
+    final xml = utf8.decode(
+        ZipDecoder().decodeBytes(bytes).findFile('xl/worksheets/sheet1.xml')!.content);
+    expect(RegExp(r'<f>SUM\(B1:C1\)</f>').allMatches(xml), hasLength(2));
+    final reread = Excel.decodeBytes(bytes)['Sheet1'];
+    expect((reread.cell(CellIndex.indexByString('A1')).value as FormulaCellValue).formula,
+        'SUM(B1:C1)');
+  });
 }

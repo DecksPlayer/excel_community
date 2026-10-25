@@ -1,7 +1,7 @@
 part of '../../../excel_community.dart';
 
 /// Builder for Scatter (XY) chart styles.
-class ScatterChartBuilder implements ChartStyleBuilder {
+class ScatterChartBuilder extends ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
     final scatterChart = chart as ScatterChart;
@@ -59,8 +59,12 @@ class ScatterChartBuilder implements ChartStyleBuilder {
         builder.element('c:symbol', attributes: {'val': 'none'});
       });
     }
+  }
 
-    if (scatterChart.smooth) {
+  @override
+  void buildSeriesEnd(
+      XmlBuilder builder, Chart chart, ChartSeries series, int seriesIndex) {
+    if ((chart as ScatterChart).smooth) {
       builder.element('c:smooth', attributes: {'val': '1'});
     }
   }

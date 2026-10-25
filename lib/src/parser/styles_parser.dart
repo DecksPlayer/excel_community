@@ -22,7 +22,10 @@ class _StylesParser {
       _excel._cellStyleList = <CellStyle>[];
       _excel._borderSetList = <_BorderSet>[];
 
-      Iterable<XmlElement> fontList = document.findAllElements('font');
+      // Only the children of <fonts>, <fills> and <borders>: fontId, fillId
+      // and borderId index them, while <dxfs> holds fonts, fills and borders
+      // of its own.
+      final fontList = _children(document, 'fonts', 'font');
       for (final font in fontList) {
         _excel._fontStyleList.add(_parseFontStyle(font));
       }
@@ -41,22 +44,29 @@ class _StylesParser {
   // Private helpers
   // ---------------------------------------------------------------------------
 
+  List<XmlElement> _children(
+          XmlDocument document, String container, String child) =>
+      document.rootElement.getElement(container)?.findElements(child).toList() ??
+      [];
+
   void _parseFills(XmlDocument document) {
-    document.findAllElements('patternFill').forEach((node) {
-      String patternType = node.getAttribute('patternType') ?? '';
-      if (node.children.isNotEmpty) {
-        node.findElements('fgColor').forEach((child) {
-          final rgb = child.getAttribute('rgb') ?? '';
-          _excel._patternFill.add(rgb);
-        });
+    // One entry per <fill>, so that fillId indexes this list. Fills without
+    // a direct fgColor (gradients, theme colors) get an empty entry.
+    for (final fill in _children(document, 'fills', 'fill')) {
+      final node = fill.getElement('patternFill');
+      if (node == null) {
+        _excel._patternFill.add('');
+      } else if (node.children.isEmpty) {
+        _excel._patternFill.add(node.getAttribute('patternType') ?? '');
       } else {
-        _excel._patternFill.add(patternType);
+        _excel._patternFill
+            .add(node.getElement('fgColor')?.getAttribute('rgb') ?? '');
       }
-    });
+    }
   }
 
   void _parseBorders(XmlDocument document) {
-    document.findAllElements('border').forEach((node) {
+    _children(document, 'borders', 'border').forEach((node) {
       final diagonalUp = !['0', 'false', null]
           .contains(node.getAttribute('diagonalUp')?.trim());
       final diagonalDown = !['0', 'false', null]

@@ -186,6 +186,8 @@ class ChartXmlWriter {
       if (chart.dataLabels != null && chart.dataLabels!.isEnabled) {
         _buildDataLabels(builder, chart.dataLabels!, chart);
       }
+      ChartStyleBuilderFactory.getBuilder(chart)
+          .buildPropertiesAfterSeries(builder, chart);
       if (hasAxes) {
         _buildAxesIds(builder);
       }
@@ -217,6 +219,8 @@ class ChartXmlWriter {
 
       _buildSeriesColors(builder, chart, series, index);
       _buildSeriesData(builder, chart, series);
+      ChartStyleBuilderFactory.getBuilder(chart)
+          .buildSeriesEnd(builder, chart, series, index);
     });
   }
 
@@ -346,10 +350,11 @@ class ChartXmlWriter {
   void _buildDataLabels(
       XmlBuilder builder, ChartDataLabels labels, Chart chart) {
     builder.element('c:dLbls', nest: () {
-      // Per OOXML §21.2.2.49 the separator comes before the show* flags.
-      if (labels.separator != ', ') {
-        builder.element('c:separator',
-            nest: () => builder.text(labels.separator));
+      // CT_DLbls sequence: dLblPos, the show* flags, separator,
+      // showLeaderLines.
+      if (labels.labelPosition != null) {
+        builder.element('c:dLblPos',
+            attributes: {'val': labels.labelPosition!});
       }
       builder.element('c:showLegendKey', attributes: {'val': '0'});
       builder.element('c:showVal',
@@ -362,9 +367,9 @@ class ChartXmlWriter {
           attributes: {'val': labels.percentage ? '1' : '0'});
       // showBubbleSize is required for bubble charts; harmless on others.
       builder.element('c:showBubbleSize', attributes: {'val': '0'});
-      if (labels.labelPosition != null) {
-        builder.element('c:dLblPos',
-            attributes: {'val': labels.labelPosition!});
+      if (labels.separator != ', ') {
+        builder.element('c:separator',
+            nest: () => builder.text(labels.separator));
       }
       // Leader lines are useful for pie / doughnut only but valid everywhere.
       final isRound =

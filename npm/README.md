@@ -1298,6 +1298,14 @@ Writing is on par with exceljs; reading takes about twice as long, and files are
 
 ---
 
+## ⚠️ Breaking changes
+
+### 2.6.1
+
+- A formula set as `'=SUM(A1:A3)'` is saved without the `=`, so after reading the file back `cell.formula` is `'SUM(A1:A3)'`, like formulas saved by Excel.
+
+---
+
 ## 🚧 Limitations
 
 - Files are tested with the library's own reader and with openpyxl; complex workbooks from third parties (macros, external links, unusual formats) can lose parts the library does not model. Keep the original when you rewrite a user's file.

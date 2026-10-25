@@ -60,6 +60,47 @@ void main() {
     expect(excel2.sheets.containsKey('Pivot Report'), isTrue);
   });
 
+  test('pivot tables are linked only through the sheet relationships', () {
+    final excel = Excel.createExcel();
+    excel['Data']
+      ..appendRow([TextCellValue('Region'), TextCellValue('Units')])
+      ..appendRow([TextCellValue('North'), IntCellValue(10)]);
+    excel['Pivot'].addPivotTable(PivotTable(
+      name: 'PT',
+      sourceSheet: 'Data',
+      sourceRange: 'A1:B2',
+      targetCell: CellIndex.indexByString('A3'),
+      rows: ['Region'],
+      values: [PivotTableValue(field: 'Units', function: PivotValueFunction.sum)],
+    ));
+
+    String partsText(List<int> bytes, String prefix) => ZipDecoder()
+        .decodeBytes(bytes)
+        .files
+        .where((f) => f.name.startsWith(prefix))
+        .map((f) => utf8.decode(f.content))
+        .join();
+
+    final bytes = excel.encode()!;
+    // <pivotTableParts> is not a CT_Worksheet element.
+    expect(partsText(bytes, 'xl/worksheets/sheet'), isNot(contains('pivotTablePart')));
+    expect(partsText(bytes, 'xl/worksheets/_rels/'), contains('/relationships/pivotTable"'));
+
+    // Files saved by older versions carry the element; re-saving drops it.
+    final old = ZipDecoder().decodeBytes(bytes);
+    final patched = Archive();
+    for (final f in old.files.where((f) => f.isFile)) {
+      var content = f.content as List<int>;
+      if (f.name.startsWith('xl/worksheets/sheet')) {
+        content = utf8.encode(utf8.decode(content).replaceFirst('</worksheet>',
+            '<pivotTableParts count="1"><pivotTablePart r:id="rId1"/></pivotTableParts></worksheet>'));
+      }
+      patched.addFile(ArchiveFile(f.name, content.length, content));
+    }
+    final resaved = Excel.decodeBytes(ZipEncoder().encode(patched)).encode()!;
+    expect(partsText(resaved, 'xl/worksheets/sheet'), isNot(contains('pivotTablePart')));
+  });
+
   test('pivot tables are saved computed: cells, cache records and layout', () {
     final excel = Excel.createExcel();
     final data = excel['Data'];

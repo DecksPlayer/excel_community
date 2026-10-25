@@ -1,11 +1,15 @@
 part of '../../../excel_community.dart';
 
 /// Builder for Bubble chart styles.
-class BubbleChartBuilder implements ChartStyleBuilder {
+class BubbleChartBuilder extends ChartStyleBuilder {
   @override
   void buildProperties(XmlBuilder builder, Chart chart) {
-    final bubbleChart = chart as BubbleChart;
     builder.element('c:varyColors', attributes: {'val': '1'});
+  }
+
+  @override
+  void buildPropertiesAfterSeries(XmlBuilder builder, Chart chart) {
+    final bubbleChart = chart as BubbleChart;
     builder.element('c:bubbleScale',
         attributes: {'val': bubbleChart.bubbleScale.toString()});
     builder.element('c:showNegBubbles',
