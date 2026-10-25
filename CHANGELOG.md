@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2026-10-26
+- update readme.md and docs to reflect new features and API
+
 ## [2.6.1] - 2026-10-26
 ### Fixed
 - Fixed reading files whose XML uses namespace prefixes, as some writers produce (thanks @marcobazzani).
