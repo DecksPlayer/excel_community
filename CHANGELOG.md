@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.6.3] - 2026-11-16
+- Update dart version 3.6.0 < 4.0.0 to 3.11.0 < 4.0.0
 
 ## [2.6.2] - 2026-10-26
 - update readme.md and docs to reflect new features and API
