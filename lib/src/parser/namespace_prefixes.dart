@@ -87,8 +87,8 @@ XmlNode _unprefixedNode(XmlNode node, String namespace) {
   final name = node.name;
   return XmlElement(
     name.prefix != null && name.namespaceUri == namespace
-        ? XmlName.parts(name.local)
-        : XmlName.qualified(name.qualified),
+        ? _xmlName(name.local)
+        : _xmlName(name.qualified),
     node.attributes.map((attribute) => attribute.copy()),
     node.children.map((child) => _unprefixedNode(child, namespace)),
     node.isSelfClosing,

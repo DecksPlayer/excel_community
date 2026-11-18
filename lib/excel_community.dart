@@ -48,6 +48,7 @@ part 'src/utilities/span.dart';
 part 'src/utilities/cell_rect.dart';
 part 'src/utilities/fast_list.dart';
 part 'src/utilities/utility.dart';
+part 'src/utilities/xml_compat.dart';
 part 'src/utilities/constants.dart';
 part 'src/utilities/enum.dart';
 part 'src/utilities/chart_xml_writer.dart';

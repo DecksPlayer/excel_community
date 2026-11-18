@@ -20,7 +20,8 @@ class ChartXmlWriter {
     final builder = XmlBuilder();
     builder.processing(
         'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    builder.element('xdr:wsDr', namespaceUris: _buildDrawingNamespaces(),
+    builder.elementWithNamespaceUris('xdr:wsDr',
+        namespaceUris: _buildDrawingNamespaces(),
         nest: () {
       for (int i = 0; i < charts.length; i++) {
         _buildChartAnchor(builder, charts[i], i, drawingCount, 'rId${i + 1}');
@@ -33,7 +34,7 @@ class ChartXmlWriter {
   XmlElement buildChartAnchorElement(
       Chart chart, int index, int drawingCount, String rId) {
     final builder = XmlBuilder();
-    builder.element('xdr:twoCellAnchor',
+    builder.elementWithNamespaceUris('xdr:twoCellAnchor',
         namespaceUris: _buildDrawingNamespaces(), nest: () {
       _buildAnchorPosition(
           builder, 'xdr:from', chart.anchor.fromColumn, chart.anchor.fromRow);
@@ -50,7 +51,8 @@ class ChartXmlWriter {
     final builder = XmlBuilder();
     builder.processing(
         'xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    builder.element('c:chartSpace', namespaceUris: _buildChartNamespaces(),
+    builder.elementWithNamespaceUris('c:chartSpace',
+        namespaceUris: _buildChartNamespaces(),
         nest: () {
       // c:lang is required by Excel as first child of chartSpace
       builder.element('c:lang', attributes: {'val': 'en-US'});

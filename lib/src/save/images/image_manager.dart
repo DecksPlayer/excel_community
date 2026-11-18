@@ -77,14 +77,14 @@ class _ImageManager {
         _save._addMediaFile(mediaPath, List<int>.from(image.imageBytes));
 
         // Add image relationship in the drawing rels
-        relsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
-          XmlAttribute(XmlName.parts('Id'), rId),
+        relsRoot.children.add(XmlElement(_xmlName('Relationship'), [
+          XmlAttribute(_xmlName('Id'), rId),
           XmlAttribute(
-            XmlName.parts('Type'),
+            _xmlName('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
           ),
           XmlAttribute(
-            XmlName.parts('Target'),
+            _xmlName('Target'),
             '../media/image$imageCount.${image._extension}',
           ),
         ]));
@@ -110,13 +110,13 @@ class _ImageManager {
         final drawingRId = _save._nextRelationshipId(sheetRelsRoot);
         final drawingFileName = drawingPath.split('/').last;
 
-        sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
-          XmlAttribute(XmlName.parts('Id'), drawingRId),
+        sheetRelsRoot.children.add(XmlElement(_xmlName('Relationship'), [
+          XmlAttribute(_xmlName('Id'), drawingRId),
           XmlAttribute(
-            XmlName.parts('Type'),
+            _xmlName('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
           ),
-          XmlAttribute(XmlName.parts('Target'), '../drawings/$drawingFileName'),
+          XmlAttribute(_xmlName('Target'), '../drawings/$drawingFileName'),
         ]));
 
         sheet._drawingRId = drawingRId;
@@ -155,7 +155,7 @@ class _ImageManager {
   XmlDocument _buildEmptyDrawing() {
     final b = XmlBuilder();
     b.processing('xml', 'version="1.0" encoding="UTF-8" standalone="yes"');
-    b.element('xdr:wsDr',
+    b.elementWithNamespaceUris('xdr:wsDr',
         namespaceUris: {
           'xdr':
               'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
@@ -173,7 +173,7 @@ class _ImageManager {
       ExcelImage image, String rId, int imageIndex) {
     final a = image.anchor;
     final b = XmlBuilder();
-    b.element('xdr:oneCellAnchor', namespaceUris: {
+    b.elementWithNamespaceUris('xdr:oneCellAnchor', namespaceUris: {
       'xdr':
           'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
       'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',

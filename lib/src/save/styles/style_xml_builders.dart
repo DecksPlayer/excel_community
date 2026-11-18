@@ -12,48 +12,48 @@ class _StyleXmlBuilders {
       fontAttribute.value =
           '${_excel._fontStyleList.length + innerFontStyle.length}';
     } else {
-      fonts.attributes.add(XmlAttribute(XmlName.parts('count'),
+      fonts.attributes.add(XmlAttribute(_xmlName('count'),
           '${_excel._fontStyleList.length + innerFontStyle.length}'));
     }
 
     for (var fontStyleElement in innerFontStyle) {
-      fonts.children.add(XmlElement(XmlName.parts('font'), [], [
+      fonts.children.add(XmlElement(_xmlName('font'), [], [
         if (fontStyleElement.fontFamily != null &&
             fontStyleElement.fontFamily!.toLowerCase().toString() != 'null' &&
             fontStyleElement.fontFamily != '' &&
             fontStyleElement.fontFamily!.isNotEmpty)
-          XmlElement(XmlName.parts('name'), [
+          XmlElement(_xmlName('name'), [
             XmlAttribute(
-                XmlName.parts('val'), fontStyleElement.fontFamily.toString())
+                _xmlName('val'), fontStyleElement.fontFamily.toString())
           ], []),
-        if (fontStyleElement.isBold) XmlElement(XmlName.parts('b'), [], []),
-        if (fontStyleElement.isItalic) XmlElement(XmlName.parts('i'), [], []),
+        if (fontStyleElement.isBold) XmlElement(_xmlName('b'), [], []),
+        if (fontStyleElement.isItalic) XmlElement(_xmlName('i'), [], []),
         if (fontStyleElement.isStrikethrough)
-          XmlElement(XmlName.parts('strike'), [], []),
+          XmlElement(_xmlName('strike'), [], []),
         if (fontStyleElement._fontColorHex != null &&
             fontStyleElement._fontColorHex!.colorHex != "FF000000")
-          XmlElement(XmlName.parts('color'), [
+          XmlElement(_xmlName('color'), [
             XmlAttribute(
-                XmlName.parts('rgb'), fontStyleElement._fontColorHex!.colorHex)
+                _xmlName('rgb'), fontStyleElement._fontColorHex!.colorHex)
           ], []),
         if (fontStyleElement.fontSize != null &&
             fontStyleElement.fontSize.toString().isNotEmpty)
-          XmlElement(XmlName.parts('sz'), [
+          XmlElement(_xmlName('sz'), [
             XmlAttribute(
-                XmlName.parts('val'), fontStyleElement.fontSize.toString())
+                _xmlName('val'), fontStyleElement.fontSize.toString())
           ], []),
         if (fontStyleElement.underline != Underline.None &&
             fontStyleElement.underline == Underline.Single)
-          XmlElement(XmlName.parts('u'), [], []),
+          XmlElement(_xmlName('u'), [], []),
         if (fontStyleElement.underline != Underline.None &&
             fontStyleElement.underline != Underline.Single &&
             fontStyleElement.underline == Underline.Double)
-          XmlElement(XmlName.parts('u'),
-              [XmlAttribute(XmlName.parts('val'), 'double')], []),
+          XmlElement(_xmlName('u'),
+              [XmlAttribute(_xmlName('val'), 'double')], []),
         if (fontStyleElement.fontScheme != FontScheme.Unset)
-          XmlElement(XmlName.parts('scheme'), [
+          XmlElement(_xmlName('scheme'), [
             XmlAttribute(
-                XmlName.parts('val'),
+                _xmlName('val'),
                 switch (fontStyleElement.fontScheme) {
                   FontScheme.Major => "major",
                   _ => "minor"
@@ -70,7 +70,7 @@ class _StyleXmlBuilders {
       fillAttribute.value =
           '${_excel._patternFill.length + innerPatternFill.length}';
     } else {
-      fills.attributes.add(XmlAttribute(XmlName.parts('count'),
+      fills.attributes.add(XmlAttribute(_xmlName('count'),
           '${_excel._patternFill.length + innerPatternFill.length}'));
     }
 
@@ -79,20 +79,20 @@ class _StyleXmlBuilders {
     for (var color in innerPatternFill) {
       if (color.length >= 2) {
         if (color == "none" || color == "gray125" || color == "lightGray") {
-          fills.children.add(XmlElement(XmlName.parts('fill'), [], [
-            XmlElement(XmlName.parts('patternFill'),
-                [XmlAttribute(XmlName.parts('patternType'), color)], [])
+          fills.children.add(XmlElement(_xmlName('fill'), [], [
+            XmlElement(_xmlName('patternFill'),
+                [XmlAttribute(_xmlName('patternType'), color)], [])
           ]));
         } else {
           // An ARGB color, opaque (FF...) or not (e.g. ExcelColor.black12).
-          fills.children.add(XmlElement(XmlName.parts('fill'), [], [
-            XmlElement(XmlName.parts('patternFill'), [
-              XmlAttribute(XmlName.parts('patternType'), 'solid')
+          fills.children.add(XmlElement(_xmlName('fill'), [], [
+            XmlElement(_xmlName('patternFill'), [
+              XmlAttribute(_xmlName('patternType'), 'solid')
             ], [
-              XmlElement(XmlName.parts('fgColor'),
-                  [XmlAttribute(XmlName.parts('rgb'), color)], []),
-              XmlElement(XmlName.parts('bgColor'),
-                  [XmlAttribute(XmlName.parts('rgb'), color)], [])
+              XmlElement(_xmlName('fgColor'),
+                  [XmlAttribute(_xmlName('rgb'), color)], []),
+              XmlElement(_xmlName('bgColor'),
+                  [XmlAttribute(_xmlName('rgb'), color)], [])
             ])
           ]));
         }
@@ -111,19 +111,19 @@ class _StyleXmlBuilders {
       borderAttribute.value =
           '${_excel._borderSetList.length + innerBorderSet.length}';
     } else {
-      borders.attributes.add(XmlAttribute(XmlName.parts('count'),
+      borders.attributes.add(XmlAttribute(_xmlName('count'),
           '${_excel._borderSetList.length + innerBorderSet.length}'));
     }
 
     for (var border in innerBorderSet) {
-      var borderElement = XmlElement(XmlName.parts('border'));
+      var borderElement = XmlElement(_xmlName('border'));
       if (border.diagonalBorderDown) {
         borderElement.attributes
-            .add(XmlAttribute(XmlName.parts('diagonalDown'), '1'));
+            .add(XmlAttribute(_xmlName('diagonalDown'), '1'));
       }
       if (border.diagonalBorderUp) {
         borderElement.attributes
-            .add(XmlAttribute(XmlName.parts('diagonalUp'), '1'));
+            .add(XmlAttribute(_xmlName('diagonalUp'), '1'));
       }
       final Map<String, Border> borderMap = {
         'left': border.leftBorder,
@@ -135,16 +135,16 @@ class _StyleXmlBuilders {
       for (var key in borderMap.keys) {
         final borderValue = borderMap[key]!;
 
-        final element = XmlElement(XmlName.parts(key));
+        final element = XmlElement(_xmlName(key));
         final style = borderValue.borderStyle;
         if (style != null) {
           element.attributes
-              .add(XmlAttribute(XmlName.parts('style'), style.style));
+              .add(XmlAttribute(_xmlName('style'), style.style));
         }
         final color = borderValue.borderColorHex;
         if (color != null) {
-          element.children.add(XmlElement(XmlName.parts('color'),
-              [XmlAttribute(XmlName.parts('rgb'), color)]));
+          element.children.add(XmlElement(_xmlName('color'),
+              [XmlAttribute(_xmlName('rgb'), color)]));
         }
         borderElement.children.add(element);
       }
@@ -166,7 +166,7 @@ class _StyleXmlBuilders {
       cellAttribute.value =
           '${_excel._cellStyleList.length + innerCellStyle.length}';
     } else {
-      celx.attributes.add(XmlAttribute(XmlName.parts('count'),
+      celx.attributes.add(XmlAttribute(_xmlName('count'),
           '${_excel._cellStyleList.length + innerCellStyle.length}'));
     }
 
@@ -222,51 +222,51 @@ class _StyleXmlBuilders {
 
       final List<XmlAttribute> protectionAttrs = [];
       if (cellStyle.locked != null) {
-        protectionAttrs.add(XmlAttribute(XmlName.parts('locked'), cellStyle.locked! ? 'true' : 'false'));
+        protectionAttrs.add(XmlAttribute(_xmlName('locked'), cellStyle.locked! ? 'true' : 'false'));
       }
       if (cellStyle.hidden != null) {
-        protectionAttrs.add(XmlAttribute(XmlName.parts('hidden'), cellStyle.hidden! ? 'true' : 'false'));
+        protectionAttrs.add(XmlAttribute(_xmlName('hidden'), cellStyle.hidden! ? 'true' : 'false'));
       }
 
       final List<XmlAttribute> xfAttributes = [
-        XmlAttribute(XmlName.parts('applyFont'), '1'),
-        XmlAttribute(XmlName.parts('applyFill'), '1'),
-        XmlAttribute(XmlName.parts('applyBorder'), '1'),
-        XmlAttribute(XmlName.parts('applyAlignment'), '1'),
+        XmlAttribute(_xmlName('applyFont'), '1'),
+        XmlAttribute(_xmlName('applyFill'), '1'),
+        XmlAttribute(_xmlName('applyBorder'), '1'),
+        XmlAttribute(_xmlName('applyAlignment'), '1'),
         if (protectionAttrs.isNotEmpty)
-          XmlAttribute(XmlName.parts('applyProtection'), '1'),
-        XmlAttribute(XmlName.parts('borderId'), '$borderId'),
-        XmlAttribute(XmlName.parts('fillId'), '$fillId'),
-        XmlAttribute(XmlName.parts('fontId'), '$fontId'),
-        XmlAttribute(XmlName.parts('numFmtId'), numFmtId.toString()),
-        XmlAttribute(XmlName.parts('xfId'), '0'),
+          XmlAttribute(_xmlName('applyProtection'), '1'),
+        XmlAttribute(_xmlName('borderId'), '$borderId'),
+        XmlAttribute(_xmlName('fillId'), '$fillId'),
+        XmlAttribute(_xmlName('fontId'), '$fontId'),
+        XmlAttribute(_xmlName('numFmtId'), numFmtId.toString()),
+        XmlAttribute(_xmlName('xfId'), '0'),
       ];
 
-      celx.children.add(XmlElement(XmlName.parts('xf'), xfAttributes, [
-        XmlElement(XmlName.parts('alignment'), [
+      celx.children.add(XmlElement(_xmlName('xf'), xfAttributes, [
+        XmlElement(_xmlName('alignment'), [
           XmlAttribute(
-              XmlName.parts('horizontal'),
+              _xmlName('horizontal'),
               cellStyle.horizontalAlignment
                   .toString()
                   .split('.')
                   .last
                   .toLowerCase()),
           XmlAttribute(
-              XmlName.parts('vertical'),
+              _xmlName('vertical'),
               cellStyle.verticalAlignment
                   .toString()
                   .split('.')
                   .last
                   .toLowerCase()),
           XmlAttribute(
-              XmlName.parts('textRotation'), cellStyle.rotation.toString()),
-          XmlAttribute(XmlName.parts('wrapText'),
+              _xmlName('textRotation'), cellStyle.rotation.toString()),
+          XmlAttribute(_xmlName('wrapText'),
               cellStyle.wrap == TextWrapping.WrapText ? '1' : '0'),
-          XmlAttribute(XmlName.parts('shrinkToFit'),
+          XmlAttribute(_xmlName('shrinkToFit'),
               cellStyle.wrap == TextWrapping.Clip ? '1' : '0'),
         ], []),
         if (protectionAttrs.isNotEmpty)
-          XmlElement(XmlName.parts('protection'), protectionAttrs, []),
+          XmlElement(_xmlName('protection'), protectionAttrs, []),
       ]));
     }
   }
@@ -290,7 +290,7 @@ class _StyleXmlBuilders {
           .firstOrNull;
       int count;
       if (numFmtsElement == null) {
-        numFmtsElement = XmlElement(XmlName.parts('numFmts'));
+        numFmtsElement = XmlElement(_xmlName('numFmts'));
 
         styleSheet
             .findElements('styleSheet')
@@ -310,10 +310,10 @@ class _StyleXmlBuilders {
                 node.getAttribute('numFmtId') == numFmtIdString);
         if (numFmtElement == null) {
           numFmtElement = XmlElement(
-              XmlName.parts('numFmt'),
+              _xmlName('numFmt'),
               [
-                XmlAttribute(XmlName.parts('numFmtId'), numFmtIdString),
-                XmlAttribute(XmlName.parts('formatCode'), formatCode),
+                XmlAttribute(_xmlName('numFmtId'), numFmtIdString),
+                XmlAttribute(_xmlName('formatCode'), formatCode),
               ],
               [],
               true);
@@ -342,7 +342,7 @@ class _StyleXmlBuilders {
         .firstOrNull;
 
     if (dxfsElement == null) {
-      dxfsElement = XmlElement(XmlName.parts('dxfs'));
+      dxfsElement = XmlElement(_xmlName('dxfs'));
       int insertIndex = styleSheet.children.length;
       final tableStylesIdx = styleSheet.children.indexWhere((node) =>
           node is XmlElement &&
@@ -357,53 +357,53 @@ class _StyleXmlBuilders {
     dxfsElement.setAttribute('count', '${_excel._dxfList.length}');
 
     for (final dxf in _excel._dxfList) {
-      final dxfElement = XmlElement(XmlName.parts('dxf'));
+      final dxfElement = XmlElement(_xmlName('dxf'));
 
       final fontChildren = <XmlElement>[];
       if (dxf.bold != null) {
-        fontChildren.add(XmlElement(XmlName.parts('b'), [
-          if (!dxf.bold!) XmlAttribute(XmlName.parts('val'), 'false'),
+        fontChildren.add(XmlElement(_xmlName('b'), [
+          if (!dxf.bold!) XmlAttribute(_xmlName('val'), 'false'),
         ]));
       }
       if (dxf.italic != null) {
-        fontChildren.add(XmlElement(XmlName.parts('i'), [
-          if (!dxf.italic!) XmlAttribute(XmlName.parts('val'), 'false'),
+        fontChildren.add(XmlElement(_xmlName('i'), [
+          if (!dxf.italic!) XmlAttribute(_xmlName('val'), 'false'),
         ]));
       }
       if (dxf.strikethrough != null) {
-        fontChildren.add(XmlElement(XmlName.parts('strike'), [
-          if (!dxf.strikethrough!) XmlAttribute(XmlName.parts('val'), 'false'),
+        fontChildren.add(XmlElement(_xmlName('strike'), [
+          if (!dxf.strikethrough!) XmlAttribute(_xmlName('val'), 'false'),
         ]));
       }
       if (dxf.underline != null && dxf.underline != Underline.None) {
         final val = dxf.underline == Underline.Double ? 'double' : 'single';
-        fontChildren.add(XmlElement(XmlName.parts('u'), [
-          XmlAttribute(XmlName.parts('val'), val),
+        fontChildren.add(XmlElement(_xmlName('u'), [
+          XmlAttribute(_xmlName('val'), val),
         ]));
       }
       if (dxf.fontColor != null) {
-        fontChildren.add(XmlElement(XmlName.parts('color'), [
-          XmlAttribute(XmlName.parts('rgb'), _cleanHex(dxf.fontColor!.colorHex)),
+        fontChildren.add(XmlElement(_xmlName('color'), [
+          XmlAttribute(_xmlName('rgb'), _cleanHex(dxf.fontColor!.colorHex)),
         ]));
       }
 
       if (fontChildren.isNotEmpty) {
-        dxfElement.children.add(XmlElement(XmlName.parts('font'), [], fontChildren));
+        dxfElement.children.add(XmlElement(_xmlName('font'), [], fontChildren));
       }
 
       if (dxf.backgroundColor != null) {
         final hex = _cleanHex(dxf.backgroundColor!.colorHex);
-        final patternFill = XmlElement(XmlName.parts('patternFill'), [
-          XmlAttribute(XmlName.parts('patternType'), 'solid'),
+        final patternFill = XmlElement(_xmlName('patternFill'), [
+          XmlAttribute(_xmlName('patternType'), 'solid'),
         ], [
-          XmlElement(XmlName.parts('fgColor'), [
-            XmlAttribute(XmlName.parts('rgb'), hex),
+          XmlElement(_xmlName('fgColor'), [
+            XmlAttribute(_xmlName('rgb'), hex),
           ]),
-          XmlElement(XmlName.parts('bgColor'), [
-            XmlAttribute(XmlName.parts('rgb'), hex),
+          XmlElement(_xmlName('bgColor'), [
+            XmlAttribute(_xmlName('rgb'), hex),
           ]),
         ]);
-        dxfElement.children.add(XmlElement(XmlName.parts('fill'), [], [patternFill]));
+        dxfElement.children.add(XmlElement(_xmlName('fill'), [], [patternFill]));
       }
 
       dxfsElement.children.add(dxfElement);
