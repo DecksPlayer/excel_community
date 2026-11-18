@@ -80,12 +80,12 @@ build/
 # Generated test files
 *.xlsx
 !excel_flutter_example/assets/*.xlsx
+!test/test_resources/*.xlsx
 test_*.dart
 **/TEST_*.xlsx
 generar_*.dart
 prueba_*.dart
 PRUEBA_*.xlsx
-**/TEST_RESOURCES
 excel_flutter_example/windows/flutter/generated_plugins.cmake
 test*.txt
 
