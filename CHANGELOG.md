@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- Fixed the package not installing on Dart 3.6 and 3.7, which the `pubspec.yaml` declares as supported: `xml` 6.5 is accepted again alongside `xml` 7 (#56).
+- Fixed `dart pub get` failing on Dart 3.6 and 3.7 for contributors: `lints` 5 and older `test` releases are accepted again.
+
 ## [2.6.2] - 2026-10-26
 - update readme.md and docs to reflect new features and API
 

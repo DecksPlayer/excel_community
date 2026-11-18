@@ -30,49 +30,49 @@ class HeaderFooter {
     final attributes = <XmlAttribute>[];
     if (alignWithMargins != null) {
       attributes.add(XmlAttribute(
-          XmlName.parts("alignWithMargins"), alignWithMargins.toString()));
+          _xmlName("alignWithMargins"), alignWithMargins.toString()));
     }
     if (differentFirst != null) {
       attributes.add(XmlAttribute(
-          XmlName.parts("differentFirst"), differentFirst.toString()));
+          _xmlName("differentFirst"), differentFirst.toString()));
     }
     if (differentOddEven != null) {
       attributes.add(XmlAttribute(
-          XmlName.parts("differentOddEven"), differentOddEven.toString()));
+          _xmlName("differentOddEven"), differentOddEven.toString()));
     }
     if (scaleWithDoc != null) {
       attributes.add(
-          XmlAttribute(XmlName.parts("scaleWithDoc"), scaleWithDoc.toString()));
+          XmlAttribute(_xmlName("scaleWithDoc"), scaleWithDoc.toString()));
     }
 
     final children = <XmlNode>[];
     // CT_HeaderFooter sequence: Excel refuses another order.
     if (oddHeader != null) {
-      children.add(XmlElement(XmlName.parts("oddHeader"), [],
+      children.add(XmlElement(_xmlName("oddHeader"), [],
           [XmlText(oddHeader!)]));
     }
     if (oddFooter != null) {
-      children.add(XmlElement(XmlName.parts("oddFooter"), [],
+      children.add(XmlElement(_xmlName("oddFooter"), [],
           [XmlText(oddFooter!)]));
     }
     if (evenHeader != null) {
-      children.add(XmlElement(XmlName.parts("evenHeader"), [],
+      children.add(XmlElement(_xmlName("evenHeader"), [],
           [XmlText(evenHeader!)]));
     }
     if (evenFooter != null) {
-      children.add(XmlElement(XmlName.parts("evenFooter"), [],
+      children.add(XmlElement(_xmlName("evenFooter"), [],
           [XmlText(evenFooter!)]));
     }
     if (firstHeader != null) {
-      children.add(XmlElement(XmlName.parts("firstHeader"), [],
+      children.add(XmlElement(_xmlName("firstHeader"), [],
           [XmlText(firstHeader!)]));
     }
     if (firstFooter != null) {
-      children.add(XmlElement(XmlName.parts("firstFooter"), [],
+      children.add(XmlElement(_xmlName("firstFooter"), [],
           [XmlText(firstFooter!)]));
     }
 
-    return XmlElement(XmlName.parts("headerFooter"), attributes, children);
+    return XmlElement(_xmlName("headerFooter"), attributes, children);
   }
 
   static HeaderFooter fromXmlElement(XmlElement headerFooterElement) {

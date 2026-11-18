@@ -221,9 +221,9 @@ class Save {
         node is XmlElement && node.getAttribute('PartName') == partName);
 
     if (!exists) {
-      typesElement.children.add(XmlElement(XmlName.parts('Override'), [
-        XmlAttribute(XmlName.parts('PartName'), partName),
-        XmlAttribute(XmlName.parts('ContentType'), contentType),
+      typesElement.children.add(XmlElement(_xmlName('Override'), [
+        XmlAttribute(_xmlName('PartName'), partName),
+        XmlAttribute(_xmlName('ContentType'), contentType),
       ]));
     }
   }
@@ -242,9 +242,9 @@ class Save {
         node.getAttribute('Extension') == extension);
 
     if (!exists) {
-      typesElement.children.add(XmlElement(XmlName.parts('Default'), [
-        XmlAttribute(XmlName.parts('Extension'), extension),
-        XmlAttribute(XmlName.parts('ContentType'), contentType),
+      typesElement.children.add(XmlElement(_xmlName('Default'), [
+        XmlAttribute(_xmlName('Extension'), extension),
+        XmlAttribute(_xmlName('ContentType'), contentType),
       ]));
     }
   }

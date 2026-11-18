@@ -77,13 +77,13 @@ class _CommentManager {
         commentsRId = _save._nextRelationshipId(sheetRelsRoot);
         
         final commentsFileName = commentsPath.split('/').last;
-        sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
-          XmlAttribute(XmlName.parts('Id'), commentsRId),
+        sheetRelsRoot.children.add(XmlElement(_xmlName('Relationship'), [
+          XmlAttribute(_xmlName('Id'), commentsRId),
           XmlAttribute(
-            XmlName.parts('Type'),
+            _xmlName('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments',
           ),
-          XmlAttribute(XmlName.parts('Target'), '../$commentsFileName'),
+          XmlAttribute(_xmlName('Target'), '../$commentsFileName'),
         ]));
       }
 
@@ -91,13 +91,13 @@ class _CommentManager {
         vmlRId = _save._nextRelationshipId(sheetRelsRoot);
         
         final vmlFileName = vmlPath.split('/').last;
-        sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
-          XmlAttribute(XmlName.parts('Id'), vmlRId),
+        sheetRelsRoot.children.add(XmlElement(_xmlName('Relationship'), [
+          XmlAttribute(_xmlName('Id'), vmlRId),
           XmlAttribute(
-            XmlName.parts('Type'),
+            _xmlName('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing',
           ),
-          XmlAttribute(XmlName.parts('Target'), '../drawings/$vmlFileName'),
+          XmlAttribute(_xmlName('Target'), '../drawings/$vmlFileName'),
         ]));
       }
 

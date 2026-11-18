@@ -76,13 +76,13 @@ class _PivotTableManager {
         // Wire to worksheet relationships
         final ptRId = _save._nextRelationshipId(sheetRelsRoot);
 
-        sheetRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
-          XmlAttribute(XmlName.parts('Id'), ptRId),
+        sheetRelsRoot.children.add(XmlElement(_xmlName('Relationship'), [
+          XmlAttribute(_xmlName('Id'), ptRId),
           XmlAttribute(
-            XmlName.parts('Type'),
+            _xmlName('Type'),
             'http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotTable',
           ),
-          XmlAttribute(XmlName.parts('Target'),
+          XmlAttribute(_xmlName('Target'),
               '../pivotTables/pivotTable$pivotTableCount.xml'),
         ]));
 
@@ -93,13 +93,13 @@ class _PivotTableManager {
           final wbNextRIdNum = _getAvailableWorkbookRId(wbRelsRoot);
           final wbRId = 'rId$wbNextRIdNum';
 
-          wbRelsRoot.children.add(XmlElement(XmlName.parts('Relationship'), [
-            XmlAttribute(XmlName.parts('Id'), wbRId),
+          wbRelsRoot.children.add(XmlElement(_xmlName('Relationship'), [
+            XmlAttribute(_xmlName('Id'), wbRId),
             XmlAttribute(
-              XmlName.parts('Type'),
+              _xmlName('Type'),
               'http://schemas.openxmlformats.org/officeDocument/2006/relationships/pivotCacheDefinition',
             ),
-            XmlAttribute(XmlName.parts('Target'),
+            XmlAttribute(_xmlName('Target'),
                 'pivotCache/pivotCacheDefinition$pivotCacheCount.xml'),
           ]));
 
@@ -488,7 +488,7 @@ class _PivotTableManager {
     if (existingCaches.isNotEmpty) {
       pivotCaches = existingCaches.first;
     } else {
-      pivotCaches = XmlElement(XmlName.parts('pivotCaches'));
+      pivotCaches = XmlElement(_xmlName('pivotCaches'));
 
       final children = workbook.children;
       int insertIndex = children.length;
@@ -530,9 +530,9 @@ class _PivotTableManager {
       children.insert(insertIndex, pivotCaches);
     }
 
-    pivotCaches.children.add(XmlElement(XmlName.parts('pivotCache'), [
-      XmlAttribute(XmlName.parts('cacheId'), cacheId.toString()),
-      XmlAttribute(XmlName.parts('r:id'), rId),
+    pivotCaches.children.add(XmlElement(_xmlName('pivotCache'), [
+      XmlAttribute(_xmlName('cacheId'), cacheId.toString()),
+      XmlAttribute(_xmlName('r:id'), rId),
     ]));
   }
 }

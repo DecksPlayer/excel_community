@@ -106,12 +106,12 @@ class Parser {
             .first
             .children
             .add(XmlElement(
-              XmlName.parts('Relationship'),
+              _xmlName('Relationship'),
               <XmlAttribute>[
-                XmlAttribute(XmlName.parts('Id'), 'rId$rIdNumber'),
-                XmlAttribute(XmlName.parts('Type'),
+                XmlAttribute(_xmlName('Id'), 'rId$rIdNumber'),
+                XmlAttribute(_xmlName('Type'),
                     'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings'),
-                XmlAttribute(XmlName.parts('Target'), 'sharedStrings.xml'),
+                XmlAttribute(_xmlName('Target'), 'sharedStrings.xml'),
               ],
             ));
 
@@ -135,11 +135,11 @@ class Parser {
               .first
               .children
               .add(XmlElement(
-                XmlName.parts('Override'),
+                _xmlName('Override'),
                 <XmlAttribute>[
                   XmlAttribute(
-                      XmlName.parts('PartName'), '/xl/sharedStrings.xml'),
-                  XmlAttribute(XmlName.parts('ContentType'), contentType),
+                      _xmlName('PartName'), '/xl/sharedStrings.xml'),
+                  XmlAttribute(_xmlName('ContentType'), contentType),
                 ],
               ));
         }
@@ -297,20 +297,20 @@ class Parser {
         ?.findAllElements('Relationships')
         .first
         .children
-        .add(XmlElement(XmlName.parts('Relationship'), <XmlAttribute>[
-          XmlAttribute(XmlName.parts('Id'), 'rId$ridNumber'),
-          XmlAttribute(XmlName.parts('Type'), '$_relationships/worksheet'),
+        .add(XmlElement(_xmlName('Relationship'), <XmlAttribute>[
+          XmlAttribute(_xmlName('Id'), 'rId$ridNumber'),
+          XmlAttribute(_xmlName('Type'), '$_relationships/worksheet'),
           XmlAttribute(
-              XmlName.parts('Target'), 'worksheets/sheet$sheetNumber.xml'),
+              _xmlName('Target'), 'worksheets/sheet$sheetNumber.xml'),
         ]));
 
     if (!_rId.contains('rId$ridNumber')) _rId.add('rId$ridNumber');
 
-    final newSheetNode = XmlElement(XmlName.parts('sheet'), <XmlAttribute>[
-      XmlAttribute(XmlName.parts('state'), 'visible'),
-      XmlAttribute(XmlName.parts('name'), newSheet),
-      XmlAttribute(XmlName.parts('sheetId'), '$sheetNumber'),
-      XmlAttribute(XmlName.parts('r:id'), 'rId$ridNumber'),
+    final newSheetNode = XmlElement(_xmlName('sheet'), <XmlAttribute>[
+      XmlAttribute(_xmlName('state'), 'visible'),
+      XmlAttribute(_xmlName('name'), newSheet),
+      XmlAttribute(_xmlName('sheetId'), '$sheetNumber'),
+      XmlAttribute(_xmlName('r:id'), 'rId$ridNumber'),
     ]);
 
     _excel._xmlFiles['xl/workbook.xml']
@@ -354,10 +354,10 @@ class Parser {
         ?.findAllElements('Types')
         .first
         .children
-        .add(XmlElement(XmlName.parts('Override'), <XmlAttribute>[
-          XmlAttribute(XmlName.parts('ContentType'),
+        .add(XmlElement(_xmlName('Override'), <XmlAttribute>[
+          XmlAttribute(_xmlName('ContentType'),
               'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml'),
-          XmlAttribute(XmlName.parts('PartName'),
+          XmlAttribute(_xmlName('PartName'),
               '/xl/worksheets/sheet$sheetNumber.xml'),
         ]));
 
